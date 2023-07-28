@@ -22,12 +22,19 @@ dependencies = [
     "importlib-resources",
     "global-land-mask",
     "numpy",
-    "pythreejs"
+    "pythreejs",
+    "pyqtgraph",
+    "pyqt6",
+    "pyopengl",
 ]
 
 [tool.setuptools.packages.find]
 where = ["./src"]
 
+[tool.setuptools.package-data]
+vendeeglobe = [
+    "resources/*",
+]
 
 [tool.black]
 skip-string-normalization = true

@@ -1,13 +1,11 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
 import vendeeglobe as vg
 
 names = [
-    'Afonso',
-    'Drew',
-    'Greg',
-    'Jankas',
-    'Mads',
-    'Simon',
-    'Sun',
+    'Neil',
+    'Alex',
+    'Kevin',
 ]
 
 players = {name: None for name in names}

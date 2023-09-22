@@ -110,10 +110,10 @@ class GLTexturedSphereItem(GLGraphicsItem):
         glBegin(GL_QUADS)
         for j in range(len(theta) - 1):
             for i in range(len(phi) - 1):
-                xyz_nw = ut.to_xyz(phi[i], theta[j])
-                xyz_sw = ut.to_xyz(phi[i], theta[j + 1])
-                xyz_se = ut.to_xyz(phi[i + 1], theta[j + 1])
-                xyz_ne = ut.to_xyz(phi[i + 1], theta[j])
+                xyz_nw = ut.to_xyz(phi[i], theta[j], gl=True)
+                xyz_sw = ut.to_xyz(phi[i], theta[j + 1], gl=True)
+                xyz_se = ut.to_xyz(phi[i + 1], theta[j + 1], gl=True)
+                xyz_ne = ut.to_xyz(phi[i + 1], theta[j], gl=True)
 
                 glTexCoord2f(p_n[i], t_n[j])
                 glVertex3f(xyz_nw[0], xyz_nw[1], xyz_nw[2])
@@ -131,13 +131,13 @@ class GLTexturedSphereItem(GLGraphicsItem):
 """
 Use GLImageItem to display image data on rectangular planes.
 
-In this example, the image data is sampled from a volume and the image planes 
+In this example, the image data is sampled from a volume and the image planes
 placed as if they slice through the volume.
 """
 
 
 class Graphics:
-    def __init__(self, game_map):
+    def __init__(self, game_map, players):
         self.map = game_map
 
         # app = pg.mkQApp("GLImageItem Example")
@@ -150,23 +150,24 @@ class Graphics:
 
         # print('Graphics 1')
 
-        # world = np.load(f'world{config.map_resolution}.npz')['world'].T
-        world = self.map.array.T
-        # print('Graphics 2')
+        # # world = np.load(f'world{config.map_resolution}.npz')['world'].T
+        # world = self.map.array.T
+        # # print('Graphics 2')
 
-        a = np.reshape(world.astype('uint8'), world.shape + (1,))
-        # print('Graphics 3')
-        a = np.broadcast_to(a, world.shape + (4,)) * 255
-        # print('Graphics 4')
-        a[~world] = [0, 0, 100, 255]
-        # print('Graphics 5')
-        a[world] = [100, 140, 46, 255]
-        # print('Graphics 6')
+        # a = np.reshape(world.astype('uint8'), world.shape + (1,))
+        # # print('Graphics 3')
+        # a = np.broadcast_to(a, world.shape + (4,)) * 255
+        # # print('Graphics 4')
+        # a[~world] = [0, 0, 100, 255]
+        # # print('Graphics 5')
+        # a[world] = [100, 140, 46, 255]
+        # # print('Graphics 6')
 
-        # np.savez('world.npz', world=a)
-        # a = np.load('world.npz')['world']
+        # # np.savez('world.npz', world=a)
+        # # a = np.load('world.npz')['world']
+        world = np.fliplr(np.transpose(self.map.array, axes=[1, 0, 2]))
 
-        self.sphere = GLTexturedSphereItem(a)
+        self.sphere = GLTexturedSphereItem(world)
         # print('Graphics 7')
         self.sphere.setGLOptions("opaque")
         # print('Graphics 8')
@@ -176,17 +177,67 @@ class Graphics:
         # self.tracer_lat = np.random.uniform(-90.0, 90.0, size=config.ntracers)
         # self.tracer_lon = np.random.uniform(-180, 180, size=config.ntracers)
 
+        # Add tracers
         x, y, z = ut.to_xyz(
-            ut.lon_to_phi(self.map.tracer_lon), ut.lat_to_theta(self.map.tracer_lat)
+            ut.lon_to_phi(self.map.tracer_lon.ravel()),
+            ut.lat_to_theta(self.map.tracer_lat.ravel()),
         )
-
         self.tracers = gl.GLScatterPlotItem(
-            pos=np.array([x, y, z]).T, color=(1, 1, 1, 1), size=1, pxMode=True
+            pos=np.array([x, y, z]).T,
+            color=self.map.tracer_colors.reshape((-1, 4)),
+            size=4,
+            pxMode=True,
         )
-        self.tracers.setGLOptions("opaque")
-
+        # self.tracers.setGLOptions("opaque")
+        self.tracers.setGLOptions('translucent')
         self.window.addItem(self.tracers)
 
+        # Add players
+        latitudes = np.array([player.latitude for player in players.values()])
+        longitudes = np.array([player.longitude for player in players.values()])
+        colors = np.array([player.color for player in players.values()])
+        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+
+        self.players = gl.GLScatterPlotItem(
+            pos=np.array([x, y, z]).T,
+            color=colors,
+            size=10,
+            pxMode=True,
+        )
+        self.players.setGLOptions("opaque")
+        # self.tracers.setGLOptions('translucent')
+        self.window.addItem(self.players)
+
+        self.tracks = {}
+        for i, (name, player) in enumerate(players.items()):
+            x, y, z = ut.to_xyz(
+                ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
+            )
+            pos = np.array([[x], [y], [z]]).T
+            self.tracks[name] = {
+                'pos': pos,
+                'artist': gl.GLLinePlotItem(
+                    pos=pos, color=tuple(colors[i]), width=4, antialias=True
+                ),
+            }
+            self.window.addItem(self.tracks[name]['artist'])
+
     def update_wind_tracers(self, tracer_lat, tracer_lon):
-        x, y, z = ut.to_xyz(ut.lon_to_phi(tracer_lon), ut.lat_to_theta(tracer_lat))
+        # return
+        x, y, z = ut.to_xyz(
+            ut.lon_to_phi(tracer_lon.ravel()), ut.lat_to_theta(tracer_lat.ravel())
+        )
         self.tracers.setData(pos=np.array([x, y, z]).T)
+
+    def update_player_positions(self, players):
+        latitudes = np.array([player.latitude for player in players.values()])
+        longitudes = np.array([player.longitude for player in players.values()])
+        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        self.players.setData(pos=np.array([x, y, z]).T)
+
+        for i, name in enumerate(self.tracks):
+            pos = np.vstack(
+                [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
+            )
+            self.tracks[name]['artist'].setData(pos=pos)
+            self.tracks[name]['pos'] = pos

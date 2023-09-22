@@ -14,10 +14,11 @@ from . import config
 #     return np.array([xpos, zpos, -ypos]).T
 
 
-def to_xyz(phi, theta):
+def to_xyz(phi, theta, gl=False):
     # theta = np.radians(-theta)
     # phi = np.radians(phi)
-    theta = np.pi - theta
+    if gl:
+        theta = np.pi - theta
     r = config.map_radius
     xpos = r * np.sin(theta) * np.cos(phi)
     ypos = r * np.sin(theta) * np.sin(phi)
@@ -31,12 +32,18 @@ def lat_to_theta(lat):
 
 
 def lon_to_phi(lon):
-    return np.radians(lon % 360)
+    return np.radians((lon % 360) + 180)
 
 
-def wrap_lat(x):
-    return np.maximum(np.minimum(x, 180 - x), -180 - x)
+def wrap(lat, lon):
+    inds = (lat > 90) | (lat < -90)
+    out_lat = np.maximum(np.minimum(lat, 180 - lat), -180 - lat)
+    out_lon = lon.copy()
+    out_lon[inds] += 180
+    out_lon = ((out_lon + 180) % 360) - 180
+    return out_lat, out_lon
 
 
-def wrap_lon(x):
-    return ((x + 180) % 360) - 180
+def vector_from_heading(h) -> np.ndarray:
+    h = h * np.pi / 180.0
+    return np.array([np.cos(h), np.sin(h)])

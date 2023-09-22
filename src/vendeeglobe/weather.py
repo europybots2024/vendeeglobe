@@ -52,16 +52,19 @@ class Weather:
 
         image[(tseed, yseed, xseed)] = 10000
         smooth = gaussian_filter(image, sigma=sigma, mode="wrap")
+        normed = smooth / smooth.max()
 
-        angle = smooth / smooth.max() * 360.0
+        angle = normed * 360.0
         angle = (angle + 180.0) % 360.0
         angle *= np.pi / 180.0
         # angle = 0 * angle
         self.u = np.cos(angle)
         self.v = np.sin(angle)
 
-        speed = sum(np.gradient(smooth))
-        self.speed = speed / speed.max() * 10.0
+        div = np.abs(np.array(sum(np.gradient(normed))))
+        self.speed = (1.0 - div / div.max()) * 10.0
+        # speed = sum(np.gradient(smooth))
+        # self.speed = speed / speed.max() * 10.0
 
         lat_min = -90
         lat_max = 90

@@ -52,8 +52,18 @@ class Player:
     def get_heading(self) -> float:
         return self.heading
 
+    def get_vector(self) -> np.ndarray:
+        h = self.get_heading() * np.pi / 180.0
+        return np.array([np.cos(h), np.sin(h)])
+
+    def ray_trace(self, f: np.ndarray, dt: float) -> np.ndarray:
+        # vt = self.speed * dt
+        ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
+        return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
+
     def move(self, t: float, dt: float, u, v):
         f = wind_force(self.get_heading(), np.array([u, v]))
+
         lat, lon = wrap(
             lat=np.array([self.latitude + f[1] * dt]),
             lon=np.array([self.longitude + f[0] * dt]),

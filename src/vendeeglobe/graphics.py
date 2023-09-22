@@ -220,6 +220,7 @@ class Graphics:
                     pos=pos, color=tuple(colors[i]), width=4, antialias=True
                 ),
             }
+            self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
     def update_wind_tracers(self, tracer_lat, tracer_lon):

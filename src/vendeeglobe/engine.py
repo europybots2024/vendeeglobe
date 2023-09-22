@@ -53,7 +53,7 @@ class Engine:
         longitudes = np.array([player.longitude for player in self.players.values()])
         u, v, n = weather_map.get_uv(latitudes, longitudes, t)
         for i, player in enumerate(self.players.values()):
-            player.move(t, dt, u[i], v[i])
+            player.move(t, dt, u[i], v[i], n[i])
 
     def update(self):
         t = time.time() - self.start_time

@@ -64,12 +64,18 @@ class Player:
     #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
     #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
 
-    def move(self, t: float, dt: float, u, v, n):
+    def get_path(self, t: float, dt: float, u, v, n):
         f = wind_force(self.get_vector(), np.array([u, v])) * n * dt
 
-        # # Race trace the path
-        # ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
-        # path = (np.array(self.get_position()).reshape((2, 1)) + ray).astype(int)
+        # Race trace the path
+        ray = f.reshape((2, 1)) * np.linspace(0, n, int(n) + 1)
+        path = (np.array(self.get_position()).reshape((2, 1)) + ray).astype(int)
+        print(self.team)
+        print(f, f.shape)
+        print(ray, ray.shape)
+        print(path, path.shape)
+        lat, lon = wrap(lat=path[:, 1], lon=path[:, 0])
+        return lat, lon
 
         lat, lon = wrap(
             lat=np.array([self.latitude + f[1]]),

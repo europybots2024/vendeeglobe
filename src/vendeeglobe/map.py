@@ -34,6 +34,11 @@ class Map:
         self.lon_grid, self.lat_grid = np.meshgrid(self.lon, self.lat)
         print(self.lat_grid.shape, self.lon_grid.shape)
 
+    def get_terrain(self, longitudes, latitudes):
+        ilon = (longitudes / self.dlon).astype(int) + (self.nlon // 2)
+        ilat = (latitudes / self.dlat).astype(int) + (self.nlat // 2)
+        return self.sea_array[ilat, ilon]
+
         # self.array = np.load(
         #     os.path.join(config.resourcedir, f'world{config.map_resolution}.npz')
         # )['world']

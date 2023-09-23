@@ -49,13 +49,18 @@ class Engine:
         )
         self.start_time = time.time()
 
-    def move_players(self, weather_map, t, dt):
+    def move_players(self, weather, t, dt):
         # return
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
-        u, v, n = weather_map.get_uv(latitudes, longitudes, t)
+        u, v, n = weather.get_uv(latitudes, longitudes, t)
         for i, player in enumerate(self.players.values()):
-            player.move(t, dt, u[i], v[i], n[i])
+            lat, lon = player.get_path(t, dt, u[i], v[i], n[i])
+            terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
+            sea_inds = np.where(terrain == 1)[0]
+            if len(sea_inds) > 0:
+                player.latitude = lat[sea_inds[-1]]
+                player.longitude = lon[sea_inds[-1]]
 
     def update(self):
         t = time.time() - self.start_time

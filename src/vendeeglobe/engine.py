@@ -43,8 +43,10 @@ class Engine:
 
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map(width=width, height=height)
-        self.graphics = Graphics(self.map, players=self.players)
         self.weather = Weather(self.map)
+        self.graphics = Graphics(
+            game_map=self.map, weather=self.weather, players=self.players
+        )
         self.start_time = time.time()
 
     def move_players(self, weather_map, t, dt):
@@ -57,11 +59,13 @@ class Engine:
 
     def update(self):
         t = time.time() - self.start_time
-        self.map.update_wind_tracers(self.weather, t=t, dt=0.1)
+        self.weather.update_wind_tracers(t=t, dt=0.1)
         self.move_players(self.weather, t=t, dt=0.1)
         # for team, player in self.players.items():
         #     player.move()
-        self.graphics.update_wind_tracers(self.map.tracer_lat, self.map.tracer_lon)
+        self.graphics.update_wind_tracers(
+            self.weather.tracer_lat, self.weather.tracer_lon
+        )
         self.graphics.update_player_positions(self.players)
 
     def run(self, N=10000):

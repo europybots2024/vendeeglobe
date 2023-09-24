@@ -2,27 +2,19 @@
 
 import uuid
 from itertools import chain
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterator, Sequence, Union, Tuple
 
 import numpy as np
 
 from . import config
-from .utils import wrap
-
-
-def wind_force(ship_vector, wind):
-    # ship_vec = vector_from_heading(ship_heading)
-    norm = np.linalg.norm(wind)
-    vsum = ship_vector + wind / norm
-    vsum /= np.linalg.norm(vsum)
-    mag = np.abs(np.dot(ship_vector, vsum))
-    return mag * norm * vsum
+from .utils import wind_force, wrap
 
 
 class Player:
     def __init__(
         self,
         # ai: Any,
+        bot: Any,
         team: str,
         # game_map: np.ndarray,
         score: int,
@@ -31,6 +23,7 @@ class Player:
         # high_contrast: bool = False,
     ):
         # self.ai = ai
+        self.bot = bot
         # self.ai.team = team
         self.team = team
         self.score = score
@@ -40,14 +33,21 @@ class Player:
         self.longitude = config.start['longitude']
         self.color = config.colors[number]
 
-    def execute_ai(self, t: float, dt: float, info: dict, safe: bool = False):
+    def execute_bot(self, t: float, dt: float, info: dict, safe: bool = False):
+        control = {}
         if safe:
             try:
-                self.ai.run(t=t, dt=dt, info=info, game_map=self.game_map.array)
+                control = self.bot.run(t=t, dt=dt, info=info)
             except:
                 pass
         else:
-            self.ai.run(t=t, dt=dt, info=info, game_map=self.game_map.array)
+            control = self.bot.run(t=t, dt=dt, info=info)
+        if 'goto' in control:
+            self.goto(**control['goto'])
+        elif 'heading' in control:
+            self.set_heading(control['heading'])
+        elif 'vector' in control:
+            self.set_vector(control['vector'])
 
     def get_position(self) -> np.ndarray:
         return np.array([self.longitude, self.latitude])
@@ -55,9 +55,37 @@ class Player:
     def get_heading(self) -> float:
         return self.heading
 
+    def set_heading(self, angle: float):
+        """
+        Set the heading angle (in degrees) of the vehicle.
+        East is 0, North is 90, West is 180, South is 270.
+        """
+        self.heading = angle
+
     def get_vector(self) -> np.ndarray:
         h = self.get_heading() * np.pi / 180.0
         return np.array([np.cos(h), np.sin(h)])
+
+    def set_vector(self, vec: Union[np.ndarray, Sequence[float]]):
+        """
+        Set the vehicle's heading according to the given vector [vx, vy].
+        """
+        vec = np.asarray(vec) / np.linalg.norm(vec)
+        h = np.arccos(np.dot(vec, [1, 0])) * 180 / np.pi
+        if vec[1] < 0:
+            h = 360 - h
+        self.set_heading(h)
+
+    def goto(self, longitude: float, latitude: float):
+        """ """
+        # if not shortest_path:
+        self.set_vector([longitude - self.longitude, latitude - self.latitude])
+        return
+        # d, xl, yl = tls.periodic_distances(self.x, self.y, x, y)
+        # ind = np.argmin(d)
+        # self.set_vector(
+        #     [xl[ind] - (self.x + config.nx), yl[ind] - (self.y + config.ny)]
+        # )
 
     # def ray_trace(self, f: np.ndarray, dt: float) -> np.ndarray:
     #     # vt = self.speed * dt
@@ -77,10 +105,10 @@ class Player:
         lat, lon = wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon
 
-        lat, lon = wrap(
-            lat=np.array([self.latitude + f[1]]),
-            lon=np.array([self.longitude + f[0]]),
-        )
-        self.latitude = lat[0]
-        self.longitude = lon[0]
-        return
+        # lat, lon = wrap(
+        #     lat=np.array([self.latitude + f[1]]),
+        #     lon=np.array([self.longitude + f[0]]),
+        # )
+        # self.latitude = lat[0]
+        # self.longitude = lon[0]
+        # return

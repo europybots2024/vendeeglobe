@@ -2,12 +2,14 @@
 
 import vendeeglobe as vg
 
+from template_bot import Bot
+
 names = [
     'Neil',
-    'Alex',
-    'Kevin',
+    # 'Alex',
+    # 'Kevin',
 ]
 
-players = {name: None for name in names}
+players = {name: Bot(team=name) for name in names}
 
 vg.play(players=players, width=900, height=600)

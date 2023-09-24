@@ -47,3 +47,12 @@ def wrap(lat, lon):
 # def vector_from_heading(h) -> np.ndarray:
 #     h = h * np.pi / 180.0
 #     return np.array([np.cos(h), np.sin(h)])
+
+
+def wind_force(ship_vector, wind):
+    # ship_vec = vector_from_heading(ship_heading)
+    norm = np.linalg.norm(wind)
+    vsum = ship_vector + wind / norm
+    vsum /= np.linalg.norm(vsum)
+    mag = np.abs(np.dot(ship_vector, vsum))
+    return mag * norm * vsum

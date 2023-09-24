@@ -35,11 +35,13 @@ class Engine:
 
         self.time_limit = time_limit
         self.start_time = None
+        self.safe = safe
 
         self.players = {
-            name: Player(team=name, score=0, number=i)
-            for i, (name, ai) in enumerate(players.items())
+            name: Player(team=name, bot=bot, score=0, number=i)
+            for i, (name, bot) in enumerate(players.items())
         }
+        print(self.players)
 
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map(width=width, height=height)
@@ -48,6 +50,17 @@ class Engine:
             game_map=self.map, weather=self.weather, players=self.players
         )
         self.start_time = time.time()
+
+    def get_info(self, player):
+        return {
+            "longitude": player.longitude,
+            "latitude": player.latitude,
+            "heading": player.heading,
+        }
+
+    def call_player_bots(self, t, dt):
+        for player in self.players.values():
+            player.execute_bot(t=t, dt=dt, info=self.get_info(player), safe=self.safe)
 
     def move_players(self, weather, t, dt):
         # return
@@ -64,8 +77,10 @@ class Engine:
 
     def update(self):
         t = time.time() - self.start_time
-        self.weather.update_wind_tracers(t=t, dt=0.1)
-        self.move_players(self.weather, t=t, dt=0.1)
+        dt = 0.1
+        self.weather.update_wind_tracers(t=t, dt=dt)
+        self.call_player_bots(t=t, dt=dt)
+        self.move_players(self.weather, t=t, dt=dt)
         # for team, player in self.players.items():
         #     player.move()
         self.graphics.update_wind_tracers(

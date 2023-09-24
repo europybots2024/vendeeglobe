@@ -24,6 +24,7 @@ class Config:
         self.resourcedir = Path(__file__).parent / "resources"
         self.ntracers = 5000
         self.tracer_lifetime = 50
+        self.bot_polling_interval = 1.0
         self.start = {'longitude': -4.773949, 'latitude': 48.333422}
         self.checkpoints = [
             {'number': 1, 'latitude': 2.806318, 'longitude': -168.943864, 'size': 15.0},

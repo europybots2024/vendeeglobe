@@ -4,6 +4,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 from . import config
+from .utils import wrap
 
 
 # def make_fluctuations_map(nx, ny, nt):
@@ -52,16 +53,19 @@ class Weather:
 
         image[(tseed, yseed, xseed)] = 10000
         smooth = gaussian_filter(image, sigma=sigma, mode="wrap")
+        normed = smooth / smooth.max()
 
-        angle = smooth / smooth.max() * 360.0
+        angle = normed * 360.0
         angle = (angle + 180.0) % 360.0
         angle *= np.pi / 180.0
         # angle = 0 * angle
         self.u = np.cos(angle)
         self.v = np.sin(angle)
 
-        speed = sum(np.gradient(smooth))
-        self.speed = speed / speed.max() * 10.0
+        div = np.abs(np.array(sum(np.gradient(normed))))
+        self.speed = (1.0 - div / div.max()) * 1.0
+        # speed = sum(np.gradient(smooth))
+        # self.speed = speed / speed.max() * 10.0
 
         lat_min = -90
         lat_max = 90
@@ -70,9 +74,15 @@ class Weather:
         lon_max = 180
         self.du = (lon_max - lon_min) / self.nx
 
+        size = (config.tracer_lifetime, config.ntracers)
+        self.tracer_lat = np.random.uniform(-90.0, 90.0, size=size)
+        self.tracer_lon = np.random.uniform(-180, 180, size=size)
+        self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
+        self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
+
     def get_uv(self, lat, lon, t):
-        iv = (lat / self.dv).astype(int) + (self.ny // 2)
-        iu = (lon / self.du).astype(int) + (self.nx // 2)
+        iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
+        iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
         it = int(t % self.nt)
 
         u = self.u[it, iv, iu]
@@ -83,3 +93,30 @@ class Weather:
         # iu = (self.u / self.du).astype(int) + (self.nx // 2)
         # iv = (self.v / self.dv).astype(int) + (self.ny // 2)
         return u, v, n
+
+    def update_wind_tracers(self, t, dt):
+        # return
+        # lat_inds = (self.tracer_lat / self.dlat).astype(int) + (self.nlat // 2)
+        # lon_inds = (self.tracer_lon / self.dlon).astype(int) + (self.nlon // 2)
+        # # print('before')
+        # # print(lat_inds.max(), np.argmax(lat_inds))
+        # # print(lon_inds.max(), np.argmax(lon_inds))
+        # incr_lon = weather_map.u[lat_inds, lon_inds] * dt
+        # incr_lat = weather_map.v[lat_inds, lon_inds] * dt
+        self.tracer_lat = np.roll(self.tracer_lat, 1, axis=0)
+        self.tracer_lon = np.roll(self.tracer_lon, 1, axis=0)
+
+        u, v, n = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
+        incr_lon = u * dt
+        incr_lat = v * dt
+
+        # print('after')
+        # print(lat_inds.max(), np.argmax(lat_inds))
+        # print(lon_inds.max(), np.argmax(lon_inds))
+        # self.tracer_lat = utils.wrap_lat(self.tracer_lat + incr_lat)
+        self.tracer_lat[0, :], self.tracer_lon[0, :] = wrap(
+            lat=self.tracer_lat[1, :] + incr_lat, lon=self.tracer_lon[1, :] + incr_lon
+        )
+        # self.tracers.geometry.attributes['position'].array = utils.to_xyz(
+        #     utils.lon_to_phi(self.tracer_lon), utils.lat_to_theta(self.tracer_lat)
+        # )

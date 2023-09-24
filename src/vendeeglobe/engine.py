@@ -43,25 +43,34 @@ class Engine:
 
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map(width=width, height=height)
-        self.graphics = Graphics(self.map, players=self.players)
         self.weather = Weather(self.map)
+        self.graphics = Graphics(
+            game_map=self.map, weather=self.weather, players=self.players
+        )
         self.start_time = time.time()
 
-    def move_players(self, weather_map, t, dt):
+    def move_players(self, weather, t, dt):
         # return
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
-        u, v, n = weather_map.get_uv(latitudes, longitudes, t)
+        u, v, n = weather.get_uv(latitudes, longitudes, t)
         for i, player in enumerate(self.players.values()):
-            player.move(t, dt, u[i], v[i])
+            lat, lon = player.get_path(t, dt, u[i], v[i], n[i])
+            terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
+            sea_inds = np.where(terrain == 1)[0]
+            if len(sea_inds) > 0:
+                player.latitude = lat[sea_inds[-1]]
+                player.longitude = lon[sea_inds[-1]]
 
     def update(self):
         t = time.time() - self.start_time
-        self.map.update_wind_tracers(self.weather, t=t, dt=0.1)
+        self.weather.update_wind_tracers(t=t, dt=0.1)
         self.move_players(self.weather, t=t, dt=0.1)
         # for team, player in self.players.items():
         #     player.move()
-        self.graphics.update_wind_tracers(self.map.tracer_lat, self.map.tracer_lon)
+        self.graphics.update_wind_tracers(
+            self.weather.tracer_lat, self.weather.tracer_lon
+        )
         self.graphics.update_player_positions(self.players)
 
     def run(self, N=10000):

@@ -137,8 +137,8 @@ placed as if they slice through the volume.
 
 
 class Graphics:
-    def __init__(self, game_map, players):
-        self.map = game_map
+    def __init__(self, game_map, weather, players):
+        # self.map = game_map
 
         # app = pg.mkQApp("GLImageItem Example")
         self.window = gl.GLViewWidget()
@@ -165,7 +165,7 @@ class Graphics:
 
         # # np.savez('world.npz', world=a)
         # # a = np.load('world.npz')['world']
-        world = np.fliplr(np.transpose(self.map.array, axes=[1, 0, 2]))
+        world = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
 
         self.sphere = GLTexturedSphereItem(world)
         # print('Graphics 7')
@@ -179,12 +179,12 @@ class Graphics:
 
         # Add tracers
         x, y, z = ut.to_xyz(
-            ut.lon_to_phi(self.map.tracer_lon.ravel()),
-            ut.lat_to_theta(self.map.tracer_lat.ravel()),
+            ut.lon_to_phi(weather.tracer_lon.ravel()),
+            ut.lat_to_theta(weather.tracer_lat.ravel()),
         )
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
-            color=self.map.tracer_colors.reshape((-1, 4)),
+            color=weather.tracer_colors.reshape((-1, 4)),
             size=4,
             pxMode=True,
         )
@@ -220,6 +220,7 @@ class Graphics:
                     pos=pos, color=tuple(colors[i]), width=4, antialias=True
                 ),
             }
+            self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
     def update_wind_tracers(self, tracer_lat, tracer_lon):

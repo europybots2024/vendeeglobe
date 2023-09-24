@@ -44,6 +44,6 @@ def wrap(lat, lon):
     return out_lat, out_lon
 
 
-def vector_from_heading(h) -> np.ndarray:
-    h = h * np.pi / 180.0
-    return np.array([np.cos(h), np.sin(h)])
+# def vector_from_heading(h) -> np.ndarray:
+#     h = h * np.pi / 180.0
+#     return np.array([np.cos(h), np.sin(h)])

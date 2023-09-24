@@ -55,4 +55,5 @@ def wind_force(ship_vector, wind):
     vsum = ship_vector + wind / norm
     vsum /= np.linalg.norm(vsum)
     mag = np.abs(np.dot(ship_vector, vsum))
-    return mag * norm * vsum
+    return mag * norm * ship_vector
+    # return mag * norm * vsum

@@ -21,6 +21,7 @@ class Player:
         number: int = 0,
         # base_locations: np.ndarray,
         # high_contrast: bool = False,
+        start: dict = None,
     ):
         # self.ai = ai
         self.bot = bot
@@ -29,8 +30,12 @@ class Player:
         self.score = score
         self.heading = 180.0 + 45.0 - (45 * number)
         self.speed = 0.0
-        self.latitude = config.start['latitude']
-        self.longitude = config.start['longitude']
+        if start is None:
+            self.latitude = config.start['latitude']
+            self.longitude = config.start['longitude']
+        else:
+            self.latitude = start['latitude']
+            self.longitude = start['longitude']
         self.color = config.colors[number]
 
     def execute_bot(self, t: float, dt: float, info: dict, safe: bool = False):
@@ -78,8 +83,28 @@ class Player:
 
     def goto(self, longitude: float, latitude: float):
         """ """
-        # if not shortest_path:
-        self.set_vector([longitude - self.longitude, latitude - self.latitude])
+        # self.set_vector([longitude - self.longitude, latitude - self.latitude])
+
+        lon1 = np.radians(self.longitude)
+        lat1 = np.radians(self.latitude)
+        lon2 = np.radians(longitude)
+        lat2 = np.radians(latitude)
+
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        # Use the Haversine formula to calculate the distance:
+
+        # a = sin²(dlat/2) + cos(lat1) * cos(lat2) * sin²(dlon/2)
+        # c = 2 * atan2(√a, √(1-a))
+        # distance = R * c
+        # Where:
+
+        # R is the radius of the Earth (approximately 6,371 kilometers or 3,959 miles).
+        # Calculate the initial bearing (direction):
+        y = np.sin(dlon) * np.cos(lat2)
+        x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
+        initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
+        self.set_heading((np.degrees(initial_bearing) + 360) % 360)
         return
         # d, xl, yl = tls.periodic_distances(self.x, self.y, x, y)
         # ind = np.argmin(d)

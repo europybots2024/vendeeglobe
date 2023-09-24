@@ -22,13 +22,12 @@ class Engine:
         self,
         players: dict,
         safe=False,
-        width=1200,
-        height=900,
         test=True,
         fps=1,
         time_limit=300,
         seed=None,
         current_round=0,
+        start=None,
     ):
         np.random.seed(seed)
         config.setup(players=players)
@@ -37,14 +36,17 @@ class Engine:
         self.start_time = None
         self.safe = safe
 
+        if not test:
+            start = None
+
         self.players = {
-            name: Player(team=name, bot=bot, score=0, number=i)
+            name: Player(team=name, bot=bot, score=0, number=i, start=start)
             for i, (name, bot) in enumerate(players.items())
         }
         print(self.players)
 
         self.app = pg.mkQApp("GLImageItem Example")
-        self.map = Map(width=width, height=height)
+        self.map = Map()
         self.weather = Weather(self.map)
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players

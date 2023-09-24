@@ -12,7 +12,7 @@ from . import utils
 
 
 class Map:
-    def __init__(self, width, height):
+    def __init__(self):
         im = Image.open(os.path.join(config.resourcedir, config.map_file))
         self.array = np.array(im.convert('RGBA'))
         img16 = self.array.astype('int16')

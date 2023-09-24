@@ -11,5 +11,6 @@ names = [
 ]
 
 players = {name: Bot(team=name) for name in names}
-
-vg.play(players=players, width=900, height=600)
+start = {'longitude': -68.004373, 'latitude': 18.180470}
+start = None
+vg.play(players=players, start=start)

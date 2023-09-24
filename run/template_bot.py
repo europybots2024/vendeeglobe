@@ -16,11 +16,13 @@ class Bot:
     def __init__(self, team=CREATOR):
         self.team = team  # Mandatory attribute
         self.course = [
-            Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=10),
+            Checkpoint(
+                longitude=-45.5481686, latitude=39.0722068, radius=10, reached=False
+            ),
             Checkpoint(longitude=-68.004373, latitude=18.180470, radius=0.5),
-            Checkpoint(longitude=-80.17085, latitude=9.4875, radius=0.5),
+            Checkpoint(longitude=-80.3, latitude=9.4875, radius=0.5),
             Checkpoint(longitude=-79.3977636, latitude=8.6923598, radius=0.5),
-            Checkpoint(longitude=-79.6065038, latitude=6.6673413, radius=0.5),
+            Checkpoint(longitude=-79.6065038, latitude=5.6673413, radius=0.5),
             Checkpoint(longitude=-161.3416118, latitude=10.6814994, radius=0.5),
         ]
 

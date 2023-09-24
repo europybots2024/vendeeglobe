@@ -14,8 +14,8 @@ class Map:
         im = Image.open(os.path.join(config.resourcedir, config.map_file))
         self.array = np.array(im.convert('RGBA'))
         img16 = self.array.astype('int16')
-        self.sea_array = np.where(
-            img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0
+        self.sea_array = np.flipud(
+            np.where(img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0)
         )
 
         self.nlat, self.nlon, _ = self.array.shape
@@ -35,8 +35,8 @@ class Map:
         print(self.lat_grid.shape, self.lon_grid.shape)
 
     def get_terrain(self, longitudes, latitudes):
-        ilon = (longitudes / self.dlon).astype(int) + (self.nlon // 2)
-        ilat = (latitudes / self.dlat).astype(int) + (self.nlat // 2)
+        ilon = ((longitudes + 180.0) / self.dlon).astype(int)  # + (self.nlon // 2)
+        ilat = ((latitudes + 90.0) / self.dlat).astype(int)  # + (self.nlat // 2)
         return self.sea_array[ilat, ilon]
 
         # self.array = np.load(

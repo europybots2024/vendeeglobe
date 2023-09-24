@@ -81,8 +81,8 @@ class Weather:
         self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
     def get_uv(self, lat, lon, t):
-        iv = (lat / self.dv).astype(int) + (self.ny // 2)
-        iu = (lon / self.du).astype(int) + (self.nx // 2)
+        iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
+        iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
         it = int(t % self.nt)
 
         u = self.u[it, iv, iu]

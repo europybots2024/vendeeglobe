@@ -71,3 +71,20 @@ def lat_degs_from_length(length):
     Given a length, compute how many degrees of latitude it represents.
     """
     return length / (2.0 * np.pi * config.map_radius) * 360
+
+
+def distance(loc1, loc2) -> float:
+    """ """
+
+    lon1 = np.radians(loc1[0])
+    lat1 = np.radians(loc1[1])
+    lon2 = np.radians(loc2[0])
+    lat2 = np.radians(loc2[1])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    # Use the Haversine formula to calculate the distance:
+
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    return config.map_radius * c

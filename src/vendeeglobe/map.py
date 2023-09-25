@@ -11,6 +11,14 @@ from . import config
 from . import utils
 
 
+@dataclass
+class Checkpoint:
+    latitude: float
+    longitude: float
+    radius: float
+    reached: bool = False
+
+
 class Map:
     def __init__(self):
         im = Image.open(os.path.join(config.resourcedir, config.map_file))
@@ -71,11 +79,3 @@ class Map:
 
         # # self.tracer_lon = np.random.uniform(-10, 10, size=config.ntracers)
         # # self.tracer_lat = np.zeros_like(self.tracer_lon)
-
-
-@dataclass
-class Checkpoint:
-    latitude: float
-    longitude: float
-    radius: float
-    reached: bool = False

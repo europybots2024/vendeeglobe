@@ -14,6 +14,7 @@ from . import config
 from .graphics import Graphics
 from .map import Map
 from .player import Player
+from .utils import distance
 from .weather import Weather
 
 
@@ -76,6 +77,19 @@ class Engine:
             if len(sea_inds) > 0:
                 player.latitude = lat[sea_inds[-1]]
                 player.longitude = lon[sea_inds[-1]]
+            for checkpoint in self.map.checkpoints:
+                if not checkpoint.reached:
+                    d = distance()
+                    # if utl.check_distance(
+                    #     player.latitude,
+                    #     player.longitude,
+                    #     checkpoint.latitude,
+                    #     checkpoint.longitude,
+                    #     checkpoint.radius,
+                    # ):
+                    #     checkpoint.reached = True
+                    #     player.score += 1
+                    #     print(f"{player.team} reached {checkpoint}")
 
     def update(self):
         t = time.time() - self.start_time

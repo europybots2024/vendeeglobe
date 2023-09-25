@@ -7,6 +7,7 @@ from typing import Any, Iterator, Sequence, Union, Tuple
 import numpy as np
 
 from . import config
+from .map import Checkpoint
 from . import utils as utl
 
 
@@ -37,6 +38,9 @@ class Player:
             self.latitude = start['latitude']
             self.longitude = start['longitude']
         self.color = config.colors[number]
+        self.checkpoints = [
+            Checkpoint(**checkpoint) for checkpoint in config.checkpoints
+        ]
 
     def execute_bot(self, t: float, dt: float, info: dict, safe: bool = False):
         control = {}
@@ -112,10 +116,28 @@ class Player:
         #     [xl[ind] - (self.x + config.nx), yl[ind] - (self.y + config.ny)]
         # )
 
-    # def ray_trace(self, f: np.ndarray, dt: float) -> np.ndarray:
-    #     # vt = self.speed * dt
-    #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
-    #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
+    def get_distance(self, longitude: float, latitude: float) -> float:
+        """ """
+        return utl.distance(self.get_position(), [longitude, latitude])
+
+    #     lon1 = np.radians(self.longitude)
+    #     lat1 = np.radians(self.latitude)
+    #     lon2 = np.radians(longitude)
+    #     lat2 = np.radians(latitude)
+
+    #     dlon = lon2 - lon1
+    #     dlat = lat2 - lat1
+    #     # Use the Haversine formula to calculate the distance:
+
+    #     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    #     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    #     return config.map_radius * c
+    #     # Where:
+
+    # # def ray_trace(self, f: np.ndarray, dt: float) -> np.ndarray:
+    # #     # vt = self.speed * dt
+    # #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
+    # #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
 
     def get_path(self, t: float, dt: float, u, v, n):
         pos = self.get_position()

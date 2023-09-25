@@ -63,7 +63,7 @@ class Weather:
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        self.speed = (1.0 - div / div.max()) * 1.0
+        self.speed = (1.0 - div / div.max()) * 10.0
         # speed = sum(np.gradient(smooth))
         # self.speed = speed / speed.max() * 10.0
 

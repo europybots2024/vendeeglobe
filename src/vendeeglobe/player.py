@@ -7,7 +7,7 @@ from typing import Any, Iterator, Sequence, Union, Tuple
 import numpy as np
 
 from . import config
-from .utils import wind_force, wrap
+from . import utils as utl
 
 
 class Player:
@@ -118,16 +118,20 @@ class Player:
     #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
 
     def get_path(self, t: float, dt: float, u, v, n):
-        f = wind_force(self.get_vector(), np.array([u, v])) * n * dt
+        pos = self.get_position()
+        f = utl.wind_force(self.get_vector(), np.array([u, v])) * n * dt
+        dist = np.array(
+            [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
+        )
 
         # Race trace the path
-        ray = f.reshape((2, 1)) * np.linspace(0, n, max(20, int(n) + 1))
+        ray = dist.reshape((2, 1)) * np.linspace(0, n, max(20, int(n) + 1))
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
         # print(self.team)
         # print(f, f.shape)
         # print(ray, ray.shape)
         # print(path, path.shape)
-        lat, lon = wrap(lat=path[1, :], lon=path[0, :])
+        lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon
 
         # lat, lon = wrap(

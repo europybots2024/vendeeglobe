@@ -57,3 +57,17 @@ def wind_force(ship_vector, wind):
     mag = np.abs(np.dot(ship_vector, vsum))
     return mag * norm * ship_vector
     # return mag * norm * vsum
+
+
+def lon_degs_from_length(length, lat):
+    """
+    Given a length, compute how many degrees of longitude it represents at a given latitude.
+    """
+    return length / ((np.pi * config.map_radius * np.cos(np.radians(lat))) / 180)
+
+
+def lat_degs_from_length(length):
+    """
+    Given a length, compute how many degrees of latitude it represents.
+    """
+    return length / (2.0 * np.pi * config.map_radius) * 360

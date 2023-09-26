@@ -27,8 +27,8 @@ class Config:
         self.bot_polling_interval = 1.0
         self.start = {'longitude': -4.773949, 'latitude': 48.333422}
         self.checkpoints = [
-            {'latitude': 2.806318, 'longitude': -168.943864, 'radius': 15.0},
-            {'latitude': -15.668984, 'longitude': 77.674694, 'radius': 15.0},
+            {'latitude': 2.806318, 'longitude': -168.943864, 'radius': 1000.0},
+            {'latitude': -15.668984, 'longitude': 77.674694, 'radius': 1000.0},
         ]
 
     def setup(self, players):

@@ -73,13 +73,13 @@ def lat_degs_from_length(length):
     return length / (2.0 * np.pi * config.map_radius) * 360
 
 
-def distance(loc1, loc2) -> float:
+def distance_on_surface(origin, to) -> float:
     """ """
 
-    lon1 = np.radians(loc1[0])
-    lat1 = np.radians(loc1[1])
-    lon2 = np.radians(loc2[0])
-    lat2 = np.radians(loc2[1])
+    lon1 = np.radians(origin[0])
+    lat1 = np.radians(origin[1])
+    lon2 = np.radians(to[0])
+    lat2 = np.radians(to[1])
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1

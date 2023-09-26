@@ -177,6 +177,28 @@ class Graphics:
         # self.tracer_lat = np.random.uniform(-90.0, 90.0, size=config.ntracers)
         # self.tracer_lon = np.random.uniform(-180, 180, size=config.ntracers)
 
+        # Add checkpoints
+        for ch in list(players.values())[0].checkpoints:
+            # x, y, z = ut.to_xyz(
+            #     ut.lon_to_phi(ch.longitude),
+            #     ut.lat_to_theta(ch.latitude),
+            # )
+            md = gl.MeshData.cylinder(
+                rows=10,
+                cols=20,
+                radius=[ch.radius, ch.radius],
+                length=0.99 * config.map_radius,
+            )
+            colors = np.zeros((md.faceCount(), 4), dtype=float)
+            colors[:, 0] = 0.8
+            md.setFaceColors(colors)
+            mesh = gl.GLMeshItem(
+                meshdata=md, smooth=True, drawEdges=True, edgeColor=(0.8, 0, 0, 1)
+            )
+            mesh.rotate(np.degrees(ut.lat_to_theta(ch.latitude)), 0, 1, 0)
+            mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
+            self.window.addItem(mesh)
+
         # Add tracers
         x, y, z = ut.to_xyz(
             ut.lon_to_phi(weather.tracer_lon.ravel()),

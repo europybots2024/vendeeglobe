@@ -189,11 +189,14 @@ class Graphics:
                 radius=[ch.radius, ch.radius],
                 length=0.99 * config.map_radius,
             )
-            colors = np.zeros((md.faceCount(), 4), dtype=float)
-            colors[:, 0] = 0.8
+            color = (0.2, 0.2, 0.2, 1)
+            colors = np.tile(color, md.faceCount()).reshape((-1, 4))
             md.setFaceColors(colors)
             mesh = gl.GLMeshItem(
-                meshdata=md, smooth=True, drawEdges=True, edgeColor=(0.8, 0, 0, 1)
+                meshdata=md,
+                smooth=True,
+                drawEdges=True,
+                edgeColor=color,
             )
             mesh.rotate(np.degrees(ut.lat_to_theta(ch.latitude)), 0, 1, 0)
             mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)

@@ -25,7 +25,7 @@ class Engine:
         safe=False,
         test=True,
         fps=1,
-        time_limit=300,
+        time_limit=8 * 60,
         seed=None,
         current_round=0,
         start=None,
@@ -77,6 +77,42 @@ class Engine:
                 f.write(f"{name}: {p.global_score}\n")
         for i, (name, score) in enumerate(sorted_scores):
             print(f"{i + 1}. {name}: {score}")
+
+    def collect_scores(self):
+        player_groups = {0: [], 1: [], 2: []}
+        for player in self.players.values():
+            n = len([ch for ch in player.checkpoints if ch.reached])
+            player_groups[n].append(player)
+
+        group_players = []
+        for player in player_groups[2]:
+            if player.score is None:
+                dist = distance_on_surface(
+                    origin=[player.longitude, player.latitude],
+                    to=[config.start['longitude'], config.start['latitude']],
+                )
+                group_players.append((dist, player))
+        group_players.sort()
+        for _, player in group_players:
+            if config.scores:
+                player.score = config.scores.pop(0)
+                self.scores[player.team] += player.score
+                # print(f"{player.team} finished!")
+
+        # group_players = []
+        # for player in player_groups[1]:
+        #     if player.score is None:
+        #         dist = distance_on_surface(
+        #             origin=[player.longitude, player.latitude],
+        #             to=[config.start['longitude'], config.start['latitude']],
+        #         )
+        #         group_players.append((dist, player))
+        # group_players.sort()
+        # for _, player in group_players:
+        #     if config.scores:
+        #         player.score = config.scores.pop(0)
+        #         self.scores[player.team] += player.score
+        #         # print(f"{player.team} finished!")
 
     def get_info(self, player):
         return {
@@ -131,7 +167,9 @@ class Engine:
                 if player.team not in self.arrived_players:
                     self.arrived_players.append(player.team)
                     print(f"{player.team} finished!")
-                    self.scores[player.team] += config.scores[len(self.arrived_players)]
+                    s = config.scores.pop(0)
+                    self.scores[player.team] += s
+                    player.score = s
                     # player.global_score += 1
                     # self.scores[player.team] += 1
                     # print(self.scores)
@@ -141,6 +179,10 @@ class Engine:
 
     def update(self):
         t = time.time() - self.start_time
+        if t > self.time_limit:
+            self.collect_scores()
+            self.write_scores()
+            exit()
         dt = 0.1
         self.weather.update_wind_tracers(t=t, dt=dt)
         self.call_player_bots(t=t, dt=dt)

@@ -18,7 +18,7 @@ class Player:
         bot: Any,
         team: str,
         # game_map: np.ndarray,
-        score: int,
+        # score: int,
         number: int = 0,
         # base_locations: np.ndarray,
         # high_contrast: bool = False,
@@ -28,7 +28,7 @@ class Player:
         self.bot = bot
         # self.ai.team = team
         self.team = team
-        self.score = score
+        self.score = None
         self.heading = 180.0 + 45.0 - (45 * number)
         self.speed = 0.0
         if start is None:

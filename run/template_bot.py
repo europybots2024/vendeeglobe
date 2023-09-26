@@ -27,8 +27,14 @@ class Bot:
             Checkpoint(longitude=146.737149, latitude=-45.321510, radius=10),
             Checkpoint(longitude=114.565909, latitude=-36.310652, radius=10),
             Checkpoint(longitude=77.674694, latitude=-15.668984, radius=10),
+            Checkpoint(longitude=51.301983, latitude=13.007233, radius=10),
+            Checkpoint(longitude=43.413064, latitude=12.601511, radius=5),
+            Checkpoint(longitude=34.008390, latitude=27.560352, radius=5),
+            Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
+            Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
+            Checkpoint(longitude=32.251133, latitude=31.784320, radius=5),
         ]
-        for ch in self.course[:5]:
+        for ch in self.course[:10]:
             ch.reached = True
 
     def run(self, t: float, dt: float, info: dict):

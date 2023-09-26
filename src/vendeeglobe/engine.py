@@ -46,6 +46,7 @@ class Engine:
         }
         print(self.players)
 
+        self.scores = self.read_scores(players=players, test=test)
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map()
         self.weather = Weather(self.map)
@@ -53,6 +54,29 @@ class Engine:
             game_map=self.map, weather=self.weather, players=self.players
         )
         self.start_time = time.time()
+        self.arrived_players = []
+
+    def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
+        scores = {}
+        fname = "scores.txt"
+        if os.path.exists(fname) and (not test):
+            with open(fname, "r") as f:
+                contents = f.readlines()
+            for line in contents:
+                name, score = line.split(":")
+                scores[name] = int(score.strip())
+        else:
+            scores = {p: 0 for p in players}
+        print("Scores:", scores)
+        return scores
+
+    def write_scores(self):
+        fname = "scores.txt"
+        with open(fname, "w") as f:
+            for name, p in self.players.items():
+                f.write(f"{name}: {p.global_score}\n")
+        for i, (name, score) in enumerate(sorted_scores):
+            print(f"{i + 1}. {name}: {score}")
 
     def get_info(self, player):
         return {
@@ -97,6 +121,23 @@ class Engine:
                     #     checkpoint.reached = True
                     #     player.score += 1
                     #     print(f"{player.team} reached {checkpoint}")
+            dist_to_finish = distance_on_surface(
+                origin=[player.longitude, player.latitude],
+                to=[config.start['longitude'], config.start['latitude']],
+            )
+            if dist_to_finish < config.start["radius"] and all(
+                ch.reached for ch in player.checkpoints
+            ):
+                if player.team not in self.arrived_players:
+                    self.arrived_players.append(player.team)
+                    print(f"{player.team} finished!")
+                    self.scores[player.team] += config.scores[len(self.arrived_players)]
+                    # player.global_score += 1
+                    # self.scores[player.team] += 1
+                    # print(self.scores)
+                    # if len(self.arrived_players) == len(self.players):
+                    #     self.write_scores()
+                    #     exit()
 
     def update(self):
         t = time.time() - self.start_time

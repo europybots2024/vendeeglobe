@@ -84,6 +84,9 @@ class Weather:
         self.tracer_cmap = mpl.colormaps['Reds']
         self.norm = mpl.colors.Normalize()
 
+        self.number_of_new_tracers = 5
+        self.new_tracer_counter = 0
+
     def get_uv(self, lat, lon, t):
         iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
         iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
@@ -125,6 +128,17 @@ class Weather:
         self.tracer_lat[0, :], self.tracer_lon[0, :] = wrap(
             lat=self.tracer_lat[1, :] + incr_lat, lon=self.tracer_lon[1, :] + incr_lon
         )
+
+        # Randomly replace tracers
+        new_lat = np.random.uniform(-90.0, 90.0, size=(self.number_of_new_tracers,))
+        new_lon = np.random.uniform(-180, 180, size=(self.number_of_new_tracers,))
+        istart = self.new_tracer_counter
+        iend = self.new_tracer_counter + self.number_of_new_tracers
+        self.tracer_lat[0, istart:iend] = new_lat
+        self.tracer_lon[0, istart:iend] = new_lon
+        self.new_tracer_counter = (
+            self.new_tracer_counter + self.number_of_new_tracers
+        ) % config.ntracers
 
         # colors = self.tracer_cmap(self.norm(n))
         # self.tracer_colors = np.roll(self.tracer_colors, 1, axis=0)

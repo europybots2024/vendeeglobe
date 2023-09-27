@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import matplotlib as mpl
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
@@ -80,6 +81,9 @@ class Weather:
         self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
         self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
+        self.tracer_cmap = mpl.colormaps['Reds']
+        self.norm = mpl.colors.Normalize()
+
     def get_uv(self, lat, lon, t):
         iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
         iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
@@ -110,6 +114,10 @@ class Weather:
         incr_lon = u * dt
         incr_lat = v * dt
 
+        # print(self.tracer_lat[1, :].shape, n.shape)
+
+        # print(colors.shape)
+
         # print('after')
         # print(lat_inds.max(), np.argmax(lat_inds))
         # print(lon_inds.max(), np.argmax(lon_inds))
@@ -117,6 +125,11 @@ class Weather:
         self.tracer_lat[0, :], self.tracer_lon[0, :] = wrap(
             lat=self.tracer_lat[1, :] + incr_lat, lon=self.tracer_lon[1, :] + incr_lon
         )
-        # self.tracers.geometry.attributes['position'].array = utils.to_xyz(
-        #     utils.lon_to_phi(self.tracer_lon), utils.lat_to_theta(self.tracer_lat)
-        # )
+
+        # colors = self.tracer_cmap(self.norm(n))
+        # self.tracer_colors = np.roll(self.tracer_colors, 1, axis=0)
+        # self.tracer_colors[0, :, :3] = colors[:, :3]
+        # print(self.tracer_colors.shape)
+        # # self.tracers.geometry.attributes['position'].array = utils.to_xyz(
+        # #     utils.lon_to_phi(self.tracer_lon), utils.lat_to_theta(self.tracer_lat)
+        # # )

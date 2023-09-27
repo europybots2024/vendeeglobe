@@ -6,6 +6,8 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
+from pyqtgraph.Qt import QtWidgets
+
 from . import config
 from . import utils as ut
 
@@ -141,7 +143,21 @@ class Graphics:
         # self.map = game_map
 
         # app = pg.mkQApp("GLImageItem Example")
+
+        # rcheck = QtWidgets.QCheckBox('plot remote')
+        # rcheck.setChecked(True)
+        # # lcheck = QtWidgets.QCheckBox('plot local')
+        # # lplt = pg.PlotWidget()
+        # self.layout = pg.LayoutWidget()
+        # self.layout.addWidget(rcheck)
+        # layout.addWidget(lcheck)
+        # layout.addWidget(label)
+        # layout.addWidget(lplt, row=2, col=0, colspan=3)
+        # layout.resize(800, 800)
+        # layout.show()
+
         self.window = gl.GLViewWidget()
+
         # w.show()
         self.window.setWindowTitle("Vendee Globe")
         self.window.setCameraPosition(distance=config.map_radius * 4)
@@ -248,12 +264,17 @@ class Graphics:
             self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
-    def update_wind_tracers(self, tracer_lat, tracer_lon):
+        # self.layout.addWidget(self.window, row=0, col=1)
+
+    def update_wind_tracers(self, tracer_lat, tracer_lon, tracer_colors):
         # return
         x, y, z = ut.to_xyz(
             ut.lon_to_phi(tracer_lon.ravel()), ut.lat_to_theta(tracer_lat.ravel())
         )
-        self.tracers.setData(pos=np.array([x, y, z]).T)
+        self.tracers.setData(
+            pos=np.array([x, y, z]).T,
+            # color=tracer_colors.reshape((-1, 4))
+        )
 
     def update_player_positions(self, players):
         latitudes = np.array([player.latitude for player in players.values()])

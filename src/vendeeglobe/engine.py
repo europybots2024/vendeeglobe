@@ -41,7 +41,7 @@ class Engine:
             start = None
 
         self.players = {
-            name: Player(team=name, bot=bot, score=0, number=i, start=start)
+            name: Player(team=name, bot=bot, number=i, start=start)
             for i, (name, bot) in enumerate(players.items())
         }
         print(self.players)
@@ -94,10 +94,11 @@ class Engine:
                 group_players.append((dist, player))
         group_players.sort()
         for _, player in group_players:
-            if config.scores:
-                player.score = config.scores.pop(0)
-                self.scores[player.team] += player.score
-                # print(f"{player.team} finished!")
+            player.score = config.scores.pop(0) if config.scores else 0
+
+        for player in player_groups[2]:
+            self.scores[player.team] += player.score
+            # print(f"{player.team} finished!")
 
         # group_players = []
         # for player in player_groups[1]:
@@ -170,6 +171,7 @@ class Engine:
                     s = config.scores.pop(0)
                     self.scores[player.team] += s
                     player.score = s
+                    print("player score:", player.score)
                     # player.global_score += 1
                     # self.scores[player.team] += 1
                     # print(self.scores)
@@ -190,12 +192,13 @@ class Engine:
         # for team, player in self.players.items():
         #     player.move()
         self.graphics.update_wind_tracers(
-            self.weather.tracer_lat, self.weather.tracer_lon
+            self.weather.tracer_lat, self.weather.tracer_lon, self.weather.tracer_colors
         )
         self.graphics.update_player_positions(self.players)
 
     def run(self, N=10000):
         self.graphics.window.show()
+        # self.graphics.layout.show()
 
         t = QtCore.QTimer()
         t.timeout.connect(self.update)

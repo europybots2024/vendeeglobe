@@ -6,6 +6,7 @@ config = Config()
 
 from .engine import Engine
 from .map import Checkpoint
+from .player import Goto, Heading, Vector
 
 
 def play(*args, **kwargs):

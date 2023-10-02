@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import uuid
+from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Iterator, Sequence, Union, Tuple
 
@@ -9,6 +10,23 @@ import numpy as np
 from . import config
 from .map import Checkpoint
 from . import utils as utl
+
+
+@dataclass
+class Goto:
+    longitude: float
+    latitude: float
+
+
+@dataclass
+class Heading:
+    angle: float
+
+
+@dataclass
+class Vector:
+    u: float
+    v: float
 
 
 class Player:
@@ -43,20 +61,20 @@ class Player:
         ]
 
     def execute_bot(self, t: float, info: dict, safe: bool = False):
-        control = {}
+        instructions = None
         if safe:
             try:
-                control = self.bot.run(t=t, info=info)
+                instructions = self.bot.run(t=t, info=info)
             except:
                 pass
         else:
-            control = self.bot.run(t=t, info=info)
-        if 'goto' in control:
-            self.goto(**control['goto'])
-        elif 'heading' in control:
-            self.set_heading(control['heading'])
-        elif 'vector' in control:
-            self.set_vector(control['vector'])
+            instructions = self.bot.run(t=t, info=info)
+        if isinstance(instructions, Goto):
+            self.goto(longitude=instructions.longitude, latitude=instructions.latitude)
+        elif isinstance(instructions, Heading):
+            self.set_heading(instructions.angle)
+        elif isinstance(instructions, Vector):
+            self.set_vector([instructions.u, instructions.v])
 
     def get_position(self) -> np.ndarray:
         return np.array([self.longitude, self.latitude])

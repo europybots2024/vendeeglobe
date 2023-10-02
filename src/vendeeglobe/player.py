@@ -42,15 +42,15 @@ class Player:
             Checkpoint(**checkpoint) for checkpoint in config.checkpoints
         ]
 
-    def execute_bot(self, t: float, dt: float, info: dict, safe: bool = False):
+    def execute_bot(self, t: float, info: dict, safe: bool = False):
         control = {}
         if safe:
             try:
-                control = self.bot.run(t=t, dt=dt, info=info)
+                control = self.bot.run(t=t, info=info)
             except:
                 pass
         else:
-            control = self.bot.run(t=t, dt=dt, info=info)
+            control = self.bot.run(t=t, info=info)
         if 'goto' in control:
             self.goto(**control['goto'])
         elif 'heading' in control:

@@ -25,7 +25,7 @@ class Engine:
         safe=False,
         test=True,
         fps=1,
-        time_limit=8 * 60,
+        time_limit=7 * 60,
         seed=None,
         current_round=0,
         start=None,
@@ -49,12 +49,16 @@ class Engine:
         self.scores = self.read_scores(players=players, test=test)
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map()
-        self.weather = Weather(self.map)
+        self.weather = Weather()
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )
         self.start_time = time.time()
+        self.last_player_update = self.start_time
+        self.last_graphics_update = self.start_time
         self.arrived_players = []
+
+        self.call_player_bots(t=0)
 
     def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
         scores = {}
@@ -122,15 +126,15 @@ class Engine:
             "heading": player.heading,
         }
 
-    def call_player_bots(self, t, dt):
+    def call_player_bots(self, t):
         for player in self.players.values():
-            player.execute_bot(t=t, dt=dt, info=self.get_info(player), safe=self.safe)
+            player.execute_bot(t=t, info=self.get_info(player), safe=self.safe)
 
     def move_players(self, weather, t, dt):
         # return
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
-        u, v = weather.get_uv(latitudes, longitudes, t)
+        u, v = weather.get_uv(latitudes, longitudes, np.array([t]))
         for i, player in enumerate(self.players.values()):
             lat, lon = player.get_path(t, dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
@@ -180,23 +184,32 @@ class Engine:
                     #     exit()
 
     def update(self):
-        t = time.time() - self.start_time
+        clock_time = time.time()
+        t = clock_time - self.start_time
         if t > self.time_limit:
             self.collect_scores()
             self.write_scores()
             exit()
-        dt = 0.1
-        self.weather.update_wind_tracers(t=t, dt=dt)
-        self.call_player_bots(t=t, dt=dt)
-        self.move_players(self.weather, t=t, dt=dt)
-        # for team, player in self.players.items():
-        #     player.move()
-        self.graphics.update_wind_tracers(
-            self.weather.tracer_lat, self.weather.tracer_lon, self.weather.tracer_colors
-        )
-        self.graphics.update_player_positions(self.players)
 
-    def run(self, N=10000):
+        if (clock_time - self.last_player_update) > config.player_update_interval:
+            u, v = self.weather.get_forecast(
+                t=t + np.arange(0, 2 * config.forecast_length, 2)
+            )
+            self.call_player_bots(t=t)
+            self.last_player_update = clock_time
+        if (clock_time - self.last_graphics_update) > config.graphics_update_interval:
+            self.weather.update_wind_tracers(
+                t=np.array([t]), dt=config.graphics_update_interval
+            )
+            self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
+            self.graphics.update_wind_tracers(
+                self.weather.tracer_lat,
+                self.weather.tracer_lon,
+                self.weather.tracer_colors,
+            )
+            self.graphics.update_player_positions(self.players)
+
+    def run(self):
         self.graphics.window.show()
         # self.graphics.layout.show()
 

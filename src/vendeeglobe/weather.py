@@ -5,7 +5,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 from . import config
-from .utils import wrap
+from .utils import wrap, lon_degs_from_length, lat_degs_from_length
 
 
 # def make_fluctuations_map(nx, ny, nt):
@@ -20,7 +20,7 @@ from .utils import wrap
 
 
 class Weather:
-    def __init__(self, world_map):
+    def __init__(self):
         # # self.u = ((world_map.lat_grid > 0).astype(float) * 2.0) - 1.0
         # self.u = world_map.lat_grid / np.abs(world_map.lat_grid)
         # self.v = np.zeros_like(self.u)
@@ -39,8 +39,11 @@ class Weather:
         self.nx = self.ny * 2
         self.nt = self.ny
 
-        nseeds = 100
-        sigma = 10
+        # Weather stays constant for 2 player updates: player update every 12 hours
+        self.dt = 2.0 * config.player_update_interval
+
+        nseeds = 250
+        sigma = 6
 
         image = np.zeros([self.nt, self.ny, self.nx])
         # nseeds = int((self.nx * self.ny * self.nt) * 20000 / (1920 * 1080 * 1000))
@@ -90,25 +93,18 @@ class Weather:
         self.new_tracer_counter = 0
 
     def get_forecast(self, t):
-        # iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
-        # iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
-        forecast = np.zeros([len(t), self.ny, self.nx])
-        for i, time in enumerate(t):
-            it = (t / self.dt).astype(int)
-
-        u = self.u[it, iv, iu]
-        v = self.v[it, iv, iu]
-        n = self.speed[it, iv, iu]
-        # u = 1.0
-        # v = 0.0
-        # iu = (self.u / self.du).astype(int) + (self.nx // 2)
-        # iv = (self.v / self.dv).astype(int) + (self.ny // 2)
-        return u, v, n
+        it = (t / self.dt).astype(int) % self.nt
+        u = self.u[it, ...]
+        v = self.v[it, ...]
+        for i in range(len(t)):
+            u[i, ...] = gaussian_filter(u[i, ...], sigma=(i + 1) * 2, mode="wrap")
+            v[i, ...] = gaussian_filter(v[i, ...], sigma=(i + 1) * 2, mode="wrap")
+        return u, v
 
     def get_uv(self, lat, lon, t):
         iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
         iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
-        it = int(t % self.nt)
+        it = (t / self.dt).astype(int) % self.nt
 
         u = self.u[it, iv, iu]
         v = self.v[it, iv, iu]
@@ -133,9 +129,11 @@ class Weather:
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
-        scaling = 0.1
+        scaling = 5.0
         incr_lon = u * dt * scaling
         incr_lat = v * dt * scaling
+        incr_lon = lon_degs_from_length(incr_lon, self.tracer_lat[1, :])
+        incr_lat = lat_degs_from_length(incr_lat)
 
         # print(self.tracer_lat[1, :].shape, n.shape)
 

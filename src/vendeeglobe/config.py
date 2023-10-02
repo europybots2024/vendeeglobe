@@ -30,19 +30,10 @@ class Config:
             {'latitude': 2.806318, 'longitude': -168.943864, 'radius': 1000.0},
             {'latitude': -15.668984, 'longitude': 77.674694, 'radius': 1000.0},
         ]
-        # self.scores = {
-        #     1: 25,
-        #     2: 18,
-        #     3: 15,
-        #     4: 12,
-        #     5: 10,
-        #     6: 8,
-        #     7: 6,
-        #     8: 4,
-        #     9: 2,
-        #     10: 1,
-        # }
         self.scores = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+        self.player_update_interval = 1.0
+        self.graphics_update_interval = 0.1
+        self.forecast_length = 5.0  # in days
 
     def setup(self, players):
         self.colors = _make_colors(len(players))

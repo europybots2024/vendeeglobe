@@ -35,10 +35,10 @@ class Bot:
             Checkpoint(longitude=32.251133, latitude=31.784320, radius=5),
             Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0),
         ]
-        for ch in self.course[:-1]:
-            ch.reached = True
+        # for ch in self.course[:-1]:
+        #     ch.reached = True
 
-    def run(self, t: float, dt: float, info: dict):
+    def run(self, t: float, info: dict):
         instructions = {}
         for ch in self.course:
             dist = distance_on_surface(

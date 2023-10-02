@@ -139,15 +139,17 @@ class Player:
     # #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
     # #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
 
-    def get_path(self, t: float, dt: float, u, v, n):
+    def get_path(self, t: float, dt: float, u, v):
         pos = self.get_position()
-        f = utl.wind_force(self.get_vector(), np.array([u, v])) * n * dt
+        uv = np.array([u, v])
+        f = utl.wind_force(self.get_vector(), uv) * dt
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )
 
         # Race trace the path
-        ray = dist.reshape((2, 1)) * np.linspace(0, n, max(20, int(n) + 1))
+        norm = np.linalg.norm(uv)
+        ray = dist.reshape((2, 1)) * np.linspace(0, norm, max(20, int(norm) + 1))
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
         # print(self.team)
         # print(f, f.shape)

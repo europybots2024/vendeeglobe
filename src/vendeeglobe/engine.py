@@ -130,9 +130,9 @@ class Engine:
         # return
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
-        u, v, n = weather.get_uv(latitudes, longitudes, t)
+        u, v = weather.get_uv(latitudes, longitudes, t)
         for i, player in enumerate(self.players.values()):
-            lat, lon = player.get_path(t, dt, u[i], v[i], n[i])
+            lat, lon = player.get_path(t, dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
             sea_inds = np.where(terrain == 1)[0]
             if len(sea_inds) > 0:

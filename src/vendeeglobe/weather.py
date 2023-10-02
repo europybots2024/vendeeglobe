@@ -64,9 +64,11 @@ class Weather:
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        self.speed = (1.0 - div / div.max()) * 10.0
+        speed = (1.0 - div / div.max()) * 10.0
         # speed = sum(np.gradient(smooth))
         # self.speed = speed / speed.max() * 10.0
+        self.u *= speed
+        self.v *= speed
 
         lat_min = -90
         lat_max = 90
@@ -87,10 +89,12 @@ class Weather:
         self.number_of_new_tracers = 5
         self.new_tracer_counter = 0
 
-    def get_uv(self, lat, lon, t):
-        iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
-        iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
-        it = int(t % self.nt)
+    def get_forecast(self, t):
+        # iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
+        # iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
+        forecast = np.zeros([len(t), self.ny, self.nx])
+        for i, time in enumerate(t):
+            it = (t / self.dt).astype(int)
 
         u = self.u[it, iv, iu]
         v = self.v[it, iv, iu]
@@ -100,6 +104,20 @@ class Weather:
         # iu = (self.u / self.du).astype(int) + (self.nx // 2)
         # iv = (self.v / self.dv).astype(int) + (self.ny // 2)
         return u, v, n
+
+    def get_uv(self, lat, lon, t):
+        iv = ((lat + 90.0) / self.dv).astype(int)  #  + (self.ny // 2)
+        iu = ((lon + 180.0) / self.du).astype(int)  #  + (self.nx // 2)
+        it = int(t % self.nt)
+
+        u = self.u[it, iv, iu]
+        v = self.v[it, iv, iu]
+        # n = self.speed[it, iv, iu]
+        # u = 1.0
+        # v = 0.0
+        # iu = (self.u / self.du).astype(int) + (self.nx // 2)
+        # iv = (self.v / self.dv).astype(int) + (self.ny // 2)
+        return u, v
 
     def update_wind_tracers(self, t, dt):
         # return
@@ -113,9 +131,11 @@ class Weather:
         self.tracer_lat = np.roll(self.tracer_lat, 1, axis=0)
         self.tracer_lon = np.roll(self.tracer_lon, 1, axis=0)
 
-        u, v, n = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
-        incr_lon = u * dt
-        incr_lat = v * dt
+        u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
+
+        scaling = 0.1
+        incr_lon = u * dt * scaling
+        incr_lat = v * dt * scaling
 
         # print(self.tracer_lat[1, :].shape, n.shape)
 

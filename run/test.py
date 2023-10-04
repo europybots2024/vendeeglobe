@@ -1,13 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import numpy as np
 import vendeeglobe as vg
 
 from template_bot import Bot
 
 names = [
     'Neil',
-    # 'Alex',
-    # 'Kevin',
+    'Alex',
+    'Kevin',
+    'Samantha',
+    'Catherine',
+    'James',
+    'John',
+    'Robert',
+    'Michael',
 ]
 
 players = {name: Bot(team=name) for name in names}
@@ -17,4 +24,10 @@ start = None
 # start = None
 # start = dict(longitude=77.674694, latitude=-15.668984)
 # start = {'latitude': 43.991131, 'longitude': -24.213527}
+
+for p in players.values():
+    for loc in p.course:
+        loc.latitude += np.random.uniform(-5.0, 5.0)
+        loc.longitude += np.random.uniform(-5.0, 5.0)
+
 vg.play(players=players, start=start)

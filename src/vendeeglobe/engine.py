@@ -58,7 +58,25 @@ class Engine:
         self.last_graphics_update = self.start_time
         self.arrived_players = []
 
-        self.call_player_bots(t=0)
+        # self.call_player_bots(t=0)
+        self.set_schedule()
+        self.group_counter = 0
+
+    def set_schedule(self):
+        times = []
+        for player in self.players.values():
+            t0 = time.time()
+            player.execute_bot(t=0, info=self.get_info(player), safe=self.safe)
+            times.append(((time.time() - t0), player))
+
+        ng = 3
+        time_groups = {i: [] for i in range(ng)}
+        self.player_groups = {i: [] for i in range(ng)}
+        # sorted_by_second = sorted(data, key=lambda tup: tup[1])
+        for t in sorted(times, key=lambda tup: tup[0], reverse=True):
+            ind = np.argmin([sum(g) for g in time_groups.values()])
+            time_groups[ind].append(t[0])
+            self.player_groups[ind].append(t[1])
 
     def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
         scores = {}
@@ -126,8 +144,8 @@ class Engine:
             "heading": player.heading,
         }
 
-    def call_player_bots(self, t):
-        for player in self.players.values():
+    def call_player_bots(self, t, players):
+        for player in players:
             player.execute_bot(t=t, info=self.get_info(player), safe=self.safe)
 
     def move_players(self, weather, t, dt):
@@ -191,23 +209,44 @@ class Engine:
             self.write_scores()
             exit()
 
-        if (clock_time - self.last_player_update) > config.player_update_interval:
-            u, v = self.weather.get_forecast(
-                t=t + np.arange(0, 2 * config.forecast_length, 2)
-            )
-            self.call_player_bots(t=t)
-            self.last_player_update = clock_time
-        if (clock_time - self.last_graphics_update) > config.graphics_update_interval:
-            self.weather.update_wind_tracers(
-                t=np.array([t]), dt=config.graphics_update_interval
-            )
-            self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
-            self.graphics.update_wind_tracers(
-                self.weather.tracer_lat,
-                self.weather.tracer_lon,
-                self.weather.tracer_colors,
-            )
-            self.graphics.update_player_positions(self.players)
+        # if (clock_time - self.last_player_update) > config.player_update_interval:
+        #     u, v = self.weather.get_forecast(
+        #         t=t + np.arange(0, 2 * config.forecast_length, 2)
+        #     )
+        #     self.call_player_bots(t=t)
+        #     self.last_player_update = clock_time
+        # if (clock_time - self.last_graphics_update) > config.graphics_update_interval:
+        #     self.weather.update_wind_tracers(
+        #         t=np.array([t]), dt=config.graphics_update_interval
+        #     )
+        #     self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
+        #     self.graphics.update_wind_tracers(
+        #         self.weather.tracer_lat,
+        #         self.weather.tracer_lon,
+        #         self.weather.tracer_colors,
+        #     )
+        #     self.graphics.update_player_positions(self.players)
+
+        # # TODO: only update forecast when needed
+        # u, v = self.weather.get_forecast(
+        #     t=t + np.arange(0, 2 * config.forecast_length, 2)
+        # )
+
+        self.call_player_bots(
+            t=t,
+            players=self.player_groups[self.group_counter % len(self.player_groups)],
+        )
+        self.weather.update_wind_tracers(
+            t=np.array([t]), dt=config.graphics_update_interval
+        )
+        self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
+        self.graphics.update_wind_tracers(
+            self.weather.tracer_lat,
+            self.weather.tracer_lon,
+            self.weather.tracer_colors,
+        )
+        self.graphics.update_player_positions(self.players)
+        self.group_counter += 1
 
     def run(self):
         self.graphics.window.show()

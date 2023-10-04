@@ -68,11 +68,9 @@ class Engine:
             t0 = time.time()
             player.execute_bot(t=0, info=self.get_info(player), safe=self.safe)
             times.append(((time.time() - t0), player))
-
         ng = 3
         time_groups = {i: [] for i in range(ng)}
         self.player_groups = {i: [] for i in range(ng)}
-        # sorted_by_second = sorted(data, key=lambda tup: tup[1])
         for t in sorted(times, key=lambda tup: tup[0], reverse=True):
             ind = np.argmin([sum(g) for g in time_groups.values()])
             time_groups[ind].append(t[0])

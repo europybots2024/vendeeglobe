@@ -25,9 +25,10 @@ start = None
 # start = dict(longitude=77.674694, latitude=-15.668984)
 # start = {'latitude': 43.991131, 'longitude': -24.213527}
 
-for p in players.values():
-    for loc in p.course:
-        loc.latitude += np.random.uniform(-5.0, 5.0)
-        loc.longitude += np.random.uniform(-5.0, 5.0)
+for i, p in enumerate(players.values()):
+    if i > 0:
+        for loc in p.course:
+            loc.latitude += np.random.uniform(-1.0, 1.0)
+            loc.longitude += np.random.uniform(-1.0, 1.0)
 
 vg.play(players=players, start=start)

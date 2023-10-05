@@ -11,6 +11,7 @@ from pyqtgraph.Qt import QtCore
 
 
 from . import config
+import .scores as sc    
 from .graphics import Graphics
 from .map import Map
 from .player import Player
@@ -46,6 +47,12 @@ class Engine:
         }
         print(self.players)
 
+        for p in self.players.values():
+            p.latitude += np.random.uniform(-5.0, 5.0)
+            p.longitude += np.random.uniform(-5.0, 5.0)
+            for ch in p.checkpoints:
+                ch.reached = True
+
         self.scores = self.read_scores(players=players, test=test)
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map()
@@ -56,6 +63,7 @@ class Engine:
         self.start_time = time.time()
         self.last_player_update = self.start_time
         self.last_graphics_update = self.start_time
+        self.last_time_update = self.start_time
         self.arrived_players = []
 
         # self.call_player_bots(t=0)
@@ -76,64 +84,116 @@ class Engine:
             time_groups[ind].append(t[0])
             self.player_groups[ind].append(t[1])
 
-    def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
-        scores = {}
-        fname = "scores.txt"
-        if os.path.exists(fname) and (not test):
-            with open(fname, "r") as f:
-                contents = f.readlines()
-            for line in contents:
-                name, score = line.split(":")
-                scores[name] = int(score.strip())
-        else:
-            scores = {p: 0 for p in players}
-        print("Scores:", scores)
-        return scores
+    # def read_scores(self, players: dict, test: bool) -> Dict[str, int]:
+    #     scores = {p: 0 for p in players}
+    #     fname = "scores.txt"
+    #     if os.path.exists(fname) and (not test):
+    #         with open(fname, "r") as f:
+    #             contents = f.readlines()
+    #         for line in contents:
+    #             name, score = line.split(":")
+    #             scores[name] = int(score.strip())
+    #     # else:
+    #     #     scores = {p: 0 for p in players}
+    #     print("Scores:", scores)
+    #     return scores
 
-    def write_scores(self):
-        fname = "scores.txt"
-        with open(fname, "w") as f:
-            for name, p in self.players.items():
-                f.write(f"{name}: {p.global_score}\n")
-        for i, (name, score) in enumerate(sorted_scores):
-            print(f"{i + 1}. {name}: {score}")
+    # def write_scores(self):
+    #     fname = "scores.txt"
+    #     with open(fname, "w") as f:
+    #         for name, score in self.scores.items():
+    #             f.write(f"{name}: {score}\n")
+    #     # for i, (name, score) in enumerate(sorted_scores):
+    #     #     print(f"{i + 1}. {name}: {score}")
 
-    def collect_scores(self):
-        player_groups = {0: [], 1: [], 2: []}
-        for player in self.players.values():
-            n = len([ch for ch in player.checkpoints if ch.reached])
-            player_groups[n].append(player)
+    # def collect_scores(self):
+    #     player_groups = {0: [], 1: [], 2: []}
+    #     for player in self.players.values():
+    #         n = len([ch for ch in player.checkpoints if ch.reached])
+    #         player_groups[n].append(player)
 
-        group_players = []
-        for player in player_groups[2]:
-            if player.score is None:
-                dist = distance_on_surface(
-                    origin=[player.longitude, player.latitude],
-                    to=[config.start['longitude'], config.start['latitude']],
-                )
-                group_players.append((dist, player))
-        group_players.sort()
-        for _, player in group_players:
-            player.score = config.scores.pop(0) if config.scores else 0
+    #     start = [config.start['longitude'], config.start['latitude']]
 
-        for player in player_groups[2]:
-            self.scores[player.team] += player.score
-            # print(f"{player.team} finished!")
+    #     # Players that reached 2 checkpoints
+    #     group_players = []
+    #     for player in player_groups[2]:
+    #         if player.score is None:
+    #             dist = distance_on_surface(
+    #                 origin=[player.longitude, player.latitude],
+    #                 to=start,
+    #             )
+    #             group_players.append((dist, player))
+    #     group_players.sort()
+    #     for _, player in group_players:
+    #         player.score = config.scores.pop(0) if config.scores else 0
+    #     for player in player_groups[2]:
+    #         self.scores[player.team] += player.score
 
-        # group_players = []
-        # for player in player_groups[1]:
-        #     if player.score is None:
-        #         dist = distance_on_surface(
-        #             origin=[player.longitude, player.latitude],
-        #             to=[config.start['longitude'], config.start['latitude']],
-        #         )
-        #         group_players.append((dist, player))
-        # group_players.sort()
-        # for _, player in group_players:
-        #     if config.scores:
-        #         player.score = config.scores.pop(0)
-        #         self.scores[player.team] += player.score
-        #         # print(f"{player.team} finished!")
+    #     # Players that reached 1 checkpoint
+    #     group_players = []
+    #     for player in player_groups[1]:
+    #         for ch in player.checkpoints:
+    #             if not ch.reached:
+    #                 dist = distance_on_surface(
+    #                     origin=[player.longitude, player.latitude],
+    #                     to=[ch.longitude, ch.latitude],
+    #                 ) + distance_on_surface(
+    #                     origin=[ch.longitude, ch.latitude],
+    #                     to=start,
+    #                 )
+    #                 group_players.append((dist, player))
+    #     group_players.sort()
+    #     for _, player in group_players:
+    #         player.score = config.scores.pop(0) if config.scores else 0
+    #     for player in player_groups[1]:
+    #         self.scores[player.team] += player.score
+
+    #     # Players that reached 0 checkpoints
+    #     group_players = []
+    #     for player in player_groups[0]:
+    #         dists = [
+    #             distance_on_surface(
+    #                 origin=[player.longitude, player.latitude],
+    #                 to=[ch.longitude, ch.latitude],
+    #             )
+    #             for ch in player.checkpoints
+    #         ]
+    #         ind = np.argmin(dists)
+    #         dist = (
+    #             dists[ind]
+    #             + distance_on_surface(
+    #                 origin=[
+    #                     player.checkpoints[0].longitude,
+    #                     player.checkpoints[1].latitude,
+    #                 ],
+    #                 to=[
+    #                     player.checkpoints[1].longitude,
+    #                     player.checkpoints[1].latitude,
+    #                 ],
+    #             )
+    #             + distance_on_surface(
+    #                 origin=[
+    #                     player.checkpoints[(ind + 1) % 2].longitude,
+    #                     player.checkpoints[(ind + 1) % 2].latitude,
+    #                 ],
+    #                 to=start,
+    #             )
+    #         )
+    #         group_players.append((dist, player))
+    #     group_players.sort()
+    #     for _, player in group_players:
+    #         player.score = config.scores.pop(0) if config.scores else 0
+    #     for player in player_groups[0]:
+    #         self.scores[player.team] += player.score
+
+    #     # Print scores
+    #     all_scores = [
+    #         (p.team, p.score, self.scores[p.team]) for p in self.players.values()
+    #     ]
+    #     sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
+    #     print("Scores:")
+    #     for i, (name, score, total) in enumerate(sorted_scores):
+    #         print(f"{i + 1}. {name}: {score} ({total})")
 
     def get_info(self, player):
         return {
@@ -203,8 +263,8 @@ class Engine:
         clock_time = time.time()
         t = clock_time - self.start_time
         if t > self.time_limit:
-            self.collect_scores()
-            self.write_scores()
+            sc.collect_scores(players=self.players, scores=self.scores)
+            sc.write_scores()
             exit()
 
         # if (clock_time - self.last_player_update) > config.player_update_interval:
@@ -224,6 +284,10 @@ class Engine:
         #         self.weather.tracer_colors,
         #     )
         #     self.graphics.update_player_positions(self.players)
+
+        if (clock_time - self.last_time_update) > config.time_update_interval:
+            self.graphics.update_time(self.time_limit - t)
+            self.last_time_update = clock_time
 
         # # TODO: only update forecast when needed
         # u, v = self.weather.get_forecast(

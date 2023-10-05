@@ -33,6 +33,7 @@ class Config:
         self.scores = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
         self.player_update_interval = 1.0
         self.graphics_update_interval = 0.1
+        self.time_update_interval = 1.0
         self.forecast_length = 5.0  # in days
 
     def setup(self, players):

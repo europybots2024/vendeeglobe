@@ -5,6 +5,8 @@ from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
+import datetime
+
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -287,5 +289,11 @@ class Graphics:
             pos = np.vstack(
                 [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
             )
-            self.tracks[name]['artist'].setData(pos=pos)
+            npos = len(pos)
+            step = (npos // 1000) if npos > 1000 else 1
+            self.tracks[name]['artist'].setData(pos=pos[::step])
             self.tracks[name]['pos'] = pos
+
+    def update_time(self, t):
+        time = str(datetime.timedelta(seconds=int(t)))[2:]
+        self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")

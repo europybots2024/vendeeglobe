@@ -9,7 +9,7 @@ from . import config
 from .utils import distance_on_surface
 
 
-def read_scores(players: dict, test: bool) -> Dict[str, int]:
+def _read_scores(players: dict, test: bool) -> Dict[str, int]:
     scores = {p: 0 for p in players}
     fname = "scores.txt"
     if os.path.exists(fname) and (not test):
@@ -24,15 +24,16 @@ def read_scores(players: dict, test: bool) -> Dict[str, int]:
     return scores
 
 
-def write_scores(scores):
+def _write_scores(scores):
     fname = "scores.txt"
     with open(fname, "w") as f:
         for name, score in scores.items():
             f.write(f"{name}: {score}\n")
 
 
-def collect_scores(players: dict, scores: dict):
+def _collect_scores(players: dict, scores: dict):
     player_groups = {0: [], 1: [], 2: []}
+    final_scores = {}
     for player in players.values():
         n = len([ch for ch in player.checkpoints if ch.reached])
         player_groups[n].append(player)
@@ -52,7 +53,7 @@ def collect_scores(players: dict, scores: dict):
     for _, player in group_players:
         player.score = config.scores.pop(0) if config.scores else 0
     for player in player_groups[2]:
-        scores[player.team] += player.score
+        final_scores[player.team] = scores[player.team] + player.score
 
     # Players that reached 1 checkpoint
     group_players = []
@@ -71,7 +72,7 @@ def collect_scores(players: dict, scores: dict):
     for _, player in group_players:
         player.score = config.scores.pop(0) if config.scores else 0
     for player in player_groups[1]:
-        scores[player.team] += player.score
+        final_scores[player.team] = scores[player.team] + player.score
 
     # Players that reached 0 checkpoints
     group_players = []
@@ -109,13 +110,19 @@ def collect_scores(players: dict, scores: dict):
     for _, player in group_players:
         player.score = config.scores.pop(0) if config.scores else 0
     for player in player_groups[0]:
-        scores[player.team] += player.score
+        final_scores[player.team] = scores[player.team] + player.score
 
     # Print scores
-    all_scores = [(p.team, p.score, scores[p.team]) for p in players.values()]
+    all_scores = [(p.team, p.score, final_scores[p.team]) for p in players.values()]
     sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
     print("Scores:")
     for i, (name, score, total) in enumerate(sorted_scores):
         print(f"{i + 1}. {name}: {score} ({total})")
 
-    return scores
+    return final_scores
+
+
+def finalize_scores(players, test=False):
+    scores = _read_scores(players, test=test)
+    final_scores = _collect_scores(players, scores)
+    _write_scores(final_scores)

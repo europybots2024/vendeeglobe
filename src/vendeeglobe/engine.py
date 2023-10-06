@@ -11,10 +11,10 @@ from pyqtgraph.Qt import QtCore
 
 
 from . import config
-import .scores as sc    
 from .graphics import Graphics
 from .map import Map
 from .player import Player
+from .scores import finalize_scores
 from .utils import distance_on_surface
 from .weather import Weather
 
@@ -37,8 +37,9 @@ class Engine:
         self.time_limit = time_limit
         self.start_time = None
         self.safe = safe
+        self.test = test
 
-        if not test:
+        if not self.test:
             start = None
 
         self.players = {
@@ -53,7 +54,7 @@ class Engine:
             for ch in p.checkpoints:
                 ch.reached = True
 
-        self.scores = self.read_scores(players=players, test=test)
+        # self.scores = self.read_scores(players=players, test=test)
         self.app = pg.mkQApp("GLImageItem Example")
         self.map = Map()
         self.weather = Weather()
@@ -248,9 +249,9 @@ class Engine:
                 if player.team not in self.arrived_players:
                     self.arrived_players.append(player.team)
                     print(f"{player.team} finished!")
-                    s = config.scores.pop(0)
-                    self.scores[player.team] += s
-                    player.score = s
+                    # s = config.scores.pop(0)
+                    # self.scores[player.team] += s
+                    player.score = config.scores.pop(0)
                     print("player score:", player.score)
                     # player.global_score += 1
                     # self.scores[player.team] += 1
@@ -263,8 +264,8 @@ class Engine:
         clock_time = time.time()
         t = clock_time - self.start_time
         if t > self.time_limit:
-            sc.collect_scores(players=self.players, scores=self.scores)
-            sc.write_scores()
+            finalize_scores(players=self.players, test=self.test)
+            # sc.write_scores()
             exit()
 
         # if (clock_time - self.last_player_update) > config.player_update_interval:

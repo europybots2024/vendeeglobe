@@ -65,7 +65,7 @@ class Engine:
         self.last_player_update = self.start_time
         self.last_graphics_update = self.start_time
         self.last_time_update = self.start_time
-        self.arrived_players = []
+        self.players_not_arrived = list(self.players.keys())
 
         # self.call_player_bots(t=0)
         self.set_schedule()
@@ -212,7 +212,7 @@ class Engine:
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
         u, v = weather.get_uv(latitudes, longitudes, np.array([t]))
-        for i, player in enumerate(self.players.values()):
+        for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
             lat, lon = player.get_path(t, dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
             sea_inds = np.where(terrain == 1)[0]
@@ -246,27 +246,33 @@ class Engine:
             if dist_to_finish < config.start["radius"] and all(
                 ch.reached for ch in player.checkpoints
             ):
-                if player.team not in self.arrived_players:
-                    self.arrived_players.append(player.team)
-                    print(f"{player.team} finished!")
-                    # s = config.scores.pop(0)
-                    # self.scores[player.team] += s
-                    player.score = config.scores.pop(0)
-                    print("player score:", player.score)
-                    # player.global_score += 1
-                    # self.scores[player.team] += 1
-                    # print(self.scores)
-                    # if len(self.arrived_players) == len(self.players):
-                    #     self.write_scores()
-                    #     exit()
+                # if not player.arrived:
+                player.arrived = True
+                self.players_not_arrived.remove(player.team)
+                print(f"{player.team} finished!")
+                # s = config.scores.pop(0)
+                # self.scores[player.team] += s
+                player.score = config.scores.pop(0)
+                print("player score:", player.score)
+                # player.global_score += 1
+                # self.scores[player.team] += 1
+                # print(self.scores)
+                # if len(self.arrived_players) == len(self.players):
+                #     self.write_scores()
+                #     exit()
+
+    def shutdown(self):
+        finalize_scores(players=self.players, test=self.test)
+        exit()
 
     def update(self):
         clock_time = time.time()
         t = clock_time - self.start_time
         if t > self.time_limit:
-            finalize_scores(players=self.players, test=self.test)
-            # sc.write_scores()
-            exit()
+            self.shutdown()
+            # finalize_scores(players=self.players, test=self.test)
+            # # sc.write_scores()
+            # exit()
 
         # if (clock_time - self.last_player_update) > config.player_update_interval:
         #     u, v = self.weather.get_forecast(
@@ -310,6 +316,9 @@ class Engine:
         )
         self.graphics.update_player_positions(self.players)
         self.group_counter += 1
+
+        if len(self.players_not_arrived) == 0:
+            self.shutdown()
 
     def run(self):
         self.graphics.window.show()

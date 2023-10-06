@@ -59,6 +59,7 @@ class Player:
         self.checkpoints = [
             Checkpoint(**checkpoint) for checkpoint in config.checkpoints
         ]
+        self.arrived = False
 
     def execute_bot(self, t: float, info: dict, safe: bool = False):
         instructions = None

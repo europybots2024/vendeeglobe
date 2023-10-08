@@ -3,15 +3,16 @@
 from typing import List, Tuple
 
 from pathlib import Path
-import matplotlib.pyplot as plt
+
+# import matplotlib.pyplot as plt
 
 
-def _make_colors(num_colors: int) -> List[Tuple[float, ...]]:
-    cols = []
-    cmap = plt.get_cmap("gist_ncar")
-    for i in range(num_colors):
-        cols.append(cmap(i / max(num_colors - 1, 1)))
-    return cols
+# def _make_colors(num_colors: int) -> List[Tuple[float, ...]]:
+#     cols = []
+#     cmap = plt.get_cmap("gist_ncar")
+#     for i in range(num_colors):
+#         cols.append(cmap(i / max(num_colors - 1, 1)))
+#     return cols
 
 
 class Config:
@@ -36,5 +37,5 @@ class Config:
         self.time_update_interval = 1.0
         self.forecast_length = 5.0  # in days
 
-    def setup(self, players):
-        self.colors = _make_colors(len(players))
+    # def setup(self, players):
+    #     self.colors = _make_colors(len(players))

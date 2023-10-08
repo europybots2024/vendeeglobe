@@ -55,7 +55,7 @@ class Player:
         else:
             self.latitude = start['latitude']
             self.longitude = start['longitude']
-        self.color = config.colors[number]
+        self.color = utl.string_to_color(team)
         self.checkpoints = [
             Checkpoint(**checkpoint) for checkpoint in config.checkpoints
         ]

@@ -32,7 +32,7 @@ class Engine:
         start=None,
     ):
         np.random.seed(seed)
-        config.setup(players=players)
+        # config.setup(players=players)
 
         self.time_limit = time_limit
         self.start_time = None
@@ -48,11 +48,11 @@ class Engine:
         }
         print(self.players)
 
-        for p in self.players.values():
-            p.latitude += np.random.uniform(-5.0, 5.0)
-            p.longitude += np.random.uniform(-5.0, 5.0)
-            for ch in p.checkpoints:
-                ch.reached = True
+        # for p in self.players.values():
+        #     p.latitude += np.random.uniform(-5.0, 5.0)
+        #     p.longitude += np.random.uniform(-5.0, 5.0)
+        #     for ch in p.checkpoints:
+        #         ch.reached = True
 
         # self.scores = self.read_scores(players=players, test=test)
         self.app = pg.mkQApp("GLImageItem Example")
@@ -227,18 +227,7 @@ class Engine:
                     )
                     if d < checkpoint.radius:
                         checkpoint.reached = True
-                        # player.score += 1
                         print(f"{player.team} reached {checkpoint}")
-                    # if utl.check_distance(
-                    #     player.latitude,
-                    #     player.longitude,
-                    #     checkpoint.latitude,
-                    #     checkpoint.longitude,
-                    #     checkpoint.radius,
-                    # ):
-                    #     checkpoint.reached = True
-                    #     player.score += 1
-                    #     print(f"{player.team} reached {checkpoint}")
             dist_to_finish = distance_on_surface(
                 origin=[player.longitude, player.latitude],
                 to=[config.start['longitude'], config.start['latitude']],
@@ -246,20 +235,11 @@ class Engine:
             if dist_to_finish < config.start["radius"] and all(
                 ch.reached for ch in player.checkpoints
             ):
-                # if not player.arrived:
                 player.arrived = True
                 self.players_not_arrived.remove(player.team)
                 print(f"{player.team} finished!")
-                # s = config.scores.pop(0)
-                # self.scores[player.team] += s
                 player.score = config.scores.pop(0)
                 print("player score:", player.score)
-                # player.global_score += 1
-                # self.scores[player.team] += 1
-                # print(self.scores)
-                # if len(self.arrived_players) == len(self.players):
-                #     self.write_scores()
-                #     exit()
 
     def shutdown(self):
         finalize_scores(players=self.players, test=self.test)

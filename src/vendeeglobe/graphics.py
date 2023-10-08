@@ -6,6 +6,7 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import datetime
+from matplotlib.colors import to_rgba
 
 
 from pyqtgraph.Qt import QtWidgets
@@ -239,7 +240,7 @@ class Graphics:
         # Add players
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
-        colors = np.array([player.color for player in players.values()])
+        colors = np.array([to_rgba(player.color) for player in players.values()])
         x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
         self.players = gl.GLScatterPlotItem(

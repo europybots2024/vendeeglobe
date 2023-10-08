@@ -25,7 +25,7 @@ start = None
 # start = dict(longitude=77.674694, latitude=-15.668984)
 # start = {'latitude': 43.991131, 'longitude': -24.213527}
 
-start = {'latitude': 45.743904, 'longitude': -24.036488}
+# start = {'latitude': 45.743904, 'longitude': -24.036488}
 
 # for i, p in enumerate(players.values()):
 #     if i > 0:

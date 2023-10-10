@@ -1,28 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import List, Tuple
 
 from pathlib import Path
 
 from .core import Checkpoint
 
-# import matplotlib.pyplot as plt
-
-
-# def _make_colors(num_colors: int) -> List[Tuple[float, ...]]:
-#     cols = []
-#     cmap = plt.get_cmap("gist_ncar")
-#     for i in range(num_colors):
-#         cols.append(cmap(i / max(num_colors - 1, 1)))
-#     return cols
-
 
 class Config:
     def __init__(self):
         self.map_file = "world.jpg"
-        # self.map_resolution = 4096
-        # self.nlat = self.map_resolution
-        # self.nlon = 2 * self.map_resolution
         self.map_radius = 6371
         self.resourcedir = Path(__file__).parent / "resources"
         self.ntracers = 5000
@@ -38,6 +24,3 @@ class Config:
         self.graphics_update_interval = 0.1
         self.time_update_interval = 1.0
         self.forecast_length = 5.0  # in days
-
-    # def setup(self, players):
-    #     self.colors = _make_colors(len(players))

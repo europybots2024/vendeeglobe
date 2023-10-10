@@ -157,10 +157,7 @@ class Engine:
 
     def run(self):
         self.graphics.window.show()
-        # self.graphics.layout.show()
-
         t = QtCore.QTimer()
         t.timeout.connect(self.update)
         t.start(50)
-
         pg.exec()

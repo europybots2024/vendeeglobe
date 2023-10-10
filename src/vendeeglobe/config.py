@@ -4,6 +4,8 @@ from typing import List, Tuple
 
 from pathlib import Path
 
+from .core import Checkpoint
+
 # import matplotlib.pyplot as plt
 
 
@@ -26,10 +28,10 @@ class Config:
         self.ntracers = 5000
         self.tracer_lifetime = 50
         self.bot_polling_interval = 1.0
-        self.start = {'longitude': -4.773949, 'latitude': 48.333422, 'radius': 5.0}
+        self.start = Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0)
         self.checkpoints = [
-            {'latitude': 2.806318, 'longitude': -168.943864, 'radius': 2000.0},
-            {'latitude': -15.668984, 'longitude': 77.674694, 'radius': 1200.0},
+            Checkpoint(latitude=2.806318, longitude=-168.943864, radius=2000.0),
+            Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1200.0),
         ]
         self.scores = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
         self.player_update_interval = 1.0

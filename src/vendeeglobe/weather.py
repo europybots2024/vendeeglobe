@@ -3,6 +3,7 @@
 import matplotlib as mpl
 import numpy as np
 from scipy.ndimage import gaussian_filter
+from typing import Optional
 
 from . import config
 from .utils import wrap, lon_degs_from_length, lat_degs_from_length
@@ -20,7 +21,9 @@ from .utils import wrap, lon_degs_from_length, lat_degs_from_length
 
 
 class Weather:
-    def __init__(self):
+    def __init__(self, seed: Optional[int] = None):
+        rng = np.random.default_rng(seed)
+
         # # self.u = ((world_map.lat_grid > 0).astype(float) * 2.0) - 1.0
         # self.u = world_map.lat_grid / np.abs(world_map.lat_grid)
         # self.v = np.zeros_like(self.u)
@@ -48,11 +51,10 @@ class Weather:
         image = np.zeros([self.nt, self.ny, self.nx])
         # nseeds = int((self.nx * self.ny * self.nt) * 20000 / (1920 * 1080 * 1000))
         # nseeds = int((self.ny / 4) ** 3)
-        dy = self.ny // 3
-        xseed = np.random.randint(self.nx, size=nseeds)
-        yseed = np.random.randint(self.ny - dy, size=nseeds) + int(0.5 * dy)
-        # yseed = np.random.randint(self.ny, size=nseeds)
-        tseed = np.random.randint(self.nt, size=nseeds)
+        dy = self.ny // 6
+        xseed = rng.integers(self.nx, size=nseeds)
+        yseed = rng.integers(dy, self.ny - dy, size=nseeds)
+        tseed = rng.integers(self.nt, size=nseeds)
         # print(nseeds)
 
         image[(tseed, yseed, xseed)] = 10000

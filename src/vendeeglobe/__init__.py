@@ -5,8 +5,7 @@ from .config import Config
 config = Config()
 
 from .engine import Engine
-from .map import Checkpoint
-from .player import Goto, Heading, Vector
+from .core import Checkpoint, Location, Heading, Vector
 
 
 def play(*args, **kwargs):

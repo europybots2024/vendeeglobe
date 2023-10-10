@@ -2,21 +2,11 @@
 
 import os
 
-from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
 from . import config
-from . import utils
-
-
-@dataclass
-class Checkpoint:
-    latitude: float
-    longitude: float
-    radius: float
-    reached: bool = False
 
 
 class Map:

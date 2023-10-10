@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from vendeeglobe import Checkpoint, Goto, Heading, Vector
+from vendeeglobe import Checkpoint, Location, Heading, Vector
 from vendeeglobe.utils import distance_on_surface
 
 # This is your team name
@@ -52,7 +52,7 @@ class Bot:
             if dist < ch.radius:
                 ch.reached = True
             if not ch.reached:
-                instructions = Goto(longitude=ch.longitude, latitude=ch.latitude)
+                instructions = Location(longitude=ch.longitude, latitude=ch.latitude)
                 break
 
         return instructions

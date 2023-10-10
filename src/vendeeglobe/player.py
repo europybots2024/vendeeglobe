@@ -1,32 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import uuid
-from dataclasses import dataclass
+from dataclasses import asdict
 from itertools import chain
-from typing import Any, Iterator, Sequence, Union, Tuple
+from typing import Any, Optional, Sequence, Union, Tuple
 
 import numpy as np
 
 from . import config
-from .map import Checkpoint
 from . import utils as utl
-
-
-@dataclass
-class Goto:
-    longitude: float
-    latitude: float
-
-
-@dataclass
-class Heading:
-    angle: float
-
-
-@dataclass
-class Vector:
-    u: float
-    v: float
+from .core import Checkpoint, Location, Heading, Vector
 
 
 class Player:
@@ -40,7 +22,7 @@ class Player:
         number: int = 0,
         # base_locations: np.ndarray,
         # high_contrast: bool = False,
-        start: dict = None,
+        start: Optional[Location] = None,
     ):
         # self.ai = ai
         self.bot = bot
@@ -50,14 +32,14 @@ class Player:
         self.heading = 180.0 + 45.0 - (45 * number)
         self.speed = 0.0
         if start is None:
-            self.latitude = config.start['latitude']
-            self.longitude = config.start['longitude']
+            self.latitude = config.start.latitude
+            self.longitude = config.start.longitude
         else:
-            self.latitude = start['latitude']
-            self.longitude = start['longitude']
+            self.latitude = start.latitude
+            self.longitude = start.longitude
         self.color = utl.string_to_color(team)
         self.checkpoints = [
-            Checkpoint(**checkpoint) for checkpoint in config.checkpoints
+            Checkpoint(**asdict(checkpoint)) for checkpoint in config.checkpoints
         ]
         self.arrived = False
 
@@ -70,7 +52,7 @@ class Player:
                 pass
         else:
             instructions = self.bot.run(t=t, info=info)
-        if isinstance(instructions, Goto):
+        if isinstance(instructions, Location):
             self.goto(longitude=instructions.longitude, latitude=instructions.latitude)
         elif isinstance(instructions, Heading):
             self.set_heading(instructions.angle)
@@ -158,10 +140,11 @@ class Player:
     # #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
     # #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
 
-    def get_path(self, t: float, dt: float, u, v):
+    def get_path(self, dt: float, u: float, v: float) -> Tuple[np.ndarray, np.ndarray]:
         pos = self.get_position()
         uv = np.array([u, v])
-        f = utl.wind_force(self.get_vector(), uv) * dt
+        self.speed = utl.wind_force(self.get_vector(), uv)
+        f = self.speed * dt
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )
@@ -170,10 +153,6 @@ class Player:
         norm = np.linalg.norm(uv)
         ray = dist.reshape((2, 1)) * np.linspace(0, norm, max(20, int(norm) + 1))
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
-        # print(self.team)
-        # print(f, f.shape)
-        # print(ray, ray.shape)
-        # print(path, path.shape)
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon
 

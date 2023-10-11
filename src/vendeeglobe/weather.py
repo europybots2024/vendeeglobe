@@ -21,7 +21,7 @@ class Weather:
         self.dt = 2.0 * config.player_update_interval
 
         nseeds = 250
-        sigma = 6
+        sigma = 8
 
         image = np.zeros([self.nt, self.ny, self.nx])
         dy = self.ny // 6

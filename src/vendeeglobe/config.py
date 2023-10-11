@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import Tuple
 
 from .core import Checkpoint
 
@@ -15,11 +15,11 @@ class Config:
     ntracers: int = 5000
     tracer_lifetime: int = 50
     start: Checkpoint = Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0)
-    checkpoints: List[Checkpoint] = [
+    checkpoints: Tuple[Checkpoint, Checkpoint] = (
         Checkpoint(latitude=2.806318, longitude=-168.943864, radius=2000.0),
         Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1200.0),
-    ]
-    scores: list = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    )
+    scores: Tuple[int, ...] = (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
     player_update_interval: float = 0.1  # 1.0
     graphics_update_interval: float = 0.1
     time_update_interval: float = 1.0

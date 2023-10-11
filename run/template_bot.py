@@ -45,10 +45,41 @@ class Bot:
                 origin=[info['longitude'], info['latitude']],
                 to=[ch.longitude, ch.latitude],
             )
-            # dist = np.sqrt(
-            #     (info['longitude'] - ch.longitude) ** 2
-            #     + (info['latitude'] - ch.latitude) ** 2
-            # )
+            if dist < ch.radius:
+                ch.reached = True
+            if not ch.reached:
+                instructions = Location(longitude=ch.longitude, latitude=ch.latitude)
+                break
+
+        return instructions
+
+
+class Bot2:
+    """
+    This is the ship-controlling bot that will be instantiated for the competition.
+    """
+
+    def __init__(self, team: str = CREATOR):
+        self.team = team  # Mandatory attribute
+        self.course = [
+            Checkpoint(longitude=-29.908577, latitude=17.999811, radius=10),
+            Checkpoint(longitude=-63.240264, latitude=-61.025125, radius=10),
+            Checkpoint(latitude=2.806318, longitude=-168.943864, radius=1500.0),
+            Checkpoint(latitude=-57.746306, longitude=142.279800, radius=10.0),
+            Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1000.0),
+            Checkpoint(latitude=-39.438937, longitude=19.836265, radius=10.0),
+            Checkpoint(latitude=14.881699, longitude=-21.024326, radius=10.0),
+            Checkpoint(latitude=45.076538, longitude=-18.292936, radius=10.0),
+            Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0),
+        ]
+
+    def run(self, t: float, info: dict):
+        instructions = None
+        for ch in self.course:
+            dist = distance_on_surface(
+                origin=[info['longitude'], info['latitude']],
+                to=[ch.longitude, ch.latitude],
+            )
             if dist < ch.radius:
                 ch.reached = True
             if not ch.reached:

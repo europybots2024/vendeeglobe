@@ -3,21 +3,11 @@
 import numpy as np
 import vendeeglobe as vg
 
-from template_bot import Bot
+from template_bot import Bot, Bot2
 
-names = [
-    'Neil',
-    'Alex',
-    'Kevin',
-    'Samantha',
-    'Catherine',
-    'James',
-    'John',
-    'Robert',
-    'Michael',
-]
+names = ['Bob']
 
-players = {name: Bot(team=name) for name in names}
+players = {name: Bot2(team=name) for name in names}
 start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 

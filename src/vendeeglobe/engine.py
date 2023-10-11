@@ -105,9 +105,9 @@ class Engine:
                         print(f"{player.team} reached {checkpoint}")
             dist_to_finish = distance_on_surface(
                 origin=[player.longitude, player.latitude],
-                to=[config.start['longitude'], config.start['latitude']],
+                to=[config.start.longitude, config.start.latitude],
             )
-            if dist_to_finish < config.start["radius"] and all(
+            if dist_to_finish < config.start.radius and all(
                 ch.reached for ch in player.checkpoints
             ):
                 player.arrived = True

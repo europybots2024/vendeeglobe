@@ -171,7 +171,7 @@ class Graphics:
             md = gl.MeshData.cylinder(
                 rows=10,
                 cols=20,
-                radius=[ch['radius'], ch['radius']],
+                radius=[ch.radius, ch.radius],
                 length=scl[i] * config.map_radius,
             )
             color = (0.2, 0.2, 0.2, 1)
@@ -183,8 +183,8 @@ class Graphics:
                 drawEdges=True,
                 edgeColor=color,
             )
-            mesh.rotate(np.degrees(ut.lat_to_theta(ch['latitude'])), 0, 1, 0)
-            mesh.rotate(np.degrees(ut.lon_to_phi(ch['longitude'])), 0, 0, 1)
+            mesh.rotate(np.degrees(ut.lat_to_theta(ch.latitude)), 0, 1, 0)
+            mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
             self.window.addItem(mesh)
 
         # Add tracers

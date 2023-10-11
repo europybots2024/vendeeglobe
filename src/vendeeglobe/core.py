@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+import numpy as np
+
 
 @dataclass
 class Location:
@@ -26,3 +28,9 @@ class Checkpoint:
     longitude: float
     radius: float
     reached: bool = False
+
+
+@dataclass
+class WeatherForecast:
+    u: np.ndarray
+    v: np.ndarray

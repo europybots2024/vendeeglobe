@@ -63,6 +63,7 @@ class Bot2:
         self.team = team  # Mandatory attribute
         self.course = [
             Checkpoint(longitude=-29.908577, latitude=17.999811, radius=10),
+            Checkpoint(latitude=-11.441808, longitude=-29.660252, radius=10),
             Checkpoint(longitude=-63.240264, latitude=-61.025125, radius=10),
             Checkpoint(latitude=2.806318, longitude=-168.943864, radius=1500.0),
             Checkpoint(latitude=-57.746306, longitude=142.279800, radius=10.0),
@@ -85,5 +86,6 @@ class Bot2:
             if not ch.reached:
                 instructions = Location(longitude=ch.longitude, latitude=ch.latitude)
                 break
+        # print(info['forecast'].u.shape, info['forecast'].v.shape)
 
         return instructions

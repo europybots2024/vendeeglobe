@@ -39,7 +39,7 @@ def _collect_scores(
         n = len([ch for ch in player.checkpoints if ch.reached])
         player_groups[n].append(player)
 
-    start = [config.start['longitude'], config.start['latitude']]
+    start = [config.star.longitude, config.start.latitude]
 
     # Players that reached 2 checkpoints
     group_players = []

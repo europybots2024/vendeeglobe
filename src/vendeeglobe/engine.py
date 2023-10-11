@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtCore
 
 
 from . import config
-from .core import Location
+from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
@@ -51,7 +51,9 @@ class Engine:
         self.last_player_update = self.start_time
         self.last_graphics_update = self.start_time
         self.last_time_update = self.start_time
+        self.last_forecast_update = self.start_time
         self.players_not_arrived = list(self.players.keys())
+        self.forecast = self.weather.get_forecast(0)
 
         self.set_schedule()
         self.group_counter = 0
@@ -77,6 +79,7 @@ class Engine:
             "heading": player.heading,
             "speed": player.speed,
             "vector": player.get_vector(),
+            "forecast": self.forecast,
         }
 
     def call_player_bots(self, t: float, players: List[Player]):
@@ -118,7 +121,7 @@ class Engine:
 
     def shutdown(self):
         finalize_scores(players=self.players, test=self.test)
-        exit()
+        self.timer.stop()
 
     def update(self):
         clock_time = time.time()
@@ -130,10 +133,10 @@ class Engine:
             self.graphics.update_time(self.time_limit - t)
             self.last_time_update = clock_time
 
-        # # TODO: only update forecast when needed
-        # u, v = self.weather.get_forecast(
-        #     t=t + np.arange(0, 2 * config.forecast_length, 2)
-        # )
+        if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+            self.forecast = self.weather.get_forecast(t)
+            print(self.forecast.u.shape, self.forecast.v.shape)
+            self.last_forecast_update = clock_time
 
         self.call_player_bots(
             t=t,
@@ -154,7 +157,7 @@ class Engine:
 
     def run(self):
         self.graphics.window.show()
-        t = QtCore.QTimer()
-        t.timeout.connect(self.update)
-        t.start(50)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.timer.start(0)
         pg.exec()

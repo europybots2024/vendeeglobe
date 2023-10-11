@@ -6,6 +6,7 @@ from scipy.ndimage import gaussian_filter
 from typing import Optional, Tuple
 
 from . import config
+from .core import WeatherForecast
 from .utils import wrap, lon_degs_from_length, lat_degs_from_length
 
 
@@ -17,11 +18,10 @@ class Weather:
         self.nx = self.ny * 2
         self.nt = self.ny
 
-        # Weather stays constant for 2 player updates: player update every 12 hours
-        self.dt = 2.0 * config.player_update_interval
+        self.dt = config.weather_update_interval  # weather changes every 12 hours
 
         nseeds = 250
-        sigma = 8
+        sigma = 6
 
         image = np.zeros([self.nt, self.ny, self.nx])
         dy = self.ny // 6
@@ -64,14 +64,48 @@ class Weather:
         self.number_of_new_tracers = 5
         self.new_tracer_counter = 0
 
+        # Make forecast data
+        self.forecast_times = np.arange(
+            0, config.forecast_length * 6, config.weather_update_interval
+        )
+        nf = len(self.forecast_times)
+        print(nf, self.forecast_times)
+        self.forecast_u = [self.u]
+        self.forecast_v = [self.v]
+        # print(self.forecast_u.shape, self.forecast_v.shape)
+        for i in range(1, nf):
+            self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
+            self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
+        print(len(self.forecast_u), len(self.forecast_v))
+        self.forecast_u = np.array(self.forecast_u)
+        self.forecast_v = np.array(self.forecast_v)
+        print(self.forecast_u.shape, self.forecast_v.shape)
+
     def get_forecast(self, t: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        t = t + self.forecast_times
         it = (t / self.dt).astype(int) % self.nt
-        u = self.u[it, ...]
-        v = self.v[it, ...]
-        for i in range(len(t)):
-            u[i, ...] = gaussian_filter(u[i, ...], sigma=(i + 1) * 2, mode="wrap")
-            v[i, ...] = gaussian_filter(v[i, ...], sigma=(i + 1) * 2, mode="wrap")
-        return u, v
+        # # self.forecast_u[...] = self.u[it, ...]
+        # # self.forecast_v[...] = self.v[it, ...]
+        # for i, it_ in enumerate(it):
+        #     # self.forecast_u[i, ...] = gaussian_filter(
+        #     #     self.forecast_u[i, ...], sigma=(i + 1) * 2, mode="wrap"
+        #     # )
+        #     # self.forecast_v[i, ...] = gaussian_filter(
+        #     #     self.forecast_v[i, ...], sigma=(i + 1) * 2, mode="wrap"
+        #     # )
+        #     step = i + 1  # 2**i
+        #     u = self.u[it_, ::step, ::step]
+        #     v = self.v[it_, ::step, ::step]
+        #     print(u.shape, v.shape)
+        #     self.forecast_u[i, ...] = np.repeat(
+        #         np.repeat(u, step, axis=0), step, axis=1
+        #     )
+        #     self.forecast_v[i, ...] = np.repeat(
+        #         np.repeat(v, step, axis=0), step, axis=1
+        #     )
+        return WeatherForecast(
+            u=self.forecast_u[:, it, ...], v=self.forecast_v[:, it, ...]
+        )
 
     def get_uv(
         self, lat: np.ndarray, lon: np.ndarray, t: np.ndarray

@@ -20,7 +20,17 @@ class Config:
         Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1200.0),
     )
     scores: Tuple[int, ...] = (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
-    player_update_interval: float = 0.1  # 1.0
+    player_update_interval: float = 1.0
     graphics_update_interval: float = 0.1
     time_update_interval: float = 1.0
     forecast_length: int = 5  # in days
+    weather_update_interval: float = 3.0  # 3s = 12 hours
+
+
+# Timing:
+
+# 8 mins = 80 days
+# 1 min  = 10 days
+# 6 sec  =  1 day
+# 1 sec  =  4 hours
+# 0.25 s =  1 hour

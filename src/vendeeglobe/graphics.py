@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Any, Dict
+
 import numpy as np
 from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
@@ -12,7 +14,10 @@ from matplotlib.colors import to_rgba
 from pyqtgraph.Qt import QtWidgets
 
 from . import config
+from .map import Map
+from .player import Player
 from . import utils as ut
+from .weather import Weather
 
 
 class GLTexturedSphereItem(GLGraphicsItem):
@@ -22,7 +27,13 @@ class GLTexturedSphereItem(GLGraphicsItem):
     Displays image data as a textured quad.
     """
 
-    def __init__(self, data, smooth=False, glOptions="translucent", parentItem=None):
+    def __init__(
+        self,
+        data: np.ndarray,
+        smooth: bool = False,
+        glOptions: str = "translucent",
+        parentItem: Any = None,
+    ):
         """
 
         ==============  =======================================================================================
@@ -46,7 +57,7 @@ class GLTexturedSphereItem(GLGraphicsItem):
         glEnable(GL_TEXTURE_2D)
         self.texture = glGenTextures(1)
 
-    def setData(self, data):
+    def setData(self, data: np.ndarray):
         self.data = data
         self._needUpdate = True
         self.update()
@@ -142,67 +153,21 @@ placed as if they slice through the volume.
 
 
 class Graphics:
-    def __init__(self, game_map, weather, players):
-        # self.map = game_map
-
-        # app = pg.mkQApp("GLImageItem Example")
-
-        # rcheck = QtWidgets.QCheckBox('plot remote')
-        # rcheck.setChecked(True)
-        # # lcheck = QtWidgets.QCheckBox('plot local')
-        # # lplt = pg.PlotWidget()
-        # self.layout = pg.LayoutWidget()
-        # self.layout.addWidget(rcheck)
-        # layout.addWidget(lcheck)
-        # layout.addWidget(label)
-        # layout.addWidget(lplt, row=2, col=0, colspan=3)
-        # layout.resize(800, 800)
-        # layout.show()
-
+    def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+        self.app = pg.mkQApp("Vendee Globe")
         self.window = gl.GLViewWidget()
 
-        # w.show()
         self.window.setWindowTitle("Vendee Globe")
         self.window.setCameraPosition(distance=config.map_radius * 4)
 
-        # world_mask = self.map.array.T
-
-        # print('Graphics 1')
-
-        # # world = np.load(f'world{config.map_resolution}.npz')['world'].T
-        # world = self.map.array.T
-        # # print('Graphics 2')
-
-        # a = np.reshape(world.astype('uint8'), world.shape + (1,))
-        # # print('Graphics 3')
-        # a = np.broadcast_to(a, world.shape + (4,)) * 255
-        # # print('Graphics 4')
-        # a[~world] = [0, 0, 100, 255]
-        # # print('Graphics 5')
-        # a[world] = [100, 140, 46, 255]
-        # # print('Graphics 6')
-
-        # # np.savez('world.npz', world=a)
-        # # a = np.load('world.npz')['world']
         world = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
-
         self.sphere = GLTexturedSphereItem(world)
-        # print('Graphics 7')
         self.sphere.setGLOptions("opaque")
-        # print('Graphics 8')
         self.window.addItem(self.sphere)
-        # print('Graphics 9')
-
-        # self.tracer_lat = np.random.uniform(-90.0, 90.0, size=config.ntracers)
-        # self.tracer_lon = np.random.uniform(-180, 180, size=config.ntracers)
 
         # Add checkpoints
         scl = [0.96, 0.99]
         for i, ch in enumerate(config.checkpoints):
-            # x, y, z = ut.to_xyz(
-            #     ut.lon_to_phi(ch.longitude),
-            #     ut.lat_to_theta(ch.latitude),
-            # )
             md = gl.MeshData.cylinder(
                 rows=10,
                 cols=20,
@@ -268,19 +233,15 @@ class Graphics:
             self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
-        # self.layout.addWidget(self.window, row=0, col=1)
-
-    def update_wind_tracers(self, tracer_lat, tracer_lon, tracer_colors):
-        # return
+    def update_wind_tracers(self, tracer_lat: np.ndarray, tracer_lon: np.ndarray):
         x, y, z = ut.to_xyz(
             ut.lon_to_phi(tracer_lon.ravel()), ut.lat_to_theta(tracer_lat.ravel())
         )
         self.tracers.setData(
             pos=np.array([x, y, z]).T,
-            # color=tracer_colors.reshape((-1, 4))
         )
 
-    def update_player_positions(self, players):
+    def update_player_positions(self, players: Dict[str, Player]):
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
         x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
@@ -295,6 +256,6 @@ class Graphics:
             self.tracks[name]['artist'].setData(pos=pos[::step])
             self.tracks[name]['pos'] = pos
 
-    def update_time(self, t):
+    def update_time(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]
         self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")

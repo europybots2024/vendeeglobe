@@ -35,37 +35,6 @@ class Map:
         print(self.lat_grid.shape, self.lon_grid.shape)
 
     def get_terrain(self, longitudes, latitudes):
-        ilon = ((longitudes + 180.0) / self.dlon).astype(int)  # + (self.nlon // 2)
-        ilat = ((latitudes + 90.0) / self.dlat).astype(int)  # + (self.nlat // 2)
+        ilon = ((longitudes + 180.0) / self.dlon).astype(int)
+        ilat = ((latitudes + 90.0) / self.dlat).astype(int)
         return self.sea_array[ilat, ilon]
-
-        # self.array = np.load(
-        #     os.path.join(config.resourcedir, f'world{config.map_resolution}.npz')
-        # )['world']
-
-        # im = Image.open(os.path.join(config.resourcedir, "world.jpg"))
-        # self.array = np.array(im.convert('RGBA'))
-        # img16 = self.array.astype('int16')
-        # self.sea_array = np.where(
-        #     img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0
-        # )
-        # sea = Image.fromarray((self.sea_array.astype(np.uint8)) * 255)
-        # sea.save("sea.png")
-
-        # size = (config.tracer_lifetime, config.ntracers)
-        # self.tracer_lat = np.random.uniform(-90.0, 90.0, size=size)
-        # self.tracer_lon = np.random.uniform(-180, 180, size=size)
-        # # self.tracer_lat = np.broadcast_to(
-        # #     np.array([48.8566, 40.7128]).reshape((1, -1)), (config.tracer_lifetime, 2)
-        # # )
-        # # self.tracer_lon = np.broadcast_to(
-        # #     np.array([2.3522, -74.0060]).reshape((1, -1)), (config.tracer_lifetime, 2)
-        # # )
-        # # self.tracer_lat = np.random.uniform(-10.0, 10.0, size=config.ntracers)
-        # # self.tracer_lon = np.zeros_like(self.tracer_lat)
-        # self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
-        # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
-        # # self.tracer_colors[..., 3] = 0.5
-
-        # # self.tracer_lon = np.random.uniform(-10, 10, size=config.ntracers)
-        # # self.tracer_lat = np.zeros_like(self.tracer_lon)

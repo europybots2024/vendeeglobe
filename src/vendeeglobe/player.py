@@ -14,22 +14,15 @@ from .core import Checkpoint, Location, Heading, Vector
 class Player:
     def __init__(
         self,
-        # ai: Any,
         bot: Any,
         team: str,
-        # game_map: np.ndarray,
-        # score: int,
         number: int = 0,
-        # base_locations: np.ndarray,
-        # high_contrast: bool = False,
         start: Optional[Location] = None,
     ):
-        # self.ai = ai
         self.bot = bot
-        # self.ai.team = team
         self.team = team
         self.score = None
-        self.heading = 180.0 + 45.0 - (45 * number)
+        self.heading = 180.0
         self.speed = 0.0
         if start is None:
             self.latitude = config.start.latitude
@@ -87,60 +80,30 @@ class Player:
         self.set_heading(h)
 
     def goto(self, longitude: float, latitude: float):
-        """ """
-        # self.set_vector([longitude - self.longitude, latitude - self.latitude])
-
+        """
+        Point the vehicle towards the given longitude and latitude.
+        """
         lon1 = np.radians(self.longitude)
         lat1 = np.radians(self.latitude)
         lon2 = np.radians(longitude)
         lat2 = np.radians(latitude)
 
         dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        # Use the Haversine formula to calculate the distance:
-
-        # a = sin²(dlat/2) + cos(lat1) * cos(lat2) * sin²(dlon/2)
-        # c = 2 * atan2(√a, √(1-a))
-        # distance = R * c
-        # Where:
-
-        # R is the radius of the Earth (approximately 6,371 kilometers or 3,959 miles).
-        # Calculate the initial bearing (direction):
         y = np.sin(dlon) * np.cos(lat2)
         x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
         initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
         self.set_heading((np.degrees(initial_bearing) + 360) % 360)
-        return
-        # d, xl, yl = tls.periodic_distances(self.x, self.y, x, y)
-        # ind = np.argmin(d)
-        # self.set_vector(
-        #     [xl[ind] - (self.x + config.nx), yl[ind] - (self.y + config.ny)]
-        # )
 
     def get_distance(self, longitude: float, latitude: float) -> float:
-        """ """
+        """
+        Compute the distance between the ship and the given longitude and latitude.
+        """
         return utl.distance(self.get_position(), [longitude, latitude])
 
-    #     lon1 = np.radians(self.longitude)
-    #     lat1 = np.radians(self.latitude)
-    #     lon2 = np.radians(longitude)
-    #     lat2 = np.radians(latitude)
-
-    #     dlon = lon2 - lon1
-    #     dlat = lat2 - lat1
-    #     # Use the Haversine formula to calculate the distance:
-
-    #     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
-    #     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-    #     return config.map_radius * c
-    #     # Where:
-
-    # # def ray_trace(self, f: np.ndarray, dt: float) -> np.ndarray:
-    # #     # vt = self.speed * dt
-    # #     ray = f.reshape((2, 1)) * np.linspace(0, f, int(f) + 1)
-    # #     return (np.array(self.avatar.position()).reshape((2, 1)) + ray).astype(int)
-
     def get_path(self, dt: float, u: float, v: float) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Compute the path of the ship for the given time step.
+        """
         pos = self.get_position()
         uv = np.array([u, v])
         self.speed = utl.wind_force(self.get_vector(), uv)
@@ -155,11 +118,3 @@ class Player:
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon
-
-        # lat, lon = wrap(
-        #     lat=np.array([self.latitude + f[1]]),
-        #     lon=np.array([self.longitude + f[0]]),
-        # )
-        # self.latitude = lat[0]
-        # self.longitude = lon[0]
-        # return

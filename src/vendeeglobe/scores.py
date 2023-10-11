@@ -6,10 +6,11 @@ from typing import Dict
 import numpy as np
 
 from . import config
+from .player import Player
 from .utils import distance_on_surface
 
 
-def _read_scores(players: dict, test: bool) -> Dict[str, int]:
+def _read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
     scores = {p: 0 for p in players}
     fname = "scores.txt"
     if os.path.exists(fname) and (not test):
@@ -18,20 +19,20 @@ def _read_scores(players: dict, test: bool) -> Dict[str, int]:
         for line in contents:
             name, score = line.split(":")
             scores[name] = int(score.strip())
-    # else:
-    #     scores = {p: 0 for p in players}
     print("Scores:", scores)
     return scores
 
 
-def _write_scores(scores):
+def _write_scores(scores: Dict[str, int]):
     fname = "scores.txt"
     with open(fname, "w") as f:
         for name, score in scores.items():
             f.write(f"{name}: {score}\n")
 
 
-def _collect_scores(players: dict, scores: dict):
+def _collect_scores(
+    players: Dict[str, Player], scores: Dict[str, int]
+) -> Dict[str, int]:
     player_groups = {0: [], 1: [], 2: []}
     final_scores = {}
     for player in players.values():
@@ -122,7 +123,7 @@ def _collect_scores(players: dict, scores: dict):
     return final_scores
 
 
-def finalize_scores(players, test=False):
+def finalize_scores(players: Dict[str, Player], test: bool = False):
     scores = _read_scores(players, test=test)
     final_scores = _collect_scores(players, scores)
     _write_scores(final_scores)

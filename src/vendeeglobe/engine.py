@@ -42,7 +42,6 @@ class Engine:
         }
         print(self.players)
 
-        self.app = pg.mkQApp("Vendee Globe")
         self.map = Map()
         self.weather = Weather(seed=seed)
         self.graphics = Graphics(
@@ -145,9 +144,7 @@ class Engine:
         )
         self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
         self.graphics.update_wind_tracers(
-            self.weather.tracer_lat,
-            self.weather.tracer_lon,
-            self.weather.tracer_colors,
+            self.weather.tracer_lat, self.weather.tracer_lon
         )
         self.graphics.update_player_positions(self.players)
         self.group_counter += 1

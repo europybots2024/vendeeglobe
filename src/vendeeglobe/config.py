@@ -25,6 +25,7 @@ class Config:
     time_update_interval: float = 1.0
     forecast_length: int = 5  # in days
     weather_update_interval: float = 3.0  # 3s = 12 hours
+    seconds_to_hours = 4.0
 
 
 # Timing:

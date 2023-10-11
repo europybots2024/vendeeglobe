@@ -76,6 +76,7 @@ class Bot2:
 
     def run(self, t: float, info: dict):
         instructions = None
+        print(info['speed'])
         for ch in self.course:
             dist = distance_on_surface(
                 origin=[info['longitude'], info['latitude']],

@@ -41,7 +41,7 @@ class Weather:
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        speed = (1.0 - div / div.max()) * 10.0
+        speed = (1.0 - div / div.max()) * 100.0
         self.u *= speed
         self.v *= speed
 
@@ -69,40 +69,21 @@ class Weather:
             0, config.forecast_length * 6, config.weather_update_interval
         )
         nf = len(self.forecast_times)
-        print(nf, self.forecast_times)
+        # print(nf, self.forecast_times)
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
         # print(self.forecast_u.shape, self.forecast_v.shape)
         for i in range(1, nf):
             self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
             self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
-        print(len(self.forecast_u), len(self.forecast_v))
+        # print(len(self.forecast_u), len(self.forecast_v))
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
-        print(self.forecast_u.shape, self.forecast_v.shape)
+        # print(self.forecast_u.shape, self.forecast_v.shape)
 
     def get_forecast(self, t: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         t = t + self.forecast_times
         it = (t / self.dt).astype(int) % self.nt
-        # # self.forecast_u[...] = self.u[it, ...]
-        # # self.forecast_v[...] = self.v[it, ...]
-        # for i, it_ in enumerate(it):
-        #     # self.forecast_u[i, ...] = gaussian_filter(
-        #     #     self.forecast_u[i, ...], sigma=(i + 1) * 2, mode="wrap"
-        #     # )
-        #     # self.forecast_v[i, ...] = gaussian_filter(
-        #     #     self.forecast_v[i, ...], sigma=(i + 1) * 2, mode="wrap"
-        #     # )
-        #     step = i + 1  # 2**i
-        #     u = self.u[it_, ::step, ::step]
-        #     v = self.v[it_, ::step, ::step]
-        #     print(u.shape, v.shape)
-        #     self.forecast_u[i, ...] = np.repeat(
-        #         np.repeat(u, step, axis=0), step, axis=1
-        #     )
-        #     self.forecast_v[i, ...] = np.repeat(
-        #         np.repeat(v, step, axis=0), step, axis=1
-        #     )
         return WeatherForecast(
             u=self.forecast_u[:, it, ...], v=self.forecast_v[:, it, ...]
         )
@@ -123,7 +104,7 @@ class Weather:
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
-        scaling = 5.0
+        scaling = 0.2
         incr_lon = u * dt * scaling
         incr_lat = v * dt * scaling
         incr_lon = lon_degs_from_length(incr_lon, self.tracer_lat[1, :])

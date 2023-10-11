@@ -111,9 +111,11 @@ class Player:
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )
+        # print('distances', f, np.linalg.norm(f), np.linalg.norm(dist))
 
         # Race trace the path
-        norm = np.linalg.norm(uv)
+        # norm = np.linalg.norm(uv)
+        norm = np.linalg.norm(dist)
         ray = dist.reshape((2, 1)) * np.linspace(0, norm, max(20, int(norm) + 1))
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])

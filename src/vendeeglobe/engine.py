@@ -52,6 +52,7 @@ class Engine:
         self.last_graphics_update = self.start_time
         self.last_time_update = self.start_time
         self.last_forecast_update = self.start_time
+        self.previous_clock_time = self.start_time
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
 
@@ -126,6 +127,7 @@ class Engine:
     def update(self):
         clock_time = time.time()
         t = clock_time - self.start_time
+        dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
         if t > self.time_limit:
             self.shutdown()
 
@@ -135,17 +137,15 @@ class Engine:
 
         if (clock_time - self.last_forecast_update) > config.weather_update_interval:
             self.forecast = self.weather.get_forecast(t)
-            print(self.forecast.u.shape, self.forecast.v.shape)
+            # print(self.forecast.u.shape, self.forecast.v.shape)
             self.last_forecast_update = clock_time
 
         self.call_player_bots(
             t=t,
             players=self.player_groups[self.group_counter % len(self.player_groups)],
         )
-        self.weather.update_wind_tracers(
-            t=np.array([t]), dt=config.graphics_update_interval
-        )
-        self.move_players(self.weather, t=t, dt=config.graphics_update_interval)
+        self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+        self.move_players(self.weather, t=t, dt=dt)
         self.graphics.update_wind_tracers(
             self.weather.tracer_lat, self.weather.tracer_lon
         )
@@ -154,6 +154,8 @@ class Engine:
 
         if len(self.players_not_arrived) == 0:
             self.shutdown()
+
+        self.previous_clock_time = clock_time
 
     def run(self):
         self.graphics.window.show()

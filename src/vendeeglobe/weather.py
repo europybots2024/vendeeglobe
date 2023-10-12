@@ -41,7 +41,7 @@ class Weather:
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        speed = (1.0 - div / div.max()) * 100.0
+        speed = (1.0 - div / div.max()) * 150.0
         self.u *= speed
         self.v *= speed
 
@@ -104,7 +104,7 @@ class Weather:
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
-        scaling = 0.2
+        scaling = 0.2 / 1.5
         incr_lon = u * dt * scaling
         incr_lat = v * dt * scaling
         incr_lon = lon_degs_from_length(incr_lon, self.tracer_lat[1, :])

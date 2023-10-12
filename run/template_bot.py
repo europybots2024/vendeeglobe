@@ -65,10 +65,10 @@ class Bot2:
             Checkpoint(longitude=-29.908577, latitude=17.999811, radius=10),
             Checkpoint(latitude=-11.441808, longitude=-29.660252, radius=10),
             Checkpoint(longitude=-63.240264, latitude=-61.025125, radius=10),
-            Checkpoint(latitude=2.806318, longitude=-168.943864, radius=1500.0),
-            Checkpoint(latitude=62.052286, longitude=169.214572, radius=10.0),
+            Checkpoint(latitude=2.806318, longitude=-168.943864, radius=1990.0),
+            Checkpoint(latitude=-62.052286, longitude=169.214572, radius=10.0),
             # Checkpoint(latitude=-57.746306, longitude=142.279800, radius=10.0),
-            Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1000.0),
+            Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1190.0),
             Checkpoint(latitude=-39.438937, longitude=19.836265, radius=10.0),
             Checkpoint(latitude=14.881699, longitude=-21.024326, radius=10.0),
             Checkpoint(latitude=45.076538, longitude=-18.292936, radius=10.0),
@@ -77,7 +77,7 @@ class Bot2:
 
     def run(self, t: float, info: dict):
         instructions = None
-        print(info['speed'])
+        # print(info['speed'])
         for ch in self.course:
             dist = distance_on_surface(
                 origin=[info['longitude'], info['latitude']],

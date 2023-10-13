@@ -30,16 +30,15 @@ def _write_scores(scores: Dict[str, int]):
             f.write(f"{name}: {score}\n")
 
 
-def _collect_scores(
-    players: Dict[str, Player], scores: Dict[str, int]
-) -> Dict[str, int]:
+def get_current_scores(players: Dict[str, Player]) -> Dict[str, int]:
     player_groups = {0: [], 1: [], 2: []}
-    final_scores = {}
+
+    current_scores = {}
     for player in players.values():
         n = len([ch for ch in player.checkpoints if ch.reached])
         player_groups[n].append(player)
 
-    start = [config.star.longitude, config.start.latitude]
+    start = [config.start.longitude, config.start.latitude]
 
     # Players that reached 2 checkpoints
     group_players = []
@@ -50,11 +49,13 @@ def _collect_scores(
                 to=start,
             )
             group_players.append((dist, player))
+        else:
+            current_scores[player.team] = player.score
     group_players.sort()
     for _, player in group_players:
-        player.score = config.scores.pop(0) if config.scores else 0
-    for player in player_groups[2]:
-        final_scores[player.team] = scores[player.team] + player.score
+        current_scores[player.team] = config.pop_score()
+    # for player in player_groups[2]:
+    #     current_scores[player.team] = scores[player.team] + player.score
 
     # Players that reached 1 checkpoint
     group_players = []
@@ -71,9 +72,9 @@ def _collect_scores(
                 group_players.append((dist, player))
     group_players.sort()
     for _, player in group_players:
-        player.score = config.scores.pop(0) if config.scores else 0
-    for player in player_groups[1]:
-        final_scores[player.team] = scores[player.team] + player.score
+        current_scores[player.team] = config.pop_score()
+    # for player in player_groups[1]:
+    #     current_scores[player.team] = scores[player.team] + player.score
 
     # Players that reached 0 checkpoints
     group_players = []
@@ -109,10 +110,21 @@ def _collect_scores(
         group_players.append((dist, player))
     group_players.sort()
     for _, player in group_players:
-        player.score = config.scores.pop(0) if config.scores else 0
-    for player in player_groups[0]:
-        final_scores[player.team] = scores[player.team] + player.score
+        current_scores[player.team] = config.pop_score()
+    # for player in player_groups[0]:
+    #     final_scores[player.team] = scores[player.team] + player.score
+    return current_scores
 
+
+def _get_final_scores(players: Dict[str, Player], scores: Dict[str, int]):
+    current_scores = get_current_scores(players, scores)
+    final_scores = {
+        team: scores[team] + current_scores[team] for team in current_scores
+    }
+    return final_scores
+
+
+def _print_scores(players: Dict[str, Player], final_scores: Dict[str, int]):
     # Print scores
     all_scores = [(p.team, p.score, final_scores[p.team]) for p in players.values()]
     sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
@@ -120,10 +132,9 @@ def _collect_scores(
     for i, (name, score, total) in enumerate(sorted_scores):
         print(f"{i + 1}. {name}: {score} ({total})")
 
-    return final_scores
-
 
 def finalize_scores(players: Dict[str, Player], test: bool = False):
     scores = _read_scores(players, test=test)
-    final_scores = _collect_scores(players, scores)
+    final_scores = _get_final_scores(players, scores)
+    _print_scores(players, final_scores)
     _write_scores(final_scores)

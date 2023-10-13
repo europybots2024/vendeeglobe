@@ -7,13 +7,29 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
+import datetime
+
+
+import sys
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QCheckBox,
+    QSizePolicy,
+    QFrame,
+)
+
 
 from . import config
 from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
-from .scores import finalize_scores
+from .scores import finalize_scores, get_current_scores
 from .utils import distance_on_surface
 from .weather import Weather
 
@@ -55,6 +71,7 @@ class Engine:
         self.previous_clock_time = self.start_time
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
+        self.tracers_hidden = False
 
         self.set_schedule()
         self.group_counter = 0
@@ -72,6 +89,9 @@ class Engine:
             ind = np.argmin([sum(g) for g in time_groups.values()])
             time_groups[ind].append(t[0])
             self.player_groups[ind].append(t[1])
+        empty_groups = [i for i, g in time_groups.items() if len(g) == 0]
+        for i in empty_groups:
+            del self.player_groups[i]
 
     def get_info(self, player: Player) -> Dict[str, float]:
         return {
@@ -96,8 +116,14 @@ class Engine:
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
             sea_inds = np.where(terrain == 1)[0]
             if len(sea_inds) > 0:
-                player.latitude = lat[sea_inds[-1]]
-                player.longitude = lon[sea_inds[-1]]
+                next_lat = lat[sea_inds[-1]]
+                next_lon = lon[sea_inds[-1]]
+                player.distance_travelled += distance_on_surface(
+                    origin=[player.longitude, player.latitude],
+                    to=[next_lon, next_lat],
+                )
+                player.latitude = next_lat
+                player.longitude = next_lon
             for checkpoint in player.checkpoints:
                 if not checkpoint.reached:
                     d = distance_on_surface(
@@ -117,7 +143,7 @@ class Engine:
                 player.arrived = True
                 self.players_not_arrived.remove(player.team)
                 print(f"{player.team} finished!")
-                player.score = config.scores.pop(0)
+                player.score = config.pop_score()
                 print("player score:", player.score)
 
     def shutdown(self):
@@ -132,7 +158,7 @@ class Engine:
             self.shutdown()
 
         if (clock_time - self.last_time_update) > config.time_update_interval:
-            self.graphics.update_time(self.time_limit - t)
+            self.update_scoreboard(self.time_limit - t)
             self.last_time_update = clock_time
 
         if (clock_time - self.last_forecast_update) > config.weather_update_interval:
@@ -144,11 +170,19 @@ class Engine:
             t=t,
             players=self.player_groups[self.group_counter % len(self.player_groups)],
         )
-        self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
         self.move_players(self.weather, t=t, dt=dt)
-        self.graphics.update_wind_tracers(
-            self.weather.tracer_lat, self.weather.tracer_lon
-        )
+        if self.tracer_checkbox.isChecked():
+            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+            self.graphics.update_wind_tracers(
+                self.weather.tracer_lat,
+                self.weather.tracer_lon,
+                reset_colors=self.tracers_hidden,
+            )
+            self.tracers_hidden = False
+        else:
+            if not self.tracers_hidden:
+                self.graphics.hide_wind_tracers()
+                self.tracers_hidden = True
         self.graphics.update_player_positions(self.players)
         self.group_counter += 1
 
@@ -157,9 +191,64 @@ class Engine:
 
         self.previous_clock_time = clock_time
 
+    def update_scoreboard(self, t: float):
+        time = str(datetime.timedelta(seconds=int(t)))[2:]
+        self.time_label.setText(f"Time left: {time} s")
+
+        current_scores = get_current_scores(self.players)
+        for i, (name, player) in enumerate(self.players.items()):
+            self.player_boxes[i].setText(
+                f"{name}: {current_scores[name]}, {player.distance_travelled:.2f} km"
+            )
+
     def run(self):
-        self.graphics.window.show()
+        # self.graphics.window.show()
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.update)
+        # self.timer.start(0)
+        # pg.exec()
+
+        # app = QApplication(sys.argv)
+        window = QMainWindow()
+        window.setWindowTitle("Vendée Globe")
+        window.setGeometry(100, 100, 1280, 720)
+
+        # Create a central widget to hold the two widgets
+        central_widget = QWidget()
+        window.setCentralWidget(central_widget)
+
+        # Create a layout for the central widget
+        layout = QHBoxLayout(central_widget)
+
+        # Create the first widget with vertical checkboxes
+        widget1 = QWidget()
+        layout.addWidget(widget1)
+        widget1_layout = QVBoxLayout(widget1)
+        widget1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        widget1.setMinimumWidth(int(window.width() * 0.1))
+
+        self.time_label = QLabel("Time left:")
+        widget1_layout.addWidget(self.time_label)
+        self.tracer_checkbox = QCheckBox("Show wind tracers", checked=True)
+        widget1_layout.addWidget(self.tracer_checkbox)
+
+        layout.addWidget(self.graphics.window)
+        self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget1_layout.addWidget(separator)
+
+        self.player_boxes = {}
+        for i in range(len(self.players)):
+            # widget1_layout = QHBoxLayout(widget1_layout)
+            self.player_boxes[i] = QLabel("")
+            widget1_layout.addWidget(self.player_boxes[i])
+
+        window.show()
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(0)
         pg.exec()
+        # sys.exit(self.graphics.app.exec_())

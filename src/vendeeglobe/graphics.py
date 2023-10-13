@@ -10,6 +10,8 @@ import pyqtgraph.opengl as gl
 import datetime
 from matplotlib.colors import to_rgba
 
+from PyQt5.QtWidgets import QApplication
+import sys
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -35,13 +37,12 @@ class GLTexturedSphereItem(GLGraphicsItem):
         parentItem: Any = None,
     ):
         """
-
-        ==============  =======================================================================================
         **Arguments:**
-        data            Volume data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with dtype=ubyte.
-                        (See functions.makeRGBA)
-        smooth          (bool) If True, the volume slices are rendered with linear interpolation
-        ==============  =======================================================================================
+        data:
+            Volume data to be rendered. *Must* be 3D numpy array (x, y, RGBA) with
+            dtype=ubyte. (See functions.makeRGBA)
+        smooth:
+            If True, the volume slices are rendered with linear interpolation
         """
 
         self.smooth = smooth
@@ -155,6 +156,7 @@ placed as if they slice through the volume.
 class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
         self.app = pg.mkQApp("Vendee Globe")
+        # self.app = QApplication(sys.argv)
         self.window = gl.GLViewWidget()
 
         self.window.setWindowTitle("Vendee Globe")
@@ -192,9 +194,11 @@ class Graphics:
             ut.lon_to_phi(weather.tracer_lon.ravel()),
             ut.lat_to_theta(weather.tracer_lat.ravel()),
         )
+        self.tracer_colors = weather.tracer_colors
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
-            color=weather.tracer_colors.reshape((-1, 4)),
+            # color=weather.tracer_colors.reshape((-1, 4)),
+            color=self.tracer_colors,
             size=4,
             pxMode=True,
         )
@@ -233,13 +237,16 @@ class Graphics:
             self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
-    def update_wind_tracers(self, tracer_lat: np.ndarray, tracer_lon: np.ndarray):
+    def update_wind_tracers(
+        self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False
+    ):
         x, y, z = ut.to_xyz(
             ut.lon_to_phi(tracer_lon.ravel()), ut.lat_to_theta(tracer_lat.ravel())
         )
-        self.tracers.setData(
-            pos=np.array([x, y, z]).T,
-        )
+        kwargs = dict(pos=np.array([x, y, z]).T)
+        if reset_colors:
+            kwargs['color'] = self.tracer_colors
+        self.tracers.setData(**kwargs)
 
     def update_player_positions(self, players: Dict[str, Player]):
         latitudes = np.array([player.latitude for player in players.values()])
@@ -259,3 +266,6 @@ class Graphics:
     def update_time(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]
         self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")
+
+    def hide_wind_tracers(self):
+        self.tracers.setData(color=np.zeros_like(self.tracer_colors))

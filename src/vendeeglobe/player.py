@@ -35,6 +35,7 @@ class Player:
             Checkpoint(**asdict(checkpoint)) for checkpoint in config.checkpoints
         ]
         self.arrived = False
+        self.distance_travelled = 0.0
 
     def execute_bot(self, t: float, info: dict, safe: bool = False):
         instructions = None

@@ -72,10 +72,10 @@ class Weather:
         # print(nf, self.forecast_times)
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
-        # print(self.forecast_u.shape, self.forecast_v.shape)
-        for i in range(1, nf):
-            self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
-            self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
+        # # print(self.forecast_u.shape, self.forecast_v.shape)
+        # for i in range(1, nf):
+        #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
+        #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
         # print(len(self.forecast_u), len(self.forecast_v))
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)

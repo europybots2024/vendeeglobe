@@ -30,6 +30,39 @@ def _write_scores(scores: Dict[str, int]):
             f.write(f"{name}: {score}\n")
 
 
+def get_player_points(player: Player) -> int:
+    start = [config.start.longitude, config.start.latitude]
+    checkpoints_reached = len([ch for ch in player.checkpoints if ch.reached])
+    npoints = 1_000_000
+
+    points = checkpoints_reached * npoints
+    if checkpoints_reached == 2:
+        dist = distance_on_surface(
+            origin=[player.longitude, player.latitude],
+            to=start,
+        )
+        points += npoints - int(dist)
+    elif checkpoints_reached == 1:
+        for ch in player.checkpoints:
+            if not ch.reached:
+                dist = distance_on_surface(
+                    origin=[player.longitude, player.latitude],
+                    to=[ch.longitude, ch.latitude],
+                )
+                points += npoints - int(dist)
+    elif checkpoints_reached == 0:
+        dist = min(
+            distance_on_surface(
+                origin=[player.longitude, player.latitude],
+                to=[ch.longitude, ch.latitude],
+            )
+            for ch in player.checkpoints
+        )
+        points += npoints - int(dist)
+
+    return points
+
+
 def get_current_scores(players: Dict[str, Player]) -> Dict[str, int]:
     player_groups = {0: [], 1: [], 2: []}
 

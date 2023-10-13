@@ -10,7 +10,10 @@ import pyqtgraph.opengl as gl
 import datetime
 from matplotlib.colors import to_rgba
 
-from PyQt5.QtWidgets import QApplication
+try:
+    from PyQt5.QtWidgets import QApplication
+except ImportError:
+    from PySide2.QtWidgets import QApplication
 import sys
 
 from pyqtgraph.Qt import QtWidgets

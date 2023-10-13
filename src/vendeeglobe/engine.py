@@ -11,17 +11,31 @@ import datetime
 
 
 import sys
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QLabel,
-    QHBoxLayout,
-    QVBoxLayout,
-    QCheckBox,
-    QSizePolicy,
-    QFrame,
-)
+
+try:
+    from PyQt5.QtWidgets import (
+        QApplication,
+        QMainWindow,
+        QWidget,
+        QLabel,
+        QHBoxLayout,
+        QVBoxLayout,
+        QCheckBox,
+        QSizePolicy,
+        QFrame,
+    )
+except ImportError:
+    from PySide2.QtWidgets import (
+        QApplication,
+        QMainWindow,
+        QWidget,
+        QLabel,
+        QHBoxLayout,
+        QVBoxLayout,
+        QCheckBox,
+        QSizePolicy,
+        QFrame,
+    )
 
 
 from . import config
@@ -29,7 +43,7 @@ from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
-from .scores import finalize_scores, get_current_scores
+from .scores import finalize_scores, get_current_scores, get_player_points
 from .utils import distance_on_surface
 from .weather import Weather
 
@@ -195,11 +209,18 @@ class Engine:
         time = str(datetime.timedelta(seconds=int(t)))[2:]
         self.time_label.setText(f"Time left: {time} s")
 
-        current_scores = get_current_scores(self.players)
-        for i, (name, player) in enumerate(self.players.items()):
-            self.player_boxes[i].setText(
-                f"{name}: {current_scores[name]}, {player.distance_travelled:.2f} km"
+        # current_scores = get_current_scores(self.players)
+        status = [
+            (
+                get_player_points(player),
+                player.distance_travelled,
+                player.team,
+                len([ch for ch in player.checkpoints if ch.reached]),
             )
+            for player in self.players.values()
+        ]
+        for i, (_, dist, team, nch) in enumerate(sorted(status, reverse=True)):
+            self.player_boxes[i].setText(f"{i+1}. {team}: {int(dist)} km [{nch}]")
 
     def run(self):
         # self.graphics.window.show()

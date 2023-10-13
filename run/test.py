@@ -5,9 +5,8 @@ import vendeeglobe as vg
 
 from template_bot import Bot, Bot2
 
-names = ['Bob']
+bots = [Bot(team="Alice"), Bot2(team="Bob")]
 
-players = {name: Bot2(team=name) for name in names}
 start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 
@@ -17,4 +16,4 @@ start = None
 #             loc.latitude += np.random.uniform(-1.0, 1.0)
 #             loc.longitude += np.random.uniform(-1.0, 1.0)
 
-vg.play(players=players, start=start)
+vg.play(players={bot.team: bot for bot in bots}, start=start)

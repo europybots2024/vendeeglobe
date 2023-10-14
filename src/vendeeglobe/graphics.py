@@ -176,6 +176,7 @@ class Graphics:
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
+        self.is_default_texture = True
 
         # Add checkpoints
         scl = [0.96, 0.99]
@@ -206,7 +207,7 @@ class Graphics:
         )
         self.default_tracer_colors = weather.tracer_colors
         self.high_contrast_tracer_colors = weather.tracer_colors.copy()
-        self.high_contrast_tracer_colors[..., :3] *= 0.9
+        self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
             # color=weather.tracer_colors.reshape((-1, 4)),
@@ -257,7 +258,11 @@ class Graphics:
         )
         kwargs = dict(pos=np.array([x, y, z]).T)
         if reset_colors:
-            kwargs['color'] = self.default_tracer_colors
+            kwargs['color'] = (
+                self.default_tracer_colors
+                if self.is_default_texture
+                else self.high_contrast_tracer_colors
+            )
         self.tracers.setData(**kwargs)
 
     def update_player_positions(self, players: Dict[str, Player]):
@@ -286,6 +291,8 @@ class Graphics:
         if val:
             self.sphere.setData(self.high_contrast_texture)
             self.tracers.setData(color=self.high_contrast_tracer_colors)
+            self.is_default_texture = False
         else:
             self.sphere.setData(self.default_texture)
             self.tracers.setData(color=self.default_tracer_colors)
+            self.is_default_texture = True

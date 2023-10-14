@@ -44,7 +44,7 @@ from .graphics import Graphics
 from .map import Map
 from .player import Player
 from .scores import finalize_scores, get_current_scores, get_player_points
-from .utils import distance_on_surface
+from .utils import distance_on_surface, longitude_difference
 from .weather import Weather
 
 
@@ -137,7 +137,7 @@ class Engine:
                     to=[next_lon, next_lat],
                 )
                 player.dlat = next_lat - player.latitude
-                player.dlon = next_lon - player.longitude
+                player.dlon = longitude_difference(next_lon, player.longitude)
                 player.latitude = next_lat
                 player.longitude = next_lon
             for checkpoint in player.checkpoints:

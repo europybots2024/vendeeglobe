@@ -88,3 +88,12 @@ def distance_on_surface(
     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     return config.map_radius * c
+
+
+def longitude_difference(lon1, lon2):
+    # Calculate the absolute difference in longitudes
+    lon_diff = abs(lon1 - lon2)
+    # Check if the crossing of the +/- 180 degrees line is shorter
+    crossing_diff = 360 - lon_diff
+    # Return the shorter of the two differences
+    return min(lon_diff, crossing_diff)

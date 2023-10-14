@@ -252,9 +252,9 @@ class Engine:
         widget1_layout.addWidget(self.time_label)
         self.tracer_checkbox = QCheckBox("Show wind tracers", checked=True)
         widget1_layout.addWidget(self.tracer_checkbox)
-
-        layout.addWidget(self.graphics.window)
-        self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.texture_checkbox = QCheckBox("High contrast", checked=False)
+        widget1_layout.addWidget(self.texture_checkbox)
+        self.texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
@@ -266,6 +266,9 @@ class Engine:
             # widget1_layout = QHBoxLayout(widget1_layout)
             self.player_boxes[i] = QLabel("")
             widget1_layout.addWidget(self.player_boxes[i])
+
+        layout.addWidget(self.graphics.window)
+        self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         window.show()
         self.timer = QtCore.QTimer()

@@ -17,6 +17,9 @@ class Map:
         self.sea_array = np.flipud(
             np.where(img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0)
         )
+        self.high_contrast_texture = np.array(
+            Image.fromarray(np.uint8(self.sea_array * 255)).convert('RGBA')
+        )
 
         self.nlat, self.nlon, _ = self.array.shape
         lat_min = -90

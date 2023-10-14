@@ -165,8 +165,15 @@ class Graphics:
         self.window.setWindowTitle("Vendee Globe")
         self.window.setCameraPosition(distance=config.map_radius * 4)
 
-        world = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
-        self.sphere = GLTexturedSphereItem(world)
+        self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
+        # self.high_contrast_texture = np.fliplr(
+        #     np.transpose(game_map.high_contrast_texture, axes=[1, 0, 2])
+        # )
+        self.high_contrast_texture = np.transpose(
+            game_map.high_contrast_texture, axes=[1, 0, 2]
+        )
+        # self.high_contrast_texture = game_map.high_contrast_texture
+        self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
 
@@ -197,11 +204,13 @@ class Graphics:
             ut.lon_to_phi(weather.tracer_lon.ravel()),
             ut.lat_to_theta(weather.tracer_lat.ravel()),
         )
-        self.tracer_colors = weather.tracer_colors
+        self.default_tracer_colors = weather.tracer_colors
+        self.high_contrast_tracer_colors = weather.tracer_colors.copy()
+        self.high_contrast_tracer_colors[..., :3] *= 0.9
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
             # color=weather.tracer_colors.reshape((-1, 4)),
-            color=self.tracer_colors,
+            color=self.default_tracer_colors,
             size=4,
             pxMode=True,
         )
@@ -248,7 +257,7 @@ class Graphics:
         )
         kwargs = dict(pos=np.array([x, y, z]).T)
         if reset_colors:
-            kwargs['color'] = self.tracer_colors
+            kwargs['color'] = self.default_tracer_colors
         self.tracers.setData(**kwargs)
 
     def update_player_positions(self, players: Dict[str, Player]):
@@ -271,4 +280,12 @@ class Graphics:
         self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")
 
     def hide_wind_tracers(self):
-        self.tracers.setData(color=np.zeros_like(self.tracer_colors))
+        self.tracers.setData(color=np.zeros_like(self.default_tracer_colors))
+
+    def toggle_texture(self, val):
+        if val:
+            self.sphere.setData(self.high_contrast_texture)
+            self.tracers.setData(color=self.high_contrast_tracer_colors)
+        else:
+            self.sphere.setData(self.default_texture)
+            self.tracers.setData(color=self.default_tracer_colors)

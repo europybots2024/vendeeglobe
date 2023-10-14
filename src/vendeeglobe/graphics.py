@@ -3,6 +3,7 @@
 from typing import Any, Dict
 
 import numpy as np
+import os
 from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
@@ -17,6 +18,7 @@ except ImportError:
 import sys
 
 from pyqtgraph.Qt import QtWidgets
+from PIL import Image
 
 from . import config
 from .map import Map
@@ -236,6 +238,7 @@ class Graphics:
         self.window.addItem(self.players)
 
         self.tracks = {}
+        self.avatars = {}
         for i, (name, player) in enumerate(players.items()):
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
@@ -249,6 +252,18 @@ class Graphics:
             }
             self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
+
+            av = Image.open(os.path.join(config.resourcedir, f'ship{i+1}.png'))
+            self.avatars[name] = gl.GLImageItem(
+                np.fliplr(np.transpose(np.array(av.convert('RGBA')), axes=[1, 0, 2]))
+            )
+            # self.avatars[name].setGLOptions("opaque")
+            self.avatars[name].translate(-24, -24, 0)
+            self.avatars[name].translate(x, y, z)
+            self.avatars[name].rotate(player.longitude, 0, 0, 1)
+            self.avatars[name].rotate(player.latitude, 0, 1, 0)
+            # self.avatars[name].translate(1.02 * x, 1.02 * y, 1.02 * z)
+            self.window.addItem(self.avatars[name])
 
     def update_wind_tracers(
         self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False
@@ -279,6 +294,11 @@ class Graphics:
             step = (npos // 1000) if npos > 1000 else 1
             self.tracks[name]['artist'].setData(pos=pos[::step])
             self.tracks[name]['pos'] = pos
+            # self.avatars[name].translate(
+            #     self.tracks[name]['pos'][-1, 0] - self.tracks[name]['pos'][-2, 0],
+            #     self.tracks[name]['pos'][-1, 1] - self.tracks[name]['pos'][-2, 1],
+            #     self.tracks[name]['pos'][-1, 2] - self.tracks[name]['pos'][-2, 2],
+            # )
 
     def update_time(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]

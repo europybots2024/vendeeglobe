@@ -270,6 +270,18 @@ class Engine:
         layout.addWidget(self.graphics.window)
         self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
+        widget2 = QWidget()
+        layout.addWidget(widget2)
+        widget2_layout = QVBoxLayout(widget2)
+        widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        widget2.setMinimumWidth(int(window.width() * 0.08))
+        self.score_boxes = {}
+        for i, p in enumerate(self.players.values()):
+            # widget1_layout = QHBoxLayout(widget1_layout)
+            self.score_boxes[i] = QLabel(p.team)
+            widget2_layout.addWidget(self.score_boxes[i])
+
+
         window.show()
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)

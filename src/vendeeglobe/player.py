@@ -36,6 +36,8 @@ class Player:
         ]
         self.arrived = False
         self.distance_travelled = 0.0
+        self.dlat = 0.0
+        self.dlon = 0.0
 
     def execute_bot(self, t: float, info: dict, safe: bool = False):
         instructions = None

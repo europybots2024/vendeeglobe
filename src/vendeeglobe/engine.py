@@ -136,6 +136,8 @@ class Engine:
                     origin=[player.longitude, player.latitude],
                     to=[next_lon, next_lat],
                 )
+                player.dlat = next_lat - player.latitude
+                player.dlon = next_lon - player.longitude
                 player.latitude = next_lat
                 player.longitude = next_lon
             for checkpoint in player.checkpoints:
@@ -280,7 +282,6 @@ class Engine:
             # widget1_layout = QHBoxLayout(widget1_layout)
             self.score_boxes[i] = QLabel(p.team)
             widget2_layout.addWidget(self.score_boxes[i])
-
 
         window.show()
         self.timer = QtCore.QTimer()

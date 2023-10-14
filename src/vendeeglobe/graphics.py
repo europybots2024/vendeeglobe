@@ -165,7 +165,11 @@ class Graphics:
         self.window = gl.GLViewWidget()
 
         self.window.setWindowTitle("Vendee Globe")
-        self.window.setCameraPosition(distance=config.map_radius * 4)
+        self.window.setCameraPosition(
+            distance=config.map_radius * 4,
+            elevation=config.start.latitude,
+            azimuth=180 + config.start.longitude,
+        )
 
         self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
         # self.high_contrast_texture = np.fliplr(
@@ -259,9 +263,14 @@ class Graphics:
             )
             # self.avatars[name].setGLOptions("opaque")
             self.avatars[name].translate(-24, -24, 0)
-            self.avatars[name].translate(x, y, z)
+            self.avatars[name].rotate(90, 1, 0, 0)
+            self.avatars[name].translate(0, config.map_radius, 0)
+            self.avatars[name].rotate(90, 0, 0, 1)
             self.avatars[name].rotate(player.longitude, 0, 0, 1)
-            self.avatars[name].rotate(player.latitude, 0, 1, 0)
+            perp_vec = np.cross([x, y, 0], [0, 0, 1])
+            perp_vec /= np.linalg.norm(perp_vec)
+            self.avatars[name].rotate(player.latitude, *perp_vec)
+            # self.avatars[name].rotate(player.latitude, 0, 1, 0)
             # self.avatars[name].translate(1.02 * x, 1.02 * y, 1.02 * z)
             self.window.addItem(self.avatars[name])
 
@@ -286,7 +295,7 @@ class Graphics:
         x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
         self.players.setData(pos=np.array([x, y, z]).T)
 
-        for i, name in enumerate(self.tracks):
+        for i, (name, player) in enumerate(players.items()):
             pos = np.vstack(
                 [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
             )
@@ -294,11 +303,10 @@ class Graphics:
             step = (npos // 1000) if npos > 1000 else 1
             self.tracks[name]['artist'].setData(pos=pos[::step])
             self.tracks[name]['pos'] = pos
-            # self.avatars[name].translate(
-            #     self.tracks[name]['pos'][-1, 0] - self.tracks[name]['pos'][-2, 0],
-            #     self.tracks[name]['pos'][-1, 1] - self.tracks[name]['pos'][-2, 1],
-            #     self.tracks[name]['pos'][-1, 2] - self.tracks[name]['pos'][-2, 2],
-            # )
+            self.avatars[name].rotate(player.dlon, 0, 0, 1)
+            perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
+            perp_vec /= np.linalg.norm(perp_vec)
+            self.avatars[name].rotate(player.dlat, *perp_vec)
 
     def update_time(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import matplotlib as mpl
+# import matplotlib as mpl
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from typing import Optional, Tuple
@@ -58,8 +58,8 @@ class Weather:
         self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
         self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
-        self.tracer_cmap = mpl.colormaps['Reds']
-        self.norm = mpl.colors.Normalize()
+        # self.tracer_cmap = mpl.colormaps['Reds']
+        # self.norm = mpl.colors.Normalize()
 
         self.number_of_new_tracers = 5
         self.new_tracer_counter = 0

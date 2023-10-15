@@ -68,9 +68,9 @@ class Engine:
 
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
-        for i, (name, bot) in enumerate(self.bots.items()):
+        for name, bot in self.bots.items():
             self.players[name] = Player(
-                team=name, number=i, avatar=getattr(bot, 'avatar', None), start=start
+                team=name, avatar=getattr(bot, 'avatar', 1), start=start
             )
 
         print(self.players)

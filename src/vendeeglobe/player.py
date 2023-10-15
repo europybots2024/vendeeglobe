@@ -5,6 +5,8 @@ from itertools import chain
 from typing import Any, Optional, Sequence, Union, Tuple
 
 import numpy as np
+from PIL import Image
+from matplotlib.colors import hex2color
 
 from . import config
 from . import utils as utl
@@ -16,9 +18,8 @@ class Player:
         self,
         # bot: Any,
         team: str,
-        number: int = 0,
+        avatar: Union[str, int],
         start: Optional[Location] = None,
-        avatar: Optional[Union[str, int]] = None,
     ):
         # self.bot = bot
         self.team = team
@@ -39,6 +40,20 @@ class Player:
         self.distance_travelled = 0.0
         self.dlat = 0.0
         self.dlon = 0.0
+        self.make_avatar(avatar)
+
+    def make_avatar(self, avatar):
+        if isinstance(avatar, str):
+            self.avatar = Image.open(avatar)
+        else:
+            img = Image.open(config.resourcedir / f'ship{avatar}.png')
+            img = img.convert("RGBA")
+            data = img.getdata()
+            new_data = np.array(data).reshape(img.height, img.width, 4)
+            rgb = hex2color(self.color)
+            for i in range(3):
+                new_data[..., i] = int(round(rgb[i] * 255))
+            self.avatar = Image.fromarray(new_data.astype(np.uint8))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         # instructions = None

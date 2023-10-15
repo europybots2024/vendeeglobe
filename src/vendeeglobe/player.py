@@ -44,16 +44,18 @@ class Player:
 
     def make_avatar(self, avatar):
         if isinstance(avatar, str):
-            self.avatar = Image.open(avatar)
+            self.avatar = Image.open(avatar).resize(config.avatar_size).convert('RGBA')
         else:
             img = Image.open(config.resourcedir / f'ship{avatar}.png')
-            img = img.convert("RGBA")
+            img = img.resize(config.avatar_size).convert("RGBA")
+            # self.avatar = img
             data = img.getdata()
-            new_data = np.array(data).reshape(img.height, img.width, 4)
+            self.avatar = np.array(data).reshape(img.height, img.width, 4)
+            # print(self.team, self.avatar[..., 3].max())
             rgb = hex2color(self.color)
             for i in range(3):
-                new_data[..., i] = int(round(rgb[i] * 255))
-            self.avatar = Image.fromarray(new_data.astype(np.uint8))
+                self.avatar[..., i] = int(round(rgb[i] * 255))
+            # self.avatar = Image.fromarray(new_data.astype(np.uint8))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         # instructions = None

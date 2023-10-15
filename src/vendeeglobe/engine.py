@@ -166,6 +166,7 @@ class Engine:
                 )
                 player.dlat = next_lat - player.latitude
                 player.dlon = longitude_difference(next_lon, player.longitude)
+                # player.dlon = next_lon - player.longitude
                 player.latitude = next_lat
                 player.longitude = next_lon
             for checkpoint in player.checkpoints:

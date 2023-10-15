@@ -30,6 +30,7 @@ class Config:
     forecast_length: int = 5  # in days
     weather_update_interval: float = 3.0  # 3s = 12 hours
     seconds_to_hours = 4.0
+    avatar_size = [64, 64]
 
     def pop_score(self) -> int:
         return (

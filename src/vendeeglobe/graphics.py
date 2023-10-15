@@ -258,12 +258,9 @@ class Graphics:
             self.window.addItem(self.tracks[name]['artist'])
 
             # av = Image.open(os.path.join(config.resourcedir, f'ship{i+1}.png'))
+            # print(np.array(player.avatar))
             self.avatars[name] = gl.GLImageItem(
-                np.fliplr(
-                    np.transpose(
-                        np.array(player.avatar.convert('RGBA')), axes=[1, 0, 2]
-                    )
-                )
+                np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
             )
             # self.avatars[name].setGLOptions("opaque")
             self.avatars[name].translate(-24, -24, 0)

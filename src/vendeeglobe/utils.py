@@ -90,10 +90,24 @@ def distance_on_surface(
     return config.map_radius * c
 
 
+# def longitude_difference(lon1, lon2):
+#     # Calculate the absolute difference in longitudes
+#     lon_diff = abs(lon1 - lon2)
+#     # Check if the crossing of the +/- 180 degrees line is shorter
+#     crossing_diff = 360 - lon_diff
+#     # Return the shorter of the two differences
+#     return min(lon_diff, crossing_diff)
+
+
 def longitude_difference(lon1, lon2):
-    # Calculate the absolute difference in longitudes
-    lon_diff = abs(lon1 - lon2)
+    # Calculate the standard difference in longitudes
+    lon_diff = lon1 - lon2
+
     # Check if the crossing of the +/- 180 degrees line is shorter
-    crossing_diff = 360 - lon_diff
-    # Return the shorter of the two differences
-    return min(lon_diff, crossing_diff)
+    crossing_diff = 360 - abs(lon_diff)
+
+    # Return the signed difference
+    if lon_diff >= 0:
+        return min(lon_diff, crossing_diff)
+    else:
+        return -min(-lon_diff, crossing_diff)

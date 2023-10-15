@@ -16,4 +16,4 @@ start = None
 #             loc.latitude += np.random.uniform(-1.0, 1.0)
 #             loc.longitude += np.random.uniform(-1.0, 1.0)
 
-vg.play(players={bot.team: bot for bot in bots}, start=start)
+vg.play(bots=bots, start=start)

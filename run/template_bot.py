@@ -16,6 +16,7 @@ class Bot:
 
     def __init__(self, team: str = CREATOR):
         self.team = team  # Mandatory attribute
+        self.avatar = 1  # Optional attribute
         self.course = [
             Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
             Checkpoint(longitude=-68.004373, latitude=18.180470, radius=10),
@@ -61,6 +62,7 @@ class Bot2:
 
     def __init__(self, team: str = CREATOR):
         self.team = team  # Mandatory attribute
+        self.avatar = 2  # Optional attribute
         self.course = [
             Checkpoint(longitude=-29.908577, latitude=17.999811, radius=10),
             Checkpoint(latitude=-11.441808, longitude=-29.660252, radius=10),

@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from .config import Config
-
-config = Config()
-
+from .config import config
 from .engine import Engine
 from .core import Checkpoint, Location, Heading, Vector
 

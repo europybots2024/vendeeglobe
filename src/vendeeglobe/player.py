@@ -14,12 +14,13 @@ from .core import Checkpoint, Location, Heading, Vector
 class Player:
     def __init__(
         self,
-        bot: Any,
+        # bot: Any,
         team: str,
         number: int = 0,
         start: Optional[Location] = None,
+        avatar: Optional[Union[str, int]] = None,
     ):
-        self.bot = bot
+        # self.bot = bot
         self.team = team
         self.score = None
         self.heading = 180.0
@@ -39,15 +40,15 @@ class Player:
         self.dlat = 0.0
         self.dlon = 0.0
 
-    def execute_bot(self, t: float, info: dict, safe: bool = False):
-        instructions = None
-        if safe:
-            try:
-                instructions = self.bot.run(t=t, info=info)
-            except:
-                pass
-        else:
-            instructions = self.bot.run(t=t, info=info)
+    def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
+        # instructions = None
+        # if safe:
+        #     try:
+        #         instructions = self.bot.run(t=t, info=info)
+        #     except:
+        #         pass
+        # else:
+        #     instructions = self.bot.run(t=t, info=info)
         if isinstance(instructions, Location):
             self.goto(longitude=instructions.longitude, latitude=instructions.latitude)
         elif isinstance(instructions, Heading):

@@ -51,7 +51,7 @@ from .weather import Weather
 class Engine:
     def __init__(
         self,
-        players: dict,
+        bots: dict,
         safe: bool = False,
         test: bool = True,
         time_limit: float = 8 * 60,
@@ -66,10 +66,13 @@ class Engine:
         if not self.test:
             start = None
 
-        self.players = {
-            name: Player(team=name, bot=bot, number=i, start=start)
-            for i, (name, bot) in enumerate(players.items())
-        }
+        self.bots = {bot.team: bot for bot in bots}
+        self.players = {}
+        for i, (name, bot) in enumerate(self.bots.items()):
+            self.players[name] = Player(
+                team=name, number=i, avatar=getattr(bot, 'avatar', None), start=start
+            )
+
         print(self.players)
 
         self.map = Map()
@@ -94,7 +97,8 @@ class Engine:
         times = []
         for player in self.players.values():
             t0 = time.time()
-            player.execute_bot(t=0, info=self.get_info(player), safe=self.safe)
+            # player.execute_bot(t=0, info=self.get_info(player), safe=self.safe)
+            self.execute_player_bot(player=player, t=0)
             times.append(((time.time() - t0), player))
         ng = 3
         time_groups = {i: [] for i in range(ng)}
@@ -117,9 +121,33 @@ class Engine:
             "forecast": self.forecast,
         }
 
+    def execute_player_bot(self, player, t: float):
+        instructions = None
+        info = self.get_info(player)
+        if self.safe:
+            try:
+                instructions = self.bots[player.team].run(t=t, info=info)
+            except:
+                pass
+        else:
+            instructions = self.bots[player.team].run(t=t, info=info)
+        return instructions
+
     def call_player_bots(self, t: float, players: List[Player]):
+        # for bot in self.bots.values():
         for player in players:
-            player.execute_bot(t=t, info=self.get_info(player), safe=self.safe)
+            # instructions = None
+            # info = self.get_info(player)
+            # if self.safe:
+            #     try:
+            #         instructions = self.bots[player.team].run(t=t, info=info)
+            #     except:
+            #         pass
+            # else:
+            #     instructions = self.bot.run(t=t, info=info)
+            player.execute_bot_instructions(self.execute_player_bot(player=player, t=t))
+
+            # player.execute_bot(t=t, info=self.get_info(player), safe=self.safe)
 
     def move_players(self, weather: Weather, t: float, dt: float):
         latitudes = np.array([player.latitude for player in self.players.values()])

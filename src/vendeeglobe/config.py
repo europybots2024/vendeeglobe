@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import dataclass
+from glob import glob
 from pathlib import Path
 from typing import Tuple
+
+from PIL import Image
 
 from .core import Checkpoint
 
@@ -34,6 +37,34 @@ class Config:
             if self.score_counter < len(self.scores)
             else 0
         )
+
+
+config = Config()
+
+
+# class ImageLibrary:
+#     def __init__(self):
+#         self.images = {}
+#         # files =
+#         # print(files)
+#         for f in glob(str(config.resourcedir / "ship*.png")):
+#             img = Image.open(f)
+#             img = img.convert("RGBA")
+#             data = img.getdata()
+#             new_data = np.array(data).reshape(img.height, img.width, 4)
+#             for i in range(3):
+#                 new_data[..., i] = int(round(rgb[i] * 255))
+#             return Image.fromarray(new_data.astype(np.uint8))
+
+#     # def get(self, fname: str):
+#     #     if fname not in self.images:
+#     #         self.images[fname] = mpl.image.imread(
+#     #             str(config.resourcedir / fname), format="jpg"
+#     #         )
+#     #     return self.images[fname]
+
+
+# image_library = ImageLibrary()
 
 
 # Timing:

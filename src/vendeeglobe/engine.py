@@ -173,10 +173,15 @@ class Engine:
         for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
             lat, lon = player.get_path(dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
-            sea_inds = np.where(terrain == 1)[0]
-            if len(sea_inds) > 0:
-                next_lat = lat[sea_inds[-1]]
-                next_lon = lon[sea_inds[-1]]
+            # w = np.where(terrain == )[0]
+            w = np.where(terrain == 0)[0]
+            if len(w) > 0:
+                ind = max(w[0] - 1, 0)
+            else:
+                ind = len(terrain) - 1
+            if ind > 0:
+                next_lat = lat[ind]
+                next_lon = lon[ind]
                 player.distance_travelled += distance_on_surface(
                     origin=[player.longitude, player.latitude],
                     to=[next_lon, next_lat],

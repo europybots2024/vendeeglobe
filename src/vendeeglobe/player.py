@@ -143,7 +143,7 @@ class Player:
         # Race trace the path
         # norm = np.linalg.norm(uv)
         norm = np.linalg.norm(dist)
-        ray = dist.reshape((2, 1)) * np.linspace(0, norm, max(20, int(norm) + 1))
+        ray = dist.reshape((2, 1)) * np.linspace(0, norm, (int(norm) + 1) * 3)
         path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon

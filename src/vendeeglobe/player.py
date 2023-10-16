@@ -77,7 +77,7 @@ class Player:
         elif instructions.vector is not None:
             self.set_vector([instructions.vector.u, instructions.vector.v])
         if instructions.sail is not None:
-            self.sail = instructions.sail
+            self.sail = min(max(0, instructions.sail), 1)
 
     def get_position(self) -> np.ndarray:
         return np.array([self.longitude, self.latitude])

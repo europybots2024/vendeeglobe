@@ -17,6 +17,6 @@ start = None
 #             loc.longitude += np.random.uniform(-1.0, 1.0)
 
 # start = vg.Location(latitude=47, longitude=-10)
-start = vg.Location(longitude=32.251133, latitude=31.784320)
+# start = vg.Location(longitude=32.251133, latitude=31.784320)
 
-vg.play(bots=bots, start=start)
+vg.play(bots=bots, start=start, test=False)

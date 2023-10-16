@@ -25,22 +25,22 @@ class Bot:
         self.team = team  # Mandatory attribute
         self.avatar = 1  # Optional attribute
         self.course = [
-            # Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
-            # Checkpoint(longitude=-68.004373, latitude=18.180470, radius=10),
-            # Checkpoint(longitude=-80.3, latitude=9.4875, radius=10),
-            # Checkpoint(longitude=-79.3977636, latitude=8.6923598, radius=10),
-            # Checkpoint(longitude=-79.6065038, latitude=5.6673413, radius=10),
-            # Checkpoint(longitude=-168.943864, latitude=2.806318, radius=500),
-            # Checkpoint(longitude=174.900294, latitude=-16.801420, radius=10),
-            # Checkpoint(longitude=146.737149, latitude=-45.321510, radius=10),
-            # Checkpoint(longitude=114.565909, latitude=-36.310652, radius=10),
-            # Checkpoint(longitude=77.674694, latitude=-15.668984, radius=10),
-            # Checkpoint(longitude=51.301983, latitude=13.007233, radius=10),
-            # Checkpoint(longitude=43.413064, latitude=12.601511, radius=5),
-            # Checkpoint(longitude=34.008390, latitude=27.560352, radius=5),
-            # Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
-            # Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
-            # Checkpoint(longitude=32.251133, latitude=31.784320, radius=5),
+            Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
+            Checkpoint(longitude=-68.004373, latitude=18.180470, radius=10),
+            Checkpoint(longitude=-80.3, latitude=9.4875, radius=10),
+            Checkpoint(longitude=-79.3977636, latitude=8.6923598, radius=10),
+            Checkpoint(longitude=-79.6065038, latitude=5.6673413, radius=10),
+            Checkpoint(longitude=-168.943864, latitude=2.806318, radius=500),
+            Checkpoint(longitude=174.900294, latitude=-16.801420, radius=10),
+            Checkpoint(longitude=146.737149, latitude=-45.321510, radius=10),
+            Checkpoint(longitude=114.565909, latitude=-36.310652, radius=10),
+            Checkpoint(longitude=77.674694, latitude=-15.668984, radius=10),
+            Checkpoint(longitude=51.301983, latitude=13.007233, radius=10),
+            Checkpoint(longitude=43.413064, latitude=12.601511, radius=5),
+            Checkpoint(longitude=34.008390, latitude=27.560352, radius=5),
+            Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
+            Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
+            Checkpoint(longitude=32.251133, latitude=31.784320, radius=5),
             Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0),
         ]
         # for ch in self.course[:-1]:
@@ -57,6 +57,29 @@ class Bot:
         vector: np.ndarray,
         forecast: WeatherForecast,
     ):
+        """
+        This is the method that will be called at every time step to get the
+        instructions for the ship.
+
+        Parameters
+        ----------
+        t:
+            The current time in hours.
+        dt:
+            The time step in hours.
+        longitude:
+            The current longitude of the ship.
+        latitude:
+            The current latitude of the ship.
+        heading:
+            The current heading of the ship.
+        speed:
+            The current speed of the ship.
+        vector:
+            The current heading of the ship, expressed as a vector.
+        forecast:
+            The weather forecast for the next 5 days.
+        """
         instructions = Instructions()
         for ch in self.course:
             dist = distance_on_surface(
@@ -64,7 +87,7 @@ class Bot:
                 to=[ch.longitude, ch.latitude],
             )
             jump = dt * np.linalg.norm(speed)
-            if dist < 2.0 * ch.radius:
+            if dist < 2.0 * ch.radius + jump:
                 instructions.sail = min(ch.radius / jump, 1)
             else:
                 instructions.sail = 1.0

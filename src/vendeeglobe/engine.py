@@ -43,7 +43,7 @@ from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
-from .scores import finalize_scores, get_player_points
+from .scores import finalize_scores, get_player_points, read_scores
 from .utils import distance_on_surface, longitude_difference
 from .weather import Weather
 
@@ -234,7 +234,8 @@ class Engine:
                 # print("player score:", player.score)
 
     def shutdown(self):
-        finalize_scores(players=self.players, test=self.test)
+        final_scores = finalize_scores(players=self.players, test=self.test)
+        self.update_leaderboard(final_scores)
         self.timer.stop()
 
     def update(self):
@@ -289,12 +290,26 @@ class Engine:
                 get_player_points(player),
                 player.distance_travelled,
                 player.team,
+                player.color,
                 len([ch for ch in player.checkpoints if ch.reached]),
             )
             for player in self.players.values()
         ]
-        for i, (_, dist, team, nch) in enumerate(sorted(status, reverse=True)):
-            self.player_boxes[i].setText(f"{i+1}. {team}: {int(dist)} km [{nch}]")
+        for i, (_, dist, team, col, nch) in enumerate(sorted(status, reverse=True)):
+            self.player_boxes[i].setText(
+                f'<div style="color:{col}">&#9632;</div> {i+1}. {team}: {int(dist)} km [{nch}]'
+            )
+
+    def update_leaderboard(self, scores):
+        sorted_scores = dict(
+            sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        )
+        # print('sorted_scores', sorted_scores)
+        for i, (name, score) in enumerate(sorted_scores.items()):
+            self.score_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f'{i+1}. {name}: {score}'
+            )
 
     def run(self):
         # self.graphics.window.show()
@@ -336,10 +351,18 @@ class Engine:
         widget1_layout.addWidget(separator)
 
         self.player_boxes = {}
-        for i in range(len(self.players)):
+        for i, p in enumerate(self.players.values()):
             # widget1_layout = QHBoxLayout(widget1_layout)
             self.player_boxes[i] = QLabel("")
+            # self.infoLbl.setTextFormat(Qt.RichText)
             widget1_layout.addWidget(self.player_boxes[i])
+            # sep = QFrame()
+            # sep.setFrameShape(QFrame.HLine)
+            # sep.setLineWidth(1)
+            # sep.setStyleSheet(f"background-color: {p.color};")
+            # widget1_layout.addWidget(sep)
+
+        widget1_layout.addStretch()
 
         layout.addWidget(self.graphics.window)
         self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -349,11 +372,13 @@ class Engine:
         widget2_layout = QVBoxLayout(widget2)
         widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         widget2.setMinimumWidth(int(window.width() * 0.08))
+        widget2_layout.addWidget(QLabel("Leader board:"))
         self.score_boxes = {}
         for i, p in enumerate(self.players.values()):
-            # widget1_layout = QHBoxLayout(widget1_layout)
             self.score_boxes[i] = QLabel(p.team)
             widget2_layout.addWidget(self.score_boxes[i])
+        widget2_layout.addStretch()
+        self.update_leaderboard(read_scores(self.players.keys(), test=self.test))
 
         window.show()
         self.timer = QtCore.QTimer()

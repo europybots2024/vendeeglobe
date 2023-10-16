@@ -10,7 +10,7 @@ from .player import Player
 from .utils import distance_on_surface
 
 
-def _read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
+def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
     scores = {p: 0 for p in players}
     fname = "scores.txt"
     if os.path.exists(fname) and (not test):
@@ -191,7 +191,8 @@ def _print_scores(
 
 
 def finalize_scores(players: Dict[str, Player], test: bool = False):
-    scores = _read_scores(players, test=test)
+    scores = read_scores(players, test=test)
     round_scores, final_scores = _get_final_scores(players, scores)
     _print_scores(round_scores=round_scores, final_scores=final_scores)
     _write_scores(final_scores)
+    return final_scores

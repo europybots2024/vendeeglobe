@@ -23,7 +23,7 @@ class Player:
     ):
         # self.bot = bot
         self.team = team
-        self.score = None
+        self.bonus = 0
         self.heading = 180.0
         self.speed = 0.0
         if start is None:
@@ -41,6 +41,7 @@ class Player:
         self.dlat = 0.0
         self.dlon = 0.0
         self.make_avatar(avatar)
+        self.sail = 1.0
 
     def make_avatar(self, avatar):
         if isinstance(avatar, str):
@@ -66,12 +67,17 @@ class Player:
         #         pass
         # else:
         #     instructions = self.bot.run(t=t, info=info)
-        if isinstance(instructions, Location):
-            self.goto(longitude=instructions.longitude, latitude=instructions.latitude)
-        elif isinstance(instructions, Heading):
-            self.set_heading(instructions.angle)
-        elif isinstance(instructions, Vector):
-            self.set_vector([instructions.u, instructions.v])
+        if instructions.location is not None:
+            self.goto(
+                longitude=instructions.location.longitude,
+                latitude=instructions.location.latitude,
+            )
+        elif instructions.heading is not None:
+            self.set_heading(instructions.heading.angle)
+        elif instructions.vector is not None:
+            self.set_vector([instructions.vector.u, instructions.vector.v])
+        if instructions.sail is not None:
+            self.sail = instructions.sail
 
     def get_position(self) -> np.ndarray:
         return np.array([self.longitude, self.latitude])
@@ -128,7 +134,7 @@ class Player:
         pos = self.get_position()
         uv = np.array([u, v])
         self.speed = utl.wind_force(self.get_vector(), uv)
-        f = self.speed * dt
+        f = self.speed * dt * self.sail
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )

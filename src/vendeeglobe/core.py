@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -20,6 +21,14 @@ class Heading:
 class Vector:
     u: float
     v: float
+
+
+@dataclass
+class Instructions:
+    location: Optional[Location] = None
+    heading: Optional[Heading] = None
+    vector: Optional[Vector] = None
+    sail: Optional[float] = None
 
 
 @dataclass

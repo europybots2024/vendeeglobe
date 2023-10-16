@@ -297,17 +297,18 @@ class Graphics:
         self.players.setData(pos=np.array([x, y, z]).T)
 
         for i, (name, player) in enumerate(players.items()):
-            pos = np.vstack(
-                [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
-            )
-            npos = len(pos)
-            step = (npos // 1000) if npos > 1000 else 1
-            self.tracks[name]['artist'].setData(pos=pos[::step])
-            self.tracks[name]['pos'] = pos
-            self.avatars[name].rotate(player.dlon, 0, 0, 1)
-            perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
-            perp_vec /= np.linalg.norm(perp_vec)
-            self.avatars[name].rotate(player.dlat, *perp_vec)
+            if not player.arrived:
+                pos = np.vstack(
+                    [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
+                )
+                npos = len(pos)
+                step = (npos // 1000) if npos > 1000 else 1
+                self.tracks[name]['artist'].setData(pos=pos[::step])
+                self.tracks[name]['pos'] = pos
+                self.avatars[name].rotate(player.dlon, 0, 0, 1)
+                perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
+                perp_vec /= np.linalg.norm(perp_vec)
+                self.avatars[name].rotate(player.dlat, *perp_vec)
 
     def update_time(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]

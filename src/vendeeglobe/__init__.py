@@ -2,7 +2,7 @@
 
 from .config import config
 from .engine import Engine
-from .core import Checkpoint, Location, Heading, Vector
+from .core import Checkpoint, Location, Heading, Vector, Instructions
 
 
 def play(*args, **kwargs):

@@ -22,22 +22,25 @@ class Config:
         Checkpoint(latitude=2.806318, longitude=-168.943864, radius=2000.0),
         Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1200.0),
     )
-    scores: Tuple[int, ...] = (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
-    score_counter: int = 0
-    player_update_interval: float = 1.0
+    # scores: Tuple[int, ...] = (25, 18, 15, 12, 10, 8, 6, 4, 2, 1)
+    # score_counter: int = 0
+    # player_update_interval: float = 1.0
     graphics_update_interval: float = 0.1
     time_update_interval: float = 1.0
     forecast_length: int = 5  # in days
     weather_update_interval: float = 3.0  # 3s = 12 hours
     seconds_to_hours = 4.0
     avatar_size = [64, 64]
+    score_step = 100_000
 
-    def pop_score(self) -> int:
-        return (
-            self.scores[self.score_counter]
-            if self.score_counter < len(self.scores)
-            else 0
-        )
+    # def pop_score(self) -> int:
+    #     out = (
+    #         self.scores[self.score_counter]
+    #         if self.score_counter < len(self.scores)
+    #         else 0
+    #     )
+    #     self.score_counter += 1
+    #     return out
 
 
 config = Config()

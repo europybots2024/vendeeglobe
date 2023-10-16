@@ -43,7 +43,7 @@ from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
-from .scores import finalize_scores, get_current_scores, get_player_points
+from .scores import finalize_scores, get_player_points
 from .utils import distance_on_surface, longitude_difference
 from .weather import Weather
 
@@ -63,8 +63,8 @@ class Engine:
         self.safe = safe
         self.test = test
 
-        if not self.test:
-            start = None
+        # if not self.test:
+        #     start = None
 
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
@@ -72,6 +72,11 @@ class Engine:
             self.players[name] = Player(
                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
             )
+            # ==============
+            self.players[name].latitude += np.random.uniform(-0.5, 0.5)
+            for ch in self.players[name].checkpoints:
+                ch.reached = True
+            # ==============
 
         print(self.players)
 
@@ -92,6 +97,7 @@ class Engine:
 
         self.set_schedule()
         self.group_counter = 0
+        # self.points_this_round = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
 
     def set_schedule(self):
         times = []
@@ -186,10 +192,26 @@ class Engine:
                 ch.reached for ch in player.checkpoints
             ):
                 player.arrived = True
+                # player.score = (
+                #     self.points_this_round.pop(0) if self.points_this_round else 0
+                # )
+                player.bonus = config.score_step * len(self.players_not_arrived)
+                n_not_arrived = len(self.players_not_arrived)
+                n_players = len(self.players)
+                if n_not_arrived == n_players:
+                    pos_str = "st"
+                elif n_not_arrived == n_players - 1:
+                    pos_str = "nd"
+                elif n_not_arrived == n_players - 2:
+                    pos_str = "rd"
+                else:
+                    pos_str = "th"
+                print(
+                    f"{player.team} finished in {n_players - n_not_arrived + 1}"
+                    f"{pos_str} position!"
+                )
                 self.players_not_arrived.remove(player.team)
-                print(f"{player.team} finished!")
-                player.score = config.pop_score()
-                print("player score:", player.score)
+                # print("player score:", player.score)
 
     def shutdown(self):
         finalize_scores(players=self.players, test=self.test)

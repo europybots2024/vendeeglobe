@@ -191,6 +191,10 @@ class Engine:
                 # player.dlon = next_lon - player.longitude
                 player.latitude = next_lat
                 player.longitude = next_lon
+            else:
+                player.dlat = 0
+                player.dlon = 0
+
             for checkpoint in player.checkpoints:
                 if not checkpoint.reached:
                     d = distance_on_surface(

@@ -21,11 +21,17 @@ requires-python = ">=3.8"
 dependencies = [
     "importlib-resources",
     "global-land-mask",
+    "matplotlib",
+    "numba",
     "numpy",
+    "pillow",
     "pythreejs",
-    "pyqtgraph",
-    "pyqt6",
     "pyopengl",
+    "pyqtgraph",
+    "pyqt5",
+    "pyqt6",
+    "PySide2",
+    "scipy",
 ]
 
 [tool.setuptools.packages.find]

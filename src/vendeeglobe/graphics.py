@@ -129,22 +129,38 @@ class GLTexturedSphereItem(GLGraphicsItem):
         t_n = theta / np.pi
         p_n = phi / (2 * np.pi)
 
+        phi_grid, theta_grid = np.meshgrid(phi, theta, indexing="ij")
+
+        x, y, z = ut.to_xyz(config.map_radius, phi_grid, theta_grid, gl=True)
+        # xyz = ut.to_xyz(config.map_radius, phi[i], theta[j + 1], gl=True)
+        # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j + 1], gl=True)
+        # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j], gl=True)
+
         glBegin(GL_QUADS)
         for j in range(len(theta) - 1):
             for i in range(len(phi) - 1):
-                xyz_nw = ut.to_xyz(phi[i], theta[j], gl=True)
-                xyz_sw = ut.to_xyz(phi[i], theta[j + 1], gl=True)
-                xyz_se = ut.to_xyz(phi[i + 1], theta[j + 1], gl=True)
-                xyz_ne = ut.to_xyz(phi[i + 1], theta[j], gl=True)
+                # xyz_nw = ut.to_xyz(config.map_radius, phi[i], theta[j], gl=True)
+                # xyz_sw = ut.to_xyz(config.map_radius, phi[i], theta[j + 1], gl=True)
+                # xyz_se = ut.to_xyz(config.map_radius, phi[i + 1], theta[j + 1], gl=True)
+                # xyz_ne = ut.to_xyz(config.map_radius, phi[i + 1], theta[j], gl=True)
+
+                # glTexCoord2f(p_n[i], t_n[j])
+                # glVertex3f(xyz_nw[i, j, 0], xyz_nw[1], xyz_nw[2])
+                # glTexCoord2f(p_n[i], t_n[j + 1])
+                # glVertex3f(xyz_sw[0], xyz_sw[1], xyz_sw[2])
+                # glTexCoord2f(p_n[i + 1], t_n[j + 1])
+                # glVertex3f(xyz_se[0], xyz_se[1], xyz_se[2])
+                # glTexCoord2f(p_n[i + 1], t_n[j])
+                # glVertex3f(xyz_ne[0], xyz_ne[1], xyz_ne[2])
 
                 glTexCoord2f(p_n[i], t_n[j])
-                glVertex3f(xyz_nw[0], xyz_nw[1], xyz_nw[2])
+                glVertex3f(x[i, j], y[i, j], z[i, j])
                 glTexCoord2f(p_n[i], t_n[j + 1])
-                glVertex3f(xyz_sw[0], xyz_sw[1], xyz_sw[2])
+                glVertex3f(x[i, j + 1], y[i, j + 1], z[i, j + 1])
                 glTexCoord2f(p_n[i + 1], t_n[j + 1])
-                glVertex3f(xyz_se[0], xyz_se[1], xyz_se[2])
+                glVertex3f(x[i + 1, j + 1], y[i + 1, j + 1], z[i + 1, j + 1])
                 glTexCoord2f(p_n[i + 1], t_n[j])
-                glVertex3f(xyz_ne[0], xyz_ne[1], xyz_ne[2])
+                glVertex3f(x[i + 1, j], y[i + 1, j], z[i + 1, j])
 
         glEnd()
         glDisable(GL_TEXTURE_2D)
@@ -157,12 +173,18 @@ In this example, the image data is sampled from a volume and the image planes
 placed as if they slice through the volume.
 """
 
+from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
+
 
 class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
         self.app = pg.mkQApp("Vendee Globe")
         # self.app = QApplication(sys.argv)
         self.window = gl.GLViewWidget()
+        # self.window = RemoteGraphicsView(debug=False, useOpenGL=True)
+        # print(dir(self.window))
+        # print("==")
+        # print(dir(gl.GLViewWidget()))
 
         self.window.setWindowTitle("Vendee Globe")
         self.window.setCameraPosition(
@@ -208,6 +230,7 @@ class Graphics:
 
         # Add tracers
         x, y, z = ut.to_xyz(
+            config.map_radius,
             ut.lon_to_phi(weather.tracer_lon.ravel()),
             ut.lat_to_theta(weather.tracer_lat.ravel()),
         )
@@ -229,7 +252,9 @@ class Graphics:
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
         colors = np.array([to_rgba(player.color) for player in players.values()])
-        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        x, y, z = ut.to_xyz(
+            config.map_radius, ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes)
+        )
 
         self.players = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
@@ -245,7 +270,9 @@ class Graphics:
         self.avatars = {}
         for i, (name, player) in enumerate(players.items()):
             x, y, z = ut.to_xyz(
-                ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
+                config.map_radius,
+                ut.lon_to_phi(player.longitude),
+                ut.lat_to_theta(player.latitude),
             )
             pos = np.array([[x], [y], [z]]).T
             self.tracks[name] = {
@@ -279,7 +306,9 @@ class Graphics:
         self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False
     ):
         x, y, z = ut.to_xyz(
-            ut.lon_to_phi(tracer_lon.ravel()), ut.lat_to_theta(tracer_lat.ravel())
+            config.map_radius,
+            ut.lon_to_phi(tracer_lon.ravel()),
+            ut.lat_to_theta(tracer_lat.ravel()),
         )
         kwargs = dict(pos=np.array([x, y, z]).T)
         if reset_colors:
@@ -293,7 +322,9 @@ class Graphics:
     def update_player_positions(self, players: Dict[str, Player]):
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
-        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        x, y, z = ut.to_xyz(
+            config.map_radius, ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes)
+        )
         self.players.setData(pos=np.array([x, y, z]).T)
 
         for i, (name, player) in enumerate(players.items()):

@@ -3,6 +3,7 @@
 from typing import Tuple, Union
 
 import numpy as np
+import numba
 
 from . import config
 
@@ -16,17 +17,24 @@ def string_to_color(input_string: str) -> str:
     return "#" + hex_hash[:6]
 
 
+@numba.njit
 def to_xyz(
-    phi: Union[float, np.ndarray], theta: Union[float, np.ndarray], gl: bool = False
+    r: float,
+    phi: Union[float, np.ndarray],
+    theta: Union[float, np.ndarray],
+    gl: bool = False,
 ) -> Tuple[
     Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]
 ]:
     if gl:
-        theta = np.pi - theta
-    r = config.map_radius
-    xpos = r * np.sin(theta) * np.cos(phi)
-    ypos = r * np.sin(theta) * np.sin(phi)
-    zpos = r * np.cos(theta)
+        # theta = np.pi - theta
+        theta -= np.pi
+        theta *= -1
+    # r = config.map_radius
+    sin_theta = np.sin(theta) * r
+    xpos = sin_theta * np.cos(phi)
+    ypos = sin_theta * np.sin(phi)
+    zpos = np.cos(theta) * r
     return xpos, ypos, zpos
 
 

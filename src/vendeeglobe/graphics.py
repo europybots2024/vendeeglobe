@@ -20,6 +20,7 @@ import sys
 from pyqtgraph.Qt import QtWidgets
 from PIL import Image
 
+
 from . import config
 from .map import Map
 from .player import Player
@@ -334,9 +335,9 @@ class Graphics:
                 perp_vec /= np.linalg.norm(perp_vec)
                 self.avatars[name].rotate(player.dlat, *perp_vec)
 
-    def update_time(self, t: float):
-        time = str(datetime.timedelta(seconds=int(t)))[2:]
-        self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")
+    # def update_time(self, t: float):
+    #     time = str(datetime.timedelta(seconds=int(t)))[2:]
+    #     self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")
 
     def hide_wind_tracers(self):
         self.tracers.setData(color=np.zeros_like(self.default_tracer_colors))

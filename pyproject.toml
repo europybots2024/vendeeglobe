@@ -20,11 +20,9 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "importlib-resources",
-    "global-land-mask",
+    "numba",
     "numpy",
-    "pythreejs",
     "pyqtgraph",
-    "pyqt6",
     "pyopengl",
 ]
 

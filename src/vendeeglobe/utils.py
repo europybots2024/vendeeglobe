@@ -11,6 +11,9 @@ from . import config
 import hashlib
 
 
+RADIUS = float(config.map_radius)
+
+
 def string_to_color(input_string: str) -> str:
     hash_object = hashlib.md5(input_string.encode())
     hex_hash = hash_object.hexdigest()
@@ -19,7 +22,6 @@ def string_to_color(input_string: str) -> str:
 
 @numba.njit
 def to_xyz(
-    r: float,
     phi: Union[float, np.ndarray],
     theta: Union[float, np.ndarray],
     gl: bool = False,
@@ -29,34 +31,50 @@ def to_xyz(
     if gl:
         # theta = np.pi - theta
         theta -= np.pi
-        theta *= -1
+        theta *= -1.0
     # r = config.map_radius
-    sin_theta = np.sin(theta) * r
+    sin_theta = np.sin(theta) * RADIUS
     xpos = sin_theta * np.cos(phi)
     ypos = sin_theta * np.sin(phi)
-    zpos = np.cos(theta) * r
+    zpos = np.cos(theta) * RADIUS
     return xpos, ypos, zpos
 
 
+@numba.njit
 def lat_to_theta(lat: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-    return np.radians(90 - lat)
+    return np.radians(90.0 - lat)
 
 
+@numba.njit
 def lon_to_phi(lon: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-    return np.radians((lon % 360) + 180)
+    out = lon % 360.0
+    out += 180.0
+    return np.radians(out)
 
 
+@numba.njit
 def wrap(
     lat: Union[float, np.ndarray], lon: Union[float, np.ndarray]
 ) -> Tuple[Union[float, np.ndarray], Union[float, np.ndarray]]:
-    inds = (lat > 90) | (lat < -90)
-    out_lat = np.maximum(np.minimum(lat, 180 - lat), -180 - lat)
-    out_lon = lon.copy()
-    out_lon[inds] += 180
-    out_lon = ((out_lon + 180) % 360) - 180
+    # inds = (lat > 90.0) | (lat < -90.0)
+    out_lat = np.maximum(np.minimum(lat, 180.0 - lat), -180.0 - lat)
+    # out_lon = lon.copy()
+    # out_lon[inds] += 180
+    # out_lon += 180
+    # out_lon %= 360
+    # out_lon -= 180
+    out_lon = lon + 180.0
+    # out_lon[inds] += 180.0
+    out_lon = np.where((lat > 90.0) | (lat < -90.0), out_lon + 180.0, out_lon)
+    # out_lon += 180
+    out_lon %= 360.0
+    out_lon -= 180.0
+
+    # out_lon = ((out_lon + 180) % 360) - 180
     return out_lat, out_lon
 
 
+@numba.njit
 def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(wind)
     vsum = ship_vector + wind / norm
@@ -65,37 +83,39 @@ def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
     return mag * norm * ship_vector
 
 
+@numba.njit
 def lon_degs_from_length(length: np.ndarray, lat: np.ndarray) -> np.ndarray:
     """
     Given a length, compute how many degrees of longitude it represents at a given latitude.
     """
-    return length / ((np.pi * config.map_radius * np.cos(np.radians(lat))) / 180)
+    return length / ((np.pi * RADIUS * np.cos(np.radians(lat))) / 180.0)
 
 
+@numba.njit
 def lat_degs_from_length(length: np.ndarray) -> np.ndarray:
     """
     Given a length, compute how many degrees of latitude it represents.
     """
-    return length / (2.0 * np.pi * config.map_radius) * 360
+    return length / (2.0 * np.pi * RADIUS) * 360.0
 
 
+@numba.njit
 def distance_on_surface(
-    origin: Union[Tuple[float, float], np.ndarray],
-    to: Union[Tuple[float, float], np.ndarray],
+    longitude1: float, latitude1: float, longitude2: float, latitude2: float
 ) -> float:
     """
     Use the Haversine formula to calculate the distance on the surface of the globe
     between two points given by their longitude and latitude.
     """
-    lon1 = np.radians(origin[0])
-    lat1 = np.radians(origin[1])
-    lon2 = np.radians(to[0])
-    lat2 = np.radians(to[1])
+    lon1 = np.radians(longitude1)
+    lat1 = np.radians(latitude1)
+    lon2 = np.radians(longitude2)
+    lat2 = np.radians(latitude2)
     dlon = lon2 - lon1
     dlat = lat2 - lat1
     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-    return config.map_radius * c
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a))
+    return RADIUS * c
 
 
 # def longitude_difference(lon1, lon2):
@@ -107,15 +127,31 @@ def distance_on_surface(
 #     return min(lon_diff, crossing_diff)
 
 
+@numba.njit
 def longitude_difference(lon1, lon2):
     # Calculate the standard difference in longitudes
     lon_diff = lon1 - lon2
 
     # Check if the crossing of the +/- 180 degrees line is shorter
-    crossing_diff = 360 - abs(lon_diff)
+    crossing_diff = 360.0 - abs(lon_diff)
 
     # Return the signed difference
     if lon_diff >= 0:
         return min(lon_diff, crossing_diff)
     else:
         return -min(-lon_diff, crossing_diff)
+
+
+def pre_compile():
+    a = np.zeros(2)
+    b = 0.0
+    for ab in (a, b):
+        to_xyz(ab, ab)
+        lat_to_theta(ab)
+        lon_to_phi(ab)
+        wrap(ab, ab)
+        lon_degs_from_length(ab, ab)
+        lat_degs_from_length(ab)
+        distance_on_surface(ab, ab, ab, ab)
+    wind_force(a, a)
+    longitude_difference(b, b)

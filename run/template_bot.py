@@ -83,8 +83,10 @@ class Bot:
         instructions = Instructions()
         for ch in self.course:
             dist = distance_on_surface(
-                origin=[longitude, latitude],
-                to=[ch.longitude, ch.latitude],
+                longitude1=longitude,
+                latitude1=latitude,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
             )
             jump = dt * np.linalg.norm(speed)
             if dist < 2.0 * ch.radius + jump:
@@ -140,8 +142,10 @@ class Bot2:
         loc = None
         for ch in self.course:
             dist = distance_on_surface(
-                origin=[longitude, latitude],
-                to=[ch.longitude, ch.latitude],
+                longitude1=longitude,
+                latitude1=latitude,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
             )
             if dist < ch.radius:
                 ch.reached = True

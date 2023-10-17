@@ -44,7 +44,7 @@ from .graphics import Graphics
 from .map import Map
 from .player import Player
 from .scores import finalize_scores, get_player_points, read_scores
-from .utils import distance_on_surface, longitude_difference
+from .utils import distance_on_surface, longitude_difference, pre_compile
 from .weather import Weather
 
 
@@ -58,6 +58,8 @@ class Engine:
         seed: int = None,
         start: Optional[Location] = None,
     ):
+        pre_compile()
+
         self.time_limit = time_limit
         self.start_time = None
         self.safe = safe
@@ -85,12 +87,12 @@ class Engine:
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )
-        self.start_time = time.time()
-        self.last_player_update = self.start_time
-        self.last_graphics_update = self.start_time
-        self.last_time_update = self.start_time
-        self.last_forecast_update = self.start_time
-        self.previous_clock_time = self.start_time
+        # self.start_time = time.time()
+        # self.last_player_update = self.start_time
+        # self.last_graphics_update = self.start_time
+        # self.last_time_update = self.start_time
+        # self.last_forecast_update = self.start_time
+        # self.previous_clock_time = self.start_time
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
         self.tracers_hidden = False
@@ -98,6 +100,14 @@ class Engine:
         self.set_schedule()
         self.group_counter = 0
         # self.points_this_round = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+
+    def initialize_time(self):
+        self.start_time = time.time()
+        self.last_player_update = self.start_time
+        self.last_graphics_update = self.start_time
+        self.last_time_update = self.start_time
+        self.last_forecast_update = self.start_time
+        self.previous_clock_time = self.start_time
 
     def set_schedule(self):
         times = []
@@ -183,8 +193,12 @@ class Engine:
                 next_lat = lat[ind]
                 next_lon = lon[ind]
                 player.distance_travelled += distance_on_surface(
-                    origin=[player.longitude, player.latitude],
-                    to=[next_lon, next_lat],
+                    longitude1=player.longitude,
+                    latitude1=player.latitude,
+                    longitude2=next_lon,
+                    latitude2=next_lat,
+                    # origin=[player.longitude, player.latitude],
+                    # to=[next_lon, next_lat],
                 )
                 player.dlat = next_lat - player.latitude
                 player.dlon = longitude_difference(next_lon, player.longitude)
@@ -198,15 +212,23 @@ class Engine:
             for checkpoint in player.checkpoints:
                 if not checkpoint.reached:
                     d = distance_on_surface(
-                        origin=[player.longitude, player.latitude],
-                        to=[checkpoint.longitude, checkpoint.latitude],
+                        longitude1=player.longitude,
+                        latitude1=player.latitude,
+                        longitude2=checkpoint.longitude,
+                        latitude2=checkpoint.latitude,
+                        # origin=[player.longitude, player.latitude],
+                        # to=[checkpoint.longitude, checkpoint.latitude],
                     )
                     if d < checkpoint.radius:
                         checkpoint.reached = True
                         print(f"{player.team} reached {checkpoint}")
             dist_to_finish = distance_on_surface(
-                origin=[player.longitude, player.latitude],
-                to=[config.start.longitude, config.start.latitude],
+                longitude1=player.longitude,
+                latitude1=player.latitude,
+                longitude2=config.start.longitude,
+                latitude2=config.start.latitude,
+                # origin=[player.longitude, player.latitude],
+                # to=[config.start.longitude, config.start.latitude],
             )
             if dist_to_finish < config.start.radius and all(
                 ch.reached for ch in player.checkpoints
@@ -383,6 +405,7 @@ class Engine:
         window.show()
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
+        self.initialize_time()
         self.timer.start(0)
         pg.exec()
         # sys.exit(self.graphics.app.exec_())

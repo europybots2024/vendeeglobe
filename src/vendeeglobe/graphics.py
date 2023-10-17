@@ -124,14 +124,14 @@ class GLTexturedSphereItem(GLGraphicsItem):
 
         glColor4f(1, 1, 1, 1)
 
-        theta = np.linspace(0, np.pi, 32, dtype="float32")
-        phi = np.linspace(0, 2 * np.pi, 64, dtype="float32")
+        theta = np.linspace(0, np.pi, 25, dtype="float32")
+        phi = np.linspace(0, 2 * np.pi, 49, dtype="float32")
         t_n = theta / np.pi
         p_n = phi / (2 * np.pi)
 
         phi_grid, theta_grid = np.meshgrid(phi, theta, indexing="ij")
 
-        x, y, z = ut.to_xyz(config.map_radius, phi_grid, theta_grid, gl=True)
+        x, y, z = ut.to_xyz(phi_grid, theta_grid, gl=True)
         # xyz = ut.to_xyz(config.map_radius, phi[i], theta[j + 1], gl=True)
         # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j + 1], gl=True)
         # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j], gl=True)
@@ -230,7 +230,6 @@ class Graphics:
 
         # Add tracers
         x, y, z = ut.to_xyz(
-            config.map_radius,
             ut.lon_to_phi(weather.tracer_lon.ravel()),
             ut.lat_to_theta(weather.tracer_lat.ravel()),
         )
@@ -252,9 +251,7 @@ class Graphics:
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
         colors = np.array([to_rgba(player.color) for player in players.values()])
-        x, y, z = ut.to_xyz(
-            config.map_radius, ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes)
-        )
+        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
         self.players = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
@@ -270,7 +267,6 @@ class Graphics:
         self.avatars = {}
         for i, (name, player) in enumerate(players.items()):
             x, y, z = ut.to_xyz(
-                config.map_radius,
                 ut.lon_to_phi(player.longitude),
                 ut.lat_to_theta(player.latitude),
             )
@@ -306,7 +302,6 @@ class Graphics:
         self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False
     ):
         x, y, z = ut.to_xyz(
-            config.map_radius,
             ut.lon_to_phi(tracer_lon.ravel()),
             ut.lat_to_theta(tracer_lat.ravel()),
         )
@@ -322,9 +317,7 @@ class Graphics:
     def update_player_positions(self, players: Dict[str, Player]):
         latitudes = np.array([player.latitude for player in players.values()])
         longitudes = np.array([player.longitude for player in players.values()])
-        x, y, z = ut.to_xyz(
-            config.map_radius, ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes)
-        )
+        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
         self.players.setData(pos=np.array([x, y, z]).T)
 
         for i, (name, player) in enumerate(players.items()):

@@ -32,7 +32,6 @@ def to_xyz(
         # theta = np.pi - theta
         theta -= np.pi
         theta *= -1.0
-    # r = config.map_radius
     sin_theta = np.sin(theta) * RADIUS
     xpos = sin_theta * np.cos(phi)
     ypos = sin_theta * np.sin(phi)
@@ -56,21 +55,11 @@ def lon_to_phi(lon: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
 def wrap(
     lat: Union[float, np.ndarray], lon: Union[float, np.ndarray]
 ) -> Tuple[Union[float, np.ndarray], Union[float, np.ndarray]]:
-    # inds = (lat > 90.0) | (lat < -90.0)
     out_lat = np.maximum(np.minimum(lat, 180.0 - lat), -180.0 - lat)
-    # out_lon = lon.copy()
-    # out_lon[inds] += 180
-    # out_lon += 180
-    # out_lon %= 360
-    # out_lon -= 180
     out_lon = lon + 180.0
-    # out_lon[inds] += 180.0
     out_lon = np.where((lat > 90.0) | (lat < -90.0), out_lon + 180.0, out_lon)
-    # out_lon += 180
     out_lon %= 360.0
     out_lon -= 180.0
-
-    # out_lon = ((out_lon + 180) % 360) - 180
     return out_lat, out_lon
 
 
@@ -118,23 +107,12 @@ def distance_on_surface(
     return RADIUS * c
 
 
-# def longitude_difference(lon1, lon2):
-#     # Calculate the absolute difference in longitudes
-#     lon_diff = abs(lon1 - lon2)
-#     # Check if the crossing of the +/- 180 degrees line is shorter
-#     crossing_diff = 360 - lon_diff
-#     # Return the shorter of the two differences
-#     return min(lon_diff, crossing_diff)
-
-
 @numba.njit
 def longitude_difference(lon1, lon2):
     # Calculate the standard difference in longitudes
     lon_diff = lon1 - lon2
-
     # Check if the crossing of the +/- 180 degrees line is shorter
     crossing_diff = 360.0 - abs(lon_diff)
-
     # Return the signed difference
     if lon_diff >= 0:
         return min(lon_diff, crossing_diff)

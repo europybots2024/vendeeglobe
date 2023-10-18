@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-# import matplotlib as mpl
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 from typing import Optional, Tuple
@@ -59,9 +58,6 @@ class Weather:
         self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
         self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
-        # self.tracer_cmap = mpl.colormaps['Reds']
-        # self.norm = mpl.colors.Normalize()
-
         self.number_of_new_tracers = 5
         self.new_tracer_counter = 0
 
@@ -70,7 +66,6 @@ class Weather:
             0, config.forecast_length * 6, config.weather_update_interval
         )
         nf = len(self.forecast_times)
-        # print(nf, self.forecast_times)
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
         # # =============================
@@ -111,7 +106,7 @@ class Weather:
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
-        scaling = 0.2 / 1.5
+        scaling = 0.3  # 0.2 / 1.5
         incr_lon = u * dt * scaling
         incr_lat = v * dt * scaling
         incr_lon = lon_degs_from_length(incr_lon, self.tracer_lat[1, :])

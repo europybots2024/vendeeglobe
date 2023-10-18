@@ -35,7 +35,7 @@ except ImportError:
 
 
 from . import config
-from .core import Location, WeatherForecast
+from .core import Location
 from .graphics import Graphics
 from .map import Map
 from .player import Player
@@ -101,7 +101,6 @@ class Engine:
         times = []
         for player in self.players.values():
             t0 = time.time()
-            # player.execute_bot(t=0, info=self.get_info(player), safe=self.safe)
             self.execute_player_bot(player=player, t=0, dt=0)
             times.append(((time.time() - t0), player))
         ng = 3
@@ -149,7 +148,6 @@ class Engine:
         for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
             lat, lon = player.get_path(dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
-            # w = np.where(terrain == )[0]
             w = np.where(terrain == 0)[0]
             if len(w) > 0:
                 ind = max(w[0] - 1, 0)
@@ -163,12 +161,9 @@ class Engine:
                     latitude1=player.latitude,
                     longitude2=next_lon,
                     latitude2=next_lat,
-                    # origin=[player.longitude, player.latitude],
-                    # to=[next_lon, next_lat],
                 )
                 player.dlat = next_lat - player.latitude
                 player.dlon = longitude_difference(next_lon, player.longitude)
-                # player.dlon = next_lon - player.longitude
                 player.latitude = next_lat
                 player.longitude = next_lon
             else:
@@ -182,8 +177,6 @@ class Engine:
                         latitude1=player.latitude,
                         longitude2=checkpoint.longitude,
                         latitude2=checkpoint.latitude,
-                        # origin=[player.longitude, player.latitude],
-                        # to=[checkpoint.longitude, checkpoint.latitude],
                     )
                     if d < checkpoint.radius:
                         checkpoint.reached = True
@@ -193,16 +186,11 @@ class Engine:
                 latitude1=player.latitude,
                 longitude2=config.start.longitude,
                 latitude2=config.start.latitude,
-                # origin=[player.longitude, player.latitude],
-                # to=[config.start.longitude, config.start.latitude],
             )
             if dist_to_finish < config.start.radius and all(
                 ch.reached for ch in player.checkpoints
             ):
                 player.arrived = True
-                # player.score = (
-                #     self.points_this_round.pop(0) if self.points_this_round else 0
-                # )
                 player.bonus = config.score_step * len(self.players_not_arrived)
                 n_not_arrived = len(self.players_not_arrived)
                 n_players = len(self.players)
@@ -222,7 +210,6 @@ class Engine:
                 self.fastest_times[player.team] = min(
                     t, self.fastest_times[player.team]
                 )
-                # print("player score:", player.score)
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)
@@ -243,7 +230,6 @@ class Engine:
 
         if (clock_time - self.last_forecast_update) > config.weather_update_interval:
             self.forecast = self.weather.get_forecast(t)
-            # print(self.forecast.u.shape, self.forecast.v.shape)
             self.last_forecast_update = clock_time
 
         self.call_player_bots(
@@ -275,8 +261,6 @@ class Engine:
     def update_scoreboard(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]
         self.time_label.setText(f"Time left: {time} s")
-
-        # current_scores = get_current_scores(self.players)
         status = [
             (
                 get_player_points(player),
@@ -296,7 +280,6 @@ class Engine:
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)
         )
-        # print('sorted_scores', sorted_scores)
         for i, (name, score) in enumerate(sorted_scores.items()):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
@@ -315,13 +298,6 @@ class Engine:
             )
 
     def run(self):
-        # self.graphics.window.show()
-        # self.timer = QtCore.QTimer()
-        # self.timer.timeout.connect(self.update)
-        # self.timer.start(0)
-        # pg.exec()
-
-        # app = QApplication(sys.argv)
         window = QMainWindow()
         window.setWindowTitle("Vendée Globe")
         window.setGeometry(100, 100, 1280, 720)
@@ -355,16 +331,8 @@ class Engine:
 
         self.player_boxes = {}
         for i, p in enumerate(self.players.values()):
-            # widget1_layout = QHBoxLayout(widget1_layout)
             self.player_boxes[i] = QLabel("")
-            # self.infoLbl.setTextFormat(Qt.RichText)
             widget1_layout.addWidget(self.player_boxes[i])
-            # sep = QFrame()
-            # sep.setFrameShape(QFrame.HLine)
-            # sep.setLineWidth(1)
-            # sep.setStyleSheet(f"background-color: {p.color};")
-            # widget1_layout.addWidget(sep)
-
         widget1_layout.addStretch()
 
         layout.addWidget(self.graphics.window)
@@ -405,4 +373,3 @@ class Engine:
         self.initialize_time()
         self.timer.start(0)
         pg.exec()
-        # sys.exit(self.graphics.app.exec_())

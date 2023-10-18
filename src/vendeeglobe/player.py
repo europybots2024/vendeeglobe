@@ -16,12 +16,10 @@ from .core import Checkpoint, Location, Heading, Vector
 class Player:
     def __init__(
         self,
-        # bot: Any,
         team: str,
         avatar: Union[str, int],
         start: Optional[Location] = None,
     ):
-        # self.bot = bot
         self.team = team
         self.bonus = 0
         self.heading = 180.0
@@ -59,14 +57,6 @@ class Player:
             # self.avatar = Image.fromarray(new_data.astype(np.uint8))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
-        # instructions = None
-        # if safe:
-        #     try:
-        #         instructions = self.bot.run(t=t, info=info)
-        #     except:
-        #         pass
-        # else:
-        #     instructions = self.bot.run(t=t, info=info)
         if [instructions.location, instructions.heading, instructions.vector].count(
             None
         ) != 2:
@@ -144,12 +134,9 @@ class Player:
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )
-        # print('distances', f, np.linalg.norm(f), np.linalg.norm(dist))
-
         # Race trace the path
-        # norm = np.linalg.norm(uv)
         norm = np.linalg.norm(dist)
         ray = dist.reshape((2, 1)) * np.linspace(0, norm, (int(norm) + 1) * 8)
-        path = np.array(self.get_position()).reshape((2, 1)) + ray  # .astype(int)
+        path = np.array(self.get_position()).reshape((2, 1)) + ray
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon

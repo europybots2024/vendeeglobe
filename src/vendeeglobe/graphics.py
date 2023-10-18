@@ -11,15 +11,6 @@ import pyqtgraph.opengl as gl
 import datetime
 from matplotlib.colors import to_rgba
 
-try:
-    from PyQt5.QtWidgets import QApplication
-except ImportError:
-    from PySide2.QtWidgets import QApplication
-import sys
-
-from pyqtgraph.Qt import QtWidgets
-from PIL import Image
-
 
 from . import config
 from .map import Map
@@ -131,29 +122,11 @@ class GLTexturedSphereItem(GLGraphicsItem):
         p_n = phi / (2 * np.pi)
 
         phi_grid, theta_grid = np.meshgrid(phi, theta, indexing="ij")
-
         x, y, z = ut.to_xyz(phi_grid, theta_grid, gl=True)
-        # xyz = ut.to_xyz(config.map_radius, phi[i], theta[j + 1], gl=True)
-        # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j + 1], gl=True)
-        # xyz = ut.to_xyz(config.map_radius, phi[i + 1], theta[j], gl=True)
 
         glBegin(GL_QUADS)
         for j in range(len(theta) - 1):
             for i in range(len(phi) - 1):
-                # xyz_nw = ut.to_xyz(config.map_radius, phi[i], theta[j], gl=True)
-                # xyz_sw = ut.to_xyz(config.map_radius, phi[i], theta[j + 1], gl=True)
-                # xyz_se = ut.to_xyz(config.map_radius, phi[i + 1], theta[j + 1], gl=True)
-                # xyz_ne = ut.to_xyz(config.map_radius, phi[i + 1], theta[j], gl=True)
-
-                # glTexCoord2f(p_n[i], t_n[j])
-                # glVertex3f(xyz_nw[i, j, 0], xyz_nw[1], xyz_nw[2])
-                # glTexCoord2f(p_n[i], t_n[j + 1])
-                # glVertex3f(xyz_sw[0], xyz_sw[1], xyz_sw[2])
-                # glTexCoord2f(p_n[i + 1], t_n[j + 1])
-                # glVertex3f(xyz_se[0], xyz_se[1], xyz_se[2])
-                # glTexCoord2f(p_n[i + 1], t_n[j])
-                # glVertex3f(xyz_ne[0], xyz_ne[1], xyz_ne[2])
-
                 glTexCoord2f(p_n[i], t_n[j])
                 glVertex3f(x[i, j], y[i, j], z[i, j])
                 glTexCoord2f(p_n[i], t_n[j + 1])
@@ -181,13 +154,7 @@ class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
         print("Initializing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
-        # self.app = QApplication(sys.argv)
         self.window = gl.GLViewWidget()
-        # self.window = RemoteGraphicsView(debug=False, useOpenGL=True)
-        # print(dir(self.window))
-        # print("==")
-        # print(dir(gl.GLViewWidget()))
-
         self.window.setWindowTitle("Vendee Globe")
         self.window.setCameraPosition(
             distance=config.map_radius * 4,
@@ -196,13 +163,9 @@ class Graphics:
         )
 
         self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
-        # self.high_contrast_texture = np.fliplr(
-        #     np.transpose(game_map.high_contrast_texture, axes=[1, 0, 2])
-        # )
         self.high_contrast_texture = np.transpose(
             game_map.high_contrast_texture, axes=[1, 0, 2]
         )
-        # self.high_contrast_texture = game_map.high_contrast_texture
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
@@ -240,7 +203,6 @@ class Graphics:
         self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
-            # color=weather.tracer_colors.reshape((-1, 4)),
             color=self.default_tracer_colors,
             size=4,
             pxMode=True,
@@ -282,12 +244,9 @@ class Graphics:
             self.tracks[name]['artist'].setGLOptions("opaque")
             self.window.addItem(self.tracks[name]['artist'])
 
-            # av = Image.open(os.path.join(config.resourcedir, f'ship{i+1}.png'))
-            # print(np.array(player.avatar))
             self.avatars[name] = gl.GLImageItem(
                 np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
             )
-            # self.avatars[name].setGLOptions("opaque")
             offset = config.avatar_size[0] / 2
             self.avatars[name].translate(-offset, -offset, 0)
             self.avatars[name].rotate(90, 1, 0, 0)
@@ -298,8 +257,6 @@ class Graphics:
             perp_vec = np.cross([x, y, 0], [0, 0, 1])
             perp_vec /= np.linalg.norm(perp_vec)
             self.avatars[name].rotate(player.latitude, *perp_vec)
-            # self.avatars[name].rotate(player.latitude, 0, 1, 0)
-            # self.avatars[name].translate(1.02 * x, 1.02 * y, 1.02 * z)
             self.window.addItem(self.avatars[name])
 
         print('done')
@@ -339,10 +296,6 @@ class Graphics:
                 perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
                 perp_vec /= np.linalg.norm(perp_vec)
                 self.avatars[name].rotate(player.dlat, *perp_vec)
-
-    # def update_time(self, t: float):
-    #     time = str(datetime.timedelta(seconds=int(t)))[2:]
-    #     self.window.setWindowTitle(f"Vendee Globe - Time left: {time} s")
 
     def hide_wind_tracers(self):
         self.tracers.setData(color=np.zeros_like(self.default_tracer_colors))

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
@@ -19,7 +19,6 @@ def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
         for line in contents:
             name, score = line.split(":")
             scores[name] = int(score.strip())
-    # print("Scores:", scores)
     return scores
 
 
@@ -31,9 +30,7 @@ def _write_scores(scores: Dict[str, int]):
 
 
 def get_player_points(player: Player) -> int:
-    # start = [config.start.longitude, config.start.latitude]
     checkpoints_reached = len([ch for ch in player.checkpoints if ch.reached])
-    # npoints = 1_000_000
 
     points = checkpoints_reached * config.score_step + player.bonus
     if checkpoints_reached == 2:
@@ -52,8 +49,6 @@ def get_player_points(player: Player) -> int:
                     latitude1=player.latitude,
                     longitude2=ch.longitude,
                     latitude2=ch.latitude,
-                    # origin=[player.longitude, player.latitude],
-                    # to=[ch.longitude, ch.latitude],
                 )
                 points += config.score_step - int(dist)
     elif checkpoints_reached == 0:
@@ -63,8 +58,6 @@ def get_player_points(player: Player) -> int:
                 latitude1=player.latitude,
                 longitude2=ch.longitude,
                 latitude2=ch.latitude,
-                # origin=[player.longitude, player.latitude],
-                # to=[ch.longitude, ch.latitude],
             )
             for ch in player.checkpoints
         )
@@ -74,108 +67,11 @@ def get_player_points(player: Player) -> int:
 
 
 def get_rankings(players: Dict[str, Player]) -> Dict[str, int]:
-    status = [
-        (
-            get_player_points(player),
-            # player.distance_travelled,
-            player.team,
-            # len([ch for ch in player.checkpoints if ch.reached]),
-        )
-        for player in players.values()
-    ]
+    status = [(get_player_points(player), player.team) for player in players.values()]
     return [team for _, team in sorted(status, reverse=True)]
-    # for i, (_, team) in enumerate(sorted(status, reverse=True)):
-    #     self.player_boxes[i].setText(f"{i+1}. {team}: {int(dist)} km [{nch}]")
-
-
-# def get_current_scores(players: Dict[str, Player]) -> Dict[str, int]:
-#     player_groups = {0: [], 1: [], 2: []}
-
-#     current_scores = {}
-#     for player in players.values():
-#         n = len([ch for ch in player.checkpoints if ch.reached])
-#         player_groups[n].append(player)
-
-#     start = [config.start.longitude, config.start.latitude]
-
-#     # Players that reached 2 checkpoints
-#     group_players = []
-#     for player in player_groups[2]:
-#         if player.score is None:
-#             dist = distance_on_surface(
-#                 origin=[player.longitude, player.latitude],
-#                 to=start,
-#             )
-#             group_players.append((dist, player))
-#         else:
-#             current_scores[player.team] = player.score
-#     group_players.sort()
-#     for _, player in group_players:
-#         current_scores[player.team] = config.pop_score()
-#     # for player in player_groups[2]:
-#     #     current_scores[player.team] = scores[player.team] + player.score
-
-#     # Players that reached 1 checkpoint
-#     group_players = []
-#     for player in player_groups[1]:
-#         for ch in player.checkpoints:
-#             if not ch.reached:
-#                 dist = distance_on_surface(
-#                     origin=[player.longitude, player.latitude],
-#                     to=[ch.longitude, ch.latitude],
-#                 ) + distance_on_surface(
-#                     origin=[ch.longitude, ch.latitude],
-#                     to=start,
-#                 )
-#                 group_players.append((dist, player))
-#     group_players.sort()
-#     for _, player in group_players:
-#         current_scores[player.team] = config.pop_score()
-#     # for player in player_groups[1]:
-#     #     current_scores[player.team] = scores[player.team] + player.score
-
-#     # Players that reached 0 checkpoints
-#     group_players = []
-#     for player in player_groups[0]:
-#         dists = [
-#             distance_on_surface(
-#                 origin=[player.longitude, player.latitude],
-#                 to=[ch.longitude, ch.latitude],
-#             )
-#             for ch in player.checkpoints
-#         ]
-#         ind = np.argmin(dists)
-#         dist = (
-#             dists[ind]
-#             + distance_on_surface(
-#                 origin=[
-#                     player.checkpoints[0].longitude,
-#                     player.checkpoints[1].latitude,
-#                 ],
-#                 to=[
-#                     player.checkpoints[1].longitude,
-#                     player.checkpoints[1].latitude,
-#                 ],
-#             )
-#             + distance_on_surface(
-#                 origin=[
-#                     player.checkpoints[(ind + 1) % 2].longitude,
-#                     player.checkpoints[(ind + 1) % 2].latitude,
-#                 ],
-#                 to=start,
-#             )
-#         )
-#         group_players.append((dist, player))
-#     group_players.sort()
-#     for _, player in group_players:
-#         current_scores[player.team] = config.pop_score()
-#     # for player in player_groups[0]:
-#     #     final_scores[player.team] = scores[player.team] + player.score
-#     return current_scores
 
 
 def _get_final_scores(players: Dict[str, Player], scores: Dict[str, int]):
-    # current_scores = get_current_scores(players)
     rankings = get_rankings(players)
     for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
     final_scores = {}
@@ -190,7 +86,6 @@ def _print_scores(
     round_scores: Dict[str, int],
     final_scores: Dict[str, int],
 ):
-    # Print scores
     all_scores = [
         (team, round_scores[team], final_scores[team]) for team in final_scores
     ]
@@ -217,7 +112,6 @@ def read_fastest_times(players: Dict[str, Player]) -> Dict[str, int]:
         for line in contents:
             name, t = line.split(":")
             times[name] = int(t.strip())
-    # print("Scores:", scores)
     return times
 
 

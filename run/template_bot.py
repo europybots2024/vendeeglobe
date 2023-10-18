@@ -139,8 +139,6 @@ class Bot2:
         vector: np.ndarray,
         forecast: WeatherForecast,
     ):
-        # instructions = None
-        # print(info['speed'])
         loc = None
         for ch in self.course:
             dist = distance_on_surface(
@@ -154,6 +152,5 @@ class Bot2:
             if not ch.reached:
                 loc = Location(longitude=ch.longitude, latitude=ch.latitude)
                 break
-        # print(info['forecast'].u.shape, info['forecast'].v.shape)
 
         return Instructions(location=loc)

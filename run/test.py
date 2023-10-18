@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import numpy as np
 import vendeeglobe as vg
 
 from template_bot import Bot, Bot2

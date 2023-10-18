@@ -9,6 +9,7 @@ from vendeeglobe import (
     Vector,
     Instructions,
     WeatherForecast,
+    config,
 )
 from vendeeglobe.utils import distance_on_surface
 
@@ -41,7 +42,7 @@ class Bot:
             Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
             Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
             Checkpoint(longitude=32.251133, latitude=31.784320, radius=5),
-            Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0),
+            config.start,
         ]
         # for ch in self.course[:-1]:
         #     ch.reached = True
@@ -83,8 +84,10 @@ class Bot:
         instructions = Instructions()
         for ch in self.course:
             dist = distance_on_surface(
-                origin=[longitude, latitude],
-                to=[ch.longitude, ch.latitude],
+                longitude1=longitude,
+                latitude1=latitude,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
             )
             jump = dt * np.linalg.norm(speed)
             if dist < 2.0 * ch.radius + jump:
@@ -111,6 +114,7 @@ class Bot2:
         self.team = team  # Mandatory attribute
         self.avatar = 2  # Optional attribute
         self.course = [
+            Checkpoint(latitude=43.797109, longitude=-11.264905, radius=10),
             Checkpoint(longitude=-29.908577, latitude=17.999811, radius=10),
             Checkpoint(latitude=-11.441808, longitude=-29.660252, radius=10),
             Checkpoint(longitude=-63.240264, latitude=-61.025125, radius=10),
@@ -121,7 +125,7 @@ class Bot2:
             Checkpoint(latitude=-39.438937, longitude=19.836265, radius=10.0),
             Checkpoint(latitude=14.881699, longitude=-21.024326, radius=10.0),
             Checkpoint(latitude=45.076538, longitude=-18.292936, radius=10.0),
-            Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0),
+            config.start,
         ]
 
     def run(
@@ -140,8 +144,10 @@ class Bot2:
         loc = None
         for ch in self.course:
             dist = distance_on_surface(
-                origin=[longitude, latitude],
-                to=[ch.longitude, ch.latitude],
+                longitude1=longitude,
+                latitude1=latitude,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
             )
             if dist < ch.radius:
                 ch.reached = True

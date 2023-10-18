@@ -17,7 +17,8 @@ class Config:
     resourcedir: Path = Path(__file__).parent / "resources"
     ntracers: int = 5000
     tracer_lifetime: int = 50
-    start: Checkpoint = Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0)
+    # start: Checkpoint = Checkpoint(longitude=-4.773949, latitude=48.333422, radius=5.0)
+    start: Checkpoint = Checkpoint(longitude=-1.81, latitude=46.494275, radius=5.0)
     checkpoints: Tuple[Checkpoint, Checkpoint] = (
         Checkpoint(latitude=2.806318, longitude=-168.943864, radius=2000.0),
         Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1200.0),

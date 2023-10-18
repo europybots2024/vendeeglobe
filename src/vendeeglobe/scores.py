@@ -31,30 +31,40 @@ def _write_scores(scores: Dict[str, int]):
 
 
 def get_player_points(player: Player) -> int:
-    start = [config.start.longitude, config.start.latitude]
+    # start = [config.start.longitude, config.start.latitude]
     checkpoints_reached = len([ch for ch in player.checkpoints if ch.reached])
     # npoints = 1_000_000
 
     points = checkpoints_reached * config.score_step + player.bonus
     if checkpoints_reached == 2:
         dist = distance_on_surface(
-            origin=[player.longitude, player.latitude],
-            to=start,
+            longitude1=player.longitude,
+            latitude1=player.latitude,
+            longitude2=config.start.longitude,
+            latitude2=config.start.latitude,
         )
         points += config.score_step - int(dist)
     elif checkpoints_reached == 1:
         for ch in player.checkpoints:
             if not ch.reached:
                 dist = distance_on_surface(
-                    origin=[player.longitude, player.latitude],
-                    to=[ch.longitude, ch.latitude],
+                    longitude1=player.longitude,
+                    latitude1=player.latitude,
+                    longitude2=ch.longitude,
+                    latitude2=ch.latitude,
+                    # origin=[player.longitude, player.latitude],
+                    # to=[ch.longitude, ch.latitude],
                 )
                 points += config.score_step - int(dist)
     elif checkpoints_reached == 0:
         dist = min(
             distance_on_surface(
-                origin=[player.longitude, player.latitude],
-                to=[ch.longitude, ch.latitude],
+                longitude1=player.longitude,
+                latitude1=player.latitude,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
+                # origin=[player.longitude, player.latitude],
+                # to=[ch.longitude, ch.latitude],
             )
             for ch in player.checkpoints
         )

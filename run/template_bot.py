@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+# flake8: noqa F401
+
 import numpy as np
 
 from vendeeglobe import (

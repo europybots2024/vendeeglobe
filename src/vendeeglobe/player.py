@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import asdict
-from itertools import chain
-from typing import Any, Optional, Sequence, Union, Tuple
+from typing import Optional, Sequence, Union, Tuple
 
 import numpy as np
 from PIL import Image

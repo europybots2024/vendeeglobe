@@ -75,7 +75,8 @@ def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
 @numba.njit
 def lon_degs_from_length(length: np.ndarray, lat: np.ndarray) -> np.ndarray:
     """
-    Given a length, compute how many degrees of longitude it represents at a given latitude.
+    Given a length, compute how many degrees of longitude it represents at a given
+    latitude.
     """
     return length / ((np.pi * RADIUS * np.cos(np.radians(lat))) / 180.0)
 

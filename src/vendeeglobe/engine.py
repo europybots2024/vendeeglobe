@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import pyqtgraph as pg
@@ -129,7 +129,7 @@ class Engine:
         if self.safe:
             try:
                 instructions = self.bots[player.team].run(**args)
-            except:
+            except:  # noqa
                 pass
         else:
             instructions = self.bots[player.team].run(**args)
@@ -273,7 +273,8 @@ class Engine:
         ]
         for i, (_, dist, team, col, nch) in enumerate(sorted(status, reverse=True)):
             self.player_boxes[i].setText(
-                f'<div style="color:{col}">&#9632;</div> {i+1}. {team}: {int(dist)} km [{nch}]'
+                f'<div style="color:{col}">&#9632;</div> {i+1}. '
+                f'{team}: {int(dist)} km [{nch}]'
             )
 
     def update_leaderboard(self, scores, fastest_times):

@@ -1,14 +1,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+# flake8: noqa F405
+
 from typing import Any, Dict
 
 import numpy as np
-import os
 from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import datetime
 from matplotlib.colors import to_rgba
 
 

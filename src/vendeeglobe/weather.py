@@ -2,7 +2,7 @@
 
 # import matplotlib as mpl
 import numpy as np
-from scipy.ndimage import gaussian_filter
+from scipy.ndimage import gaussian_filter, uniform_filter
 from typing import Optional, Tuple
 
 from . import config
@@ -73,21 +73,24 @@ class Weather:
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
         # # =============================
-        # # TODO: SLOW STARTUP
+        # # Gaussian filter is slow!
         # for i in range(1, nf):
         #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
         #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
         # # =============================
+        for i in range(1, nf):
+            self.forecast_u.append(uniform_filter(self.u, size=i * 2, mode="wrap"))
+            self.forecast_v.append(uniform_filter(self.v, size=i * 2, mode="wrap"))
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
-        # print(self.forecast_u.shape, self.forecast_v.shape)
 
     def get_forecast(self, t: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         t = t + self.forecast_times
         it = (t / self.dt).astype(int) % self.nt
+        ik = np.arange(len(t))
         return WeatherForecast(
-            u=self.forecast_u[:, it, ...], v=self.forecast_v[:, it, ...]
+            u=self.forecast_u[ik, it, ...], v=self.forecast_v[ik, it, ...]
         )
 
     def get_uv(

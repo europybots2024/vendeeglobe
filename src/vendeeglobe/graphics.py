@@ -287,8 +287,10 @@ class Graphics:
                 np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
             )
             # self.avatars[name].setGLOptions("opaque")
-            self.avatars[name].translate(-24, -24, 0)
+            offset = config.avatar_size[0] / 2
+            self.avatars[name].translate(-offset, -offset, 0)
             self.avatars[name].rotate(90, 1, 0, 0)
+            self.avatars[name].rotate(180, 0, 0, 1)
             self.avatars[name].translate(0, config.map_radius, 0)
             self.avatars[name].rotate(90, 0, 0, 1)
             self.avatars[name].rotate(player.longitude, 0, 0, 1)

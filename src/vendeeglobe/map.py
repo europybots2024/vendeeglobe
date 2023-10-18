@@ -11,6 +11,7 @@ from . import config
 
 class Map:
     def __init__(self):
+        print('Loading world map...', end=' ', flush=True)
         im = Image.open(os.path.join(config.resourcedir, config.map_file))
         self.array = np.array(im.convert('RGBA'))
         img16 = self.array.astype('int16')
@@ -35,7 +36,7 @@ class Map:
             lon_min + 0.5 * self.dlon, lon_max - 0.5 * self.dlon, self.nlon
         )
         self.lon_grid, self.lat_grid = np.meshgrid(self.lon, self.lat)
-        print(self.lat_grid.shape, self.lon_grid.shape)
+        print('done')
 
     def get_terrain(self, longitudes, latitudes):
         ilon = ((longitudes + 180.0) / self.dlon).astype(int)

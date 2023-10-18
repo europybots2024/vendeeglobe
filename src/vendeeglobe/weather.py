@@ -12,6 +12,7 @@ from .utils import wrap, lon_degs_from_length, lat_degs_from_length
 
 class Weather:
     def __init__(self, seed: Optional[int] = None):
+        print("Generating weather...", end=" ", flush=True)
         rng = np.random.default_rng(seed)
 
         self.ny = 128
@@ -84,6 +85,7 @@ class Weather:
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
+        print("done")
 
     def get_forecast(self, t: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         t = t + self.forecast_times

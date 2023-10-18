@@ -10,11 +10,8 @@ from pyqtgraph.Qt import QtCore
 import datetime
 
 
-import sys
-
 try:
     from PyQt5.QtWidgets import (
-        QApplication,
         QMainWindow,
         QWidget,
         QLabel,
@@ -26,7 +23,6 @@ try:
     )
 except ImportError:
     from PySide2.QtWidgets import (
-        QApplication,
         QMainWindow,
         QWidget,
         QLabel,
@@ -43,7 +39,13 @@ from .core import Location, WeatherForecast
 from .graphics import Graphics
 from .map import Map
 from .player import Player
-from .scores import finalize_scores, get_player_points, read_scores
+from .scores import (
+    finalize_scores,
+    get_player_points,
+    read_scores,
+    read_fastest_times,
+    write_fastest_times,
+)
 from .utils import distance_on_surface, longitude_difference, pre_compile
 from .weather import Weather
 
@@ -65,41 +67,27 @@ class Engine:
         self.safe = safe
         self.test = test
 
-        # if not self.test:
-        #     start = None
-
+        print("Generating players...", end=" ", flush=True)
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
         for name, bot in self.bots.items():
             self.players[name] = Player(
                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
             )
-            # # ==============
-            # self.players[name].latitude += np.random.uniform(-0.5, 0.5)
-            # for ch in self.players[name].checkpoints:
-            #     ch.reached = True
-            # # ==============
-
-        print(self.players)
+        print("done")
 
         self.map = Map()
         self.weather = Weather(seed=seed)
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )
-        # self.start_time = time.time()
-        # self.last_player_update = self.start_time
-        # self.last_graphics_update = self.start_time
-        # self.last_time_update = self.start_time
-        # self.last_forecast_update = self.start_time
-        # self.previous_clock_time = self.start_time
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
         self.tracers_hidden = False
 
         self.set_schedule()
         self.group_counter = 0
-        # self.points_this_round = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+        self.fastest_times = read_fastest_times(self.players)
 
     def initialize_time(self):
         self.start_time = time.time()
@@ -127,16 +115,6 @@ class Engine:
         for i in empty_groups:
             del self.player_groups[i]
 
-    # def get_info(self, player: Player) -> Dict[str, float]:
-    #     return {
-    #         "longitude": player.longitude,
-    #         "latitude": player.latitude,
-    #         "heading": player.heading,
-    #         "speed": player.speed,
-    #         "vector": player.get_vector(),
-    #         "forecast": self.forecast,
-    #     }
-
     def execute_player_bot(self, player, t: float, dt: float):
         instructions = None
         args = {
@@ -159,22 +137,10 @@ class Engine:
         return instructions
 
     def call_player_bots(self, t: float, dt: float, players: List[Player]):
-        # for bot in self.bots.values():
         for player in players:
-            # instructions = None
-            # info = self.get_info(player)
-            # if self.safe:
-            #     try:
-            #         instructions = self.bots[player.team].run(t=t, info=info)
-            #     except:
-            #         pass
-            # else:
-            #     instructions = self.bot.run(t=t, info=info)
             player.execute_bot_instructions(
                 self.execute_player_bot(player=player, t=t, dt=dt)
             )
-
-            # player.execute_bot(t=t, info=self.get_info(player), safe=self.safe)
 
     def move_players(self, weather: Weather, t: float, dt: float):
         latitudes = np.array([player.latitude for player in self.players.values()])
@@ -253,11 +219,15 @@ class Engine:
                     f"{pos_str} position!"
                 )
                 self.players_not_arrived.remove(player.team)
+                self.fastest_times[player.team] = min(
+                    t, self.fastest_times[player.team]
+                )
                 # print("player score:", player.score)
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)
-        self.update_leaderboard(final_scores)
+        write_fastest_times(self.fastest_times)
+        self.update_leaderboard(final_scores, self.fastest_times)
         self.timer.stop()
 
     def update(self):
@@ -322,7 +292,7 @@ class Engine:
                 f'<div style="color:{col}">&#9632;</div> {i+1}. {team}: {int(dist)} km [{nch}]'
             )
 
-    def update_leaderboard(self, scores):
+    def update_leaderboard(self, scores, fastest_times):
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)
         )
@@ -331,6 +301,17 @@ class Engine:
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
                 f'{i+1}. {name}: {score}'
+            )
+
+        sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
+        for i, (name, t) in enumerate(sorted_times.items()):
+            try:
+                time = str(datetime.timedelta(seconds=int(t)))[2:]
+            except OverflowError:
+                time = "None"
+            self.fastest_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f'{i+1}. {name}: {time}'
             )
 
     def run(self):
@@ -394,13 +375,29 @@ class Engine:
         widget2_layout = QVBoxLayout(widget2)
         widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         widget2.setMinimumWidth(int(window.width() * 0.08))
-        widget2_layout.addWidget(QLabel("Leader board:"))
+        widget2_layout.addWidget(QLabel("Leader board"))
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget2_layout.addWidget(separator)
+        widget2_layout.addWidget(QLabel("Scores:"))
         self.score_boxes = {}
         for i, p in enumerate(self.players.values()):
             self.score_boxes[i] = QLabel(p.team)
             widget2_layout.addWidget(self.score_boxes[i])
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget2_layout.addWidget(separator)
+        widget2_layout.addWidget(QLabel("Fastest finish:"))
+        self.fastest_boxes = {}
+        for i in range(3):
+            self.fastest_boxes[i] = QLabel(str(i + 1))
+            widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
-        self.update_leaderboard(read_scores(self.players.keys(), test=self.test))
+        self.update_leaderboard(
+            read_scores(self.players.keys(), test=self.test), self.fastest_times
+        )
 
         window.show()
         self.timer = QtCore.QTimer()

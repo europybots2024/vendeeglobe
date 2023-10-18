@@ -143,6 +143,7 @@ def longitude_difference(lon1, lon2):
 
 
 def pre_compile():
+    print('Pre-compiling numba functions...', end=' ', flush=True)
     a = np.zeros(2)
     b = 0.0
     for ab in (a, b):
@@ -155,3 +156,4 @@ def pre_compile():
         distance_on_surface(ab, ab, ab, ab)
     wind_force(a, a)
     longitude_difference(b, b)
+    print('done')

@@ -206,3 +206,23 @@ def finalize_scores(players: Dict[str, Player], test: bool = False):
     _print_scores(round_scores=round_scores, final_scores=final_scores)
     _write_scores(final_scores)
     return final_scores
+
+
+def read_fastest_times(players: Dict[str, Player]) -> Dict[str, int]:
+    times = {p: np.inf for p in players}
+    fname = "fastest_times.txt"
+    if os.path.exists(fname):
+        with open(fname, "r") as f:
+            contents = f.readlines()
+        for line in contents:
+            name, t = line.split(":")
+            times[name] = int(t.strip())
+    # print("Scores:", scores)
+    return times
+
+
+def write_fastest_times(times: Dict[str, Player]):
+    fname = "fastest_times.txt"
+    with open(fname, "w") as f:
+        for name, t in times.items():
+            f.write(f"{name}: {t}\n")

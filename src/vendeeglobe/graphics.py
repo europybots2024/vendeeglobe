@@ -179,6 +179,7 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
 class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+        print("Initializing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
         # self.app = QApplication(sys.argv)
         self.window = gl.GLViewWidget()
@@ -300,6 +301,8 @@ class Graphics:
             # self.avatars[name].rotate(player.latitude, 0, 1, 0)
             # self.avatars[name].translate(1.02 * x, 1.02 * y, 1.02 * z)
             self.window.addItem(self.avatars[name])
+
+        print('done')
 
     def update_wind_tracers(
         self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False

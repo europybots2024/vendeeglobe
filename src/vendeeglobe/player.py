@@ -67,6 +67,12 @@ class Player:
         #         pass
         # else:
         #     instructions = self.bot.run(t=t, info=info)
+        if [instructions.location, instructions.heading, instructions.vector].count(
+            None
+        ) != 2:
+            raise ValueError(
+                "Instructions must define one of location, heading or vector."
+            )
         if instructions.location is not None:
             self.goto(
                 longitude=instructions.location.longitude,

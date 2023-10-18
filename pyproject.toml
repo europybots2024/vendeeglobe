@@ -20,17 +20,13 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "importlib-resources",
-    "global-land-mask",
     "matplotlib",
     "numba",
     "numpy",
     "pillow",
-    "pythreejs",
-    "pyopengl",
-    "pyqtgraph",
-    "pyqt5",
-    "pyqt6",
-    "PySide2",
+    "pyopengl == 3.1.6",
+    "pyqt5 == 5.15.9",
+    "pyqtgraph == 0.13.2",
     "scipy",
 ]
 

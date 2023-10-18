@@ -5,17 +5,16 @@
 from typing import Any, Dict
 
 import numpy as np
-from OpenGL.GL import *  # noqa
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from matplotlib.colors import to_rgba
-
+from OpenGL.GL import *  # noqa
+from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 from . import config
+from . import utils as ut
 from .map import Map
 from .player import Player
-from . import utils as ut
 from .weather import Weather
 
 

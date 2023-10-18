@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import datetime
 import time
 from typing import List, Optional
 
@@ -7,19 +8,16 @@ import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
-import datetime
-
-
 try:
     from PyQt5.QtWidgets import (
-        QMainWindow,
-        QWidget,
-        QLabel,
-        QHBoxLayout,
-        QVBoxLayout,
         QCheckBox,
-        QSizePolicy,
         QFrame,
+        QHBoxLayout,
+        QLabel,
+        QMainWindow,
+        QSizePolicy,
+        QVBoxLayout,
+        QWidget,
     )
 except ImportError:
     from PySide2.QtWidgets import (
@@ -33,7 +31,6 @@ except ImportError:
         QFrame,
     )
 
-
 from . import config
 from .core import Location
 from .graphics import Graphics
@@ -42,8 +39,8 @@ from .player import Player
 from .scores import (
     finalize_scores,
     get_player_points,
-    read_scores,
     read_fastest_times,
+    read_scores,
     write_fastest_times,
 )
 from .utils import distance_on_surface, longitude_difference, pre_compile

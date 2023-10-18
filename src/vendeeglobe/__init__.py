@@ -3,8 +3,8 @@
 # flake8: noqa F401
 
 from .config import config
+from .core import Checkpoint, Heading, Instructions, Location, Vector, WeatherForecast
 from .engine import Engine
-from .core import Checkpoint, Location, Heading, Vector, Instructions, WeatherForecast
 
 
 def play(*args, **kwargs):

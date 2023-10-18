@@ -1,15 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import hashlib
 from typing import Tuple, Union
 
-import numpy as np
 import numba
+import numpy as np
 
 from . import config
-
-
-import hashlib
-
 
 RADIUS = float(config.map_radius)
 

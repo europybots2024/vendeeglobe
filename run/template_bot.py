@@ -6,10 +6,10 @@ import numpy as np
 
 from vendeeglobe import (
     Checkpoint,
-    Location,
     Heading,
-    Vector,
     Instructions,
+    Location,
+    Vector,
     WeatherForecast,
     config,
 )

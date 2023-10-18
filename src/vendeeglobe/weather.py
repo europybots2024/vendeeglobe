@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Optional, Tuple
+
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
-from typing import Optional, Tuple
 
 from . import config
 from .core import WeatherForecast
-from .utils import wrap, lon_degs_from_length, lat_degs_from_length
+from .utils import lat_degs_from_length, lon_degs_from_length, wrap
 
 
 class Weather:

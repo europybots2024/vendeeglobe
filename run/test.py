@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import vendeeglobe as vg
-
 from template_bot import Bot, Bot2
+
+import vendeeglobe as vg
 
 bots = [Bot(team="Alice"), Bot2(team="Bob")]
 

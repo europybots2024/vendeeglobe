@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import asdict
-from typing import Optional, Sequence, Union, Tuple
+from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
-from PIL import Image
 from matplotlib.colors import hex2color
+from PIL import Image
 
 from . import config
 from . import utils as utl
-from .core import Checkpoint, Location, Heading, Vector
+from .core import Checkpoint, Heading, Location, Vector
 
 
 class Player:

@@ -10,4 +10,4 @@ start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 
 
-vg.play(bots=bots, start=start, test=False)
+vg.play(bots=bots, start=start)

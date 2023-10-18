@@ -51,7 +51,6 @@ class Engine:
     def __init__(
         self,
         bots: dict,
-        safe: bool = False,
         test: bool = True,
         time_limit: float = 8 * 60,
         seed: int = None,
@@ -61,7 +60,7 @@ class Engine:
 
         self.time_limit = time_limit
         self.start_time = None
-        self.safe = safe
+        self.safe = not test
         self.test = test
 
         print("Generating players...", end=" ", flush=True)

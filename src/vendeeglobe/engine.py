@@ -73,7 +73,9 @@ class Engine:
         print("done")
 
         self.map = Map()
+        t0 = time.time()
         self.weather = Weather(seed=seed)
+        print(f"Weather generated in {time.time() - t0:.2f} s")
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )

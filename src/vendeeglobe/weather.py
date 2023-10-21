@@ -88,15 +88,33 @@ class Weather:
         nf = len(self.forecast_times)
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
+
+        # self.expensive_forecast_u = [self.u]
+        # self.expensive_forecast_v = [self.v]
+
         # # =============================
         # # Gaussian filter is slow!
         # for i in range(1, nf):
         #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
         #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
         # # =============================
+        # for i in range(1, nf):
+        #     self.expensive_forecast_u.append(
+        #         uniform_filter(self.u, size=i * 2, mode="wrap")
+        #     )
+        #     self.expensive_forecast_v.append(
+        #         uniform_filter(self.v, size=i * 2, mode="wrap")
+        #     )
+
         for i in range(1, nf):
-            self.forecast_u.append(uniform_filter(self.u, size=i * 2, mode="wrap"))
-            self.forecast_v.append(uniform_filter(self.v, size=i * 2, mode="wrap"))
+            fu = np.repeat(
+                np.repeat(self.u[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
+            )
+            fv = np.repeat(
+                np.repeat(self.v[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
+            )
+            self.forecast_u.append(fu[:, : self.ny, : self.nx])
+            self.forecast_v.append(fv[:, : self.ny, : self.nx])
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
@@ -105,7 +123,8 @@ class Weather:
         self.v.setflags(write=False)
         self.forecast_u.setflags(write=False)
         self.forecast_v.setflags(write=False)
-
+        # self.expensive_forecast_u = np.array(self.expensive_forecast_u)
+        # self.expensive_forecast_v = np.array(self.expensive_forecast_v)
         print("done")
 
     def get_forecast(self, t: np.ndarray) -> WeatherForecast:
@@ -119,6 +138,11 @@ class Weather:
             dv=self.dv,
             dt=self.dt,
         )
+
+    # , WeatherForecast(
+    #         u=self.expensive_forecast_u[ik, it, ...],
+    #         v=self.expensive_forecast_v[ik, it, ...],
+    #     )
 
     def get_uv(
         self, lat: np.ndarray, lon: np.ndarray, t: np.ndarray

@@ -82,8 +82,7 @@ class Engine:
         print(f"Generating map took {time.time() - t0:.2f} s")
         t0 = time.time()
         self.weather = Weather(seed=seed)
-        print(f"Generating weather took {time.time() - t0:.2f} s")
-        t0 = time.time()
+        print(f"Weather generated in {time.time() - t0:.2f} s")
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )

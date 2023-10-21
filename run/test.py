@@ -28,8 +28,8 @@ for name in [
 ]:
     other_bots.append(Bot2(team=name))
     for ch in other_bots[-1].course[:-1]:
-        ch.longitude += np.random.uniform(-0.5, 0.5)
-        ch.latitude += np.random.uniform(-0.5, 0.5)
+        ch.longitude += np.random.uniform(-1, 1)
+        ch.latitude += np.random.uniform(-1, 1)
 
 
 start = None

@@ -111,7 +111,7 @@ def read_fastest_times(players: Dict[str, Player]) -> Dict[str, int]:
             contents = f.readlines()
         for line in contents:
             name, t = line.split(":")
-            times[name] = int(t.strip())
+            times[name] = float(t.strip())
     return times
 
 

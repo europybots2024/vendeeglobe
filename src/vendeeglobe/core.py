@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -66,9 +66,3 @@ class Checkpoint:
     longitude: float
     radius: float
     reached: bool = False
-
-
-@dataclass
-class WeatherForecast:
-    u: np.ndarray
-    v: np.ndarray

@@ -9,6 +9,7 @@ from vendeeglobe import (
     Heading,
     Instructions,
     Location,
+    MapProxy,
     Vector,
     WeatherForecast,
     config,
@@ -59,6 +60,7 @@ class Bot:
         speed: float,
         vector: np.ndarray,
         forecast: WeatherForecast,
+        map: MapProxy,
     ):
         """
         This is the method that will be called at every time step to get the
@@ -82,6 +84,8 @@ class Bot:
             The current heading of the ship, expressed as a vector.
         forecast:
             The weather forecast for the next 5 days.
+        map:
+            The map of the world: 1 for sea, 0 for land.
         """
         instructions = Instructions()
         for ch in self.course:
@@ -140,6 +144,7 @@ class Bot2:
         speed: float,
         vector: np.ndarray,
         forecast: WeatherForecast,
+        map: MapProxy,
     ):
         loc = None
         for ch in self.course:

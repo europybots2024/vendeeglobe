@@ -34,7 +34,7 @@ except ImportError:
 from . import config
 from .core import Location
 from .graphics import Graphics
-from .map import Map
+from .map import Map, MapProxy
 from .player import Player
 from .scores import (
     finalize_scores,
@@ -56,13 +56,16 @@ class Engine:
         seed: int = None,
         start: Optional[Location] = None,
     ):
+        t0 = time.time()
         pre_compile()
+        print(f"Pre-compilation took {time.time() - t0:.2f} s")
 
         self.time_limit = time_limit
         self.start_time = None
         self.safe = not test
         self.test = test
 
+        t0 = time.time()
         print("Generating players...", end=" ", flush=True)
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
@@ -71,12 +74,20 @@ class Engine:
                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
             )
         print("done")
+        print(f"Generating players took {time.time() - t0:.2f} s")
 
+        t0 = time.time()
         self.map = Map()
+        self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
+        print(f"Generating map took {time.time() - t0:.2f} s")
+        t0 = time.time()
         self.weather = Weather(seed=seed)
+        print(f"Generating weather took {time.time() - t0:.2f} s")
+        t0 = time.time()
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )
+        print(f"Generating graphics took {time.time() - t0:.2f} s")
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
         self.tracers_hidden = False
@@ -121,6 +132,7 @@ class Engine:
             "speed": player.speed,
             "vector": player.get_vector(),
             "forecast": self.forecast,
+            "map": self.map_proxy,
         }
         if self.safe:
             try:
@@ -229,7 +241,7 @@ class Engine:
             self.last_forecast_update = clock_time
 
         self.call_player_bots(
-            t=t,
+            t=t * config.seconds_to_hours,
             dt=dt,
             players=self.player_groups[self.group_counter % len(self.player_groups)],
         )
@@ -284,7 +296,8 @@ class Engine:
             )
 
         sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
-        for i, (name, t) in enumerate(sorted_times.items()):
+        time_list = list(enumerate(sorted_times.items()))
+        for i, (name, t) in time_list[:3]:
             try:
                 time = str(datetime.timedelta(seconds=int(t)))[2:]
             except OverflowError:

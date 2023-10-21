@@ -1,13 +1,32 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
 from . import config
-from .core import WeatherForecast
 from .utils import lat_degs_from_length, lon_degs_from_length, wrap
+
+
+@dataclass(frozen=True)
+class WeatherForecast:
+    u: np.ndarray
+    v: np.ndarray
+    du: float
+    dv: float
+    dt: float
+
+    def get_uv(
+        self, lat: np.ndarray, lon: np.ndarray, t: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        iv = ((lat + 90.0) / self.dv).astype(int)
+        iu = ((lon + 180.0) / self.du).astype(int)
+        it = (t / self.dt).astype(int) % self.nt
+        u = self.u[it, iv, iu]
+        v = self.v[it, iv, iu]
+        return u, v
 
 
 class Weather:
@@ -81,14 +100,24 @@ class Weather:
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
+
+        self.u.setflags(write=False)
+        self.v.setflags(write=False)
+        self.forecast_u.setflags(write=False)
+        self.forecast_v.setflags(write=False)
+
         print("done")
 
-    def get_forecast(self, t: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def get_forecast(self, t: np.ndarray) -> WeatherForecast:
         t = t + self.forecast_times
         it = (t / self.dt).astype(int) % self.nt
         ik = np.arange(len(t))
         return WeatherForecast(
-            u=self.forecast_u[ik, it, ...], v=self.forecast_v[ik, it, ...]
+            u=self.forecast_u[ik, it, ...],
+            v=self.forecast_v[ik, it, ...],
+            du=self.du,
+            dv=self.dv,
+            dt=self.dt,
         )
 
     def get_uv(

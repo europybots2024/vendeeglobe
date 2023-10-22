@@ -40,7 +40,7 @@ class Bot:
             Checkpoint(longitude=114.565909, latitude=-36.310652, radius=10),
             Checkpoint(longitude=77.674694, latitude=-15.668984, radius=10),
             Checkpoint(longitude=51.301983, latitude=13.007233, radius=10),
-            Checkpoint(longitude=43.013064, latitude=12.001511, radius=5),
+            Checkpoint(longitude=43.603064, latitude=12.001511, radius=5),
             Checkpoint(longitude=34.008390, latitude=27.560352, radius=5),
             Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
             Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
@@ -48,6 +48,7 @@ class Bot:
             Checkpoint(latitude=34.557106, longitude=13.336454, radius=5),
             Checkpoint(latitude=38.427478, longitude=10.717964, radius=5),
             Checkpoint(latitude=36.318234, longitude=-1.976254, radius=5),
+            Checkpoint(latitude=35.501014, longitude=-11.226080, radius=5),
             Checkpoint(latitude=43.830773, longitude=-10.694328, radius=5),
             config.start,
         ]
@@ -134,7 +135,7 @@ class Bot2:
             Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1190.0),
             Checkpoint(latitude=-39.438937, longitude=19.836265, radius=50.0),
             Checkpoint(latitude=14.881699, longitude=-21.024326, radius=50.0),
-            Checkpoint(latitude=45.076538, longitude=-18.292936, radius=50.0),
+            Checkpoint(latitude=44.076538, longitude=-18.292936, radius=50.0),
             config.start,
         ]
 

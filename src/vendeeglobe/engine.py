@@ -81,7 +81,9 @@ class Engine:
         self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
         print(f"Generating map took {time.time() - t0:.2f} s")
         t0 = time.time()
-        self.weather = Weather(seed=seed)
+        self.weather = Weather(
+            seed=seed, time_limit=self.time_limit * config.seconds_to_hours
+        )
         print(f"Weather generated in {time.time() - t0:.2f} s")
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
@@ -273,15 +275,19 @@ class Engine:
                 get_player_points(player),
                 player.distance_travelled,
                 player.team,
+                player.speed,
                 player.color,
                 len([ch for ch in player.checkpoints if ch.reached]),
             )
             for player in self.players.values()
         ]
-        for i, (_, dist, team, col, nch) in enumerate(sorted(status, reverse=True)):
+        for i, (_, dist, team, speed, col, nch) in enumerate(
+            sorted(status, reverse=True)
+        ):
             self.player_boxes[i].setText(
                 f'<div style="color:{col}">&#9632;</div> {i+1}. '
-                f'{team}: {int(dist)} km [{nch}]'
+                f'{team[:config.max_name_length]}: {int(dist)} km, '
+                f'{int(speed)} km/h [{nch}]'
             )
 
     def update_leaderboard(self, scores, fastest_times):
@@ -291,7 +297,7 @@ class Engine:
         for i, (name, score) in enumerate(sorted_scores.items()):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name}: {score}'
+                f'{i+1}. {name[:config.max_name_length]}: {score}'
             )
 
         sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
@@ -303,7 +309,7 @@ class Engine:
                 time = "None"
             self.fastest_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name}: {time}'
+                f'{i+1}. {name[:config.max_name_length]}: {time}'
             )
 
     def run(self):
@@ -323,7 +329,7 @@ class Engine:
         layout.addWidget(widget1)
         widget1_layout = QVBoxLayout(widget1)
         widget1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        widget1.setMinimumWidth(int(window.width() * 0.1))
+        widget1.setMinimumWidth(int(window.width() * 0.2))
 
         self.time_label = QLabel("Time left:")
         widget1_layout.addWidget(self.time_label)

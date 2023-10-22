@@ -23,25 +23,25 @@ class WeatherForecast:
     ) -> Tuple[np.ndarray, np.ndarray]:
         iv = ((lat + 90.0) / self.dv).astype(int)
         iu = ((lon + 180.0) / self.du).astype(int)
-        it = (t / self.dt).astype(int) % self.nt
+        it = ((t / config.seconds_to_hours) / self.dt).astype(int) % self.nt
         u = self.u[it, iv, iu]
         v = self.v[it, iv, iu]
         return u, v
 
 
 class Weather:
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, time_limit: int, seed: Optional[int] = None):
         print("Generating weather...", end=" ", flush=True)
         rng = np.random.default_rng(seed)
 
         self.ny = 128
         self.nx = self.ny * 2
-        self.nt = self.ny
+        self.nt = int(time_limit / config.weather_update_interval)
 
         self.dt = config.weather_update_interval  # weather changes every 12 hours
 
-        nseeds = 250
-        sigma = 6
+        nseeds = 300  # 350
+        sigma = 8
 
         image = np.zeros([self.nt, self.ny, self.nx])
         dy = self.ny // 6
@@ -56,12 +56,13 @@ class Weather:
         angle = normed * 360.0
         angle = (angle + 180.0) % 360.0
         angle *= np.pi / 180.0
+        self.angle = angle
 
         self.u = np.cos(angle)
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        speed = (1.0 - div / div.max()) * 150.0
+        speed = (1.0 - div / div.max()) * 200.0  # 150.0
         self.u *= speed
         self.v *= speed
 

@@ -128,8 +128,21 @@ class Player:
         """
         pos = self.get_position()
         uv = np.array([u, v])
-        self.speed = utl.wind_force(self.get_vector(), uv)
-        f = self.speed * dt * self.sail
+        vec = utl.wind_force(self.get_vector(), uv)
+        self.speed = np.linalg.norm(vec)
+        f = vec * dt * self.sail
+        # print(
+        #     'f',
+        #     np.linalg.norm(f),
+        #     'speed',
+        #     np.linalg.norm(self.speed),
+        #     'dt',
+        #     dt,
+        #     'sail',
+        #     self.sail,
+        #     'uv',
+        #     np.linalg.norm(uv),
+        # )
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )

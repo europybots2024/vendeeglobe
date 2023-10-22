@@ -26,6 +26,7 @@ class Config:
     seconds_to_hours = 4.0
     avatar_size = [64, 64]
     score_step = 100_000
+    max_name_length = 15
 
 
 config = Config()

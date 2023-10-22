@@ -17,7 +17,7 @@ def string_to_color(input_string: str) -> str:
     return "#" + hex_hash[:6]
 
 
-@numba.njit
+@numba.njit(cache=True)
 def to_xyz(
     phi: Union[float, np.ndarray],
     theta: Union[float, np.ndarray],
@@ -36,19 +36,19 @@ def to_xyz(
     return xpos, ypos, zpos
 
 
-@numba.njit
+@numba.njit(cache=True)
 def lat_to_theta(lat: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     return np.radians(90.0 - lat)
 
 
-@numba.njit
+@numba.njit(cache=True)
 def lon_to_phi(lon: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     out = lon % 360.0
     out += 180.0
     return np.radians(out)
 
 
-@numba.njit
+@numba.njit(cache=True)
 def wrap(
     lat: Union[float, np.ndarray], lon: Union[float, np.ndarray]
 ) -> Tuple[Union[float, np.ndarray], Union[float, np.ndarray]]:
@@ -60,7 +60,7 @@ def wrap(
     return out_lat, out_lon
 
 
-@numba.njit
+@numba.njit(cache=True)
 def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(wind)
     vsum = ship_vector + wind / norm
@@ -69,7 +69,7 @@ def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
     return mag * norm * ship_vector
 
 
-@numba.njit
+@numba.njit(cache=True)
 def lon_degs_from_length(length: np.ndarray, lat: np.ndarray) -> np.ndarray:
     """
     Given a length, compute how many degrees of longitude it represents at a given
@@ -78,7 +78,7 @@ def lon_degs_from_length(length: np.ndarray, lat: np.ndarray) -> np.ndarray:
     return length / ((np.pi * RADIUS * np.cos(np.radians(lat))) / 180.0)
 
 
-@numba.njit
+@numba.njit(cache=True)
 def lat_degs_from_length(length: np.ndarray) -> np.ndarray:
     """
     Given a length, compute how many degrees of latitude it represents.
@@ -86,7 +86,7 @@ def lat_degs_from_length(length: np.ndarray) -> np.ndarray:
     return length / (2.0 * np.pi * RADIUS) * 360.0
 
 
-@numba.njit
+@numba.njit(cache=True)
 def distance_on_surface(
     longitude1: float, latitude1: float, longitude2: float, latitude2: float
 ) -> float:
@@ -105,7 +105,7 @@ def distance_on_surface(
     return RADIUS * c
 
 
-@numba.njit
+@numba.njit(cache=True)
 def longitude_difference(lon1, lon2):
     # Calculate the standard difference in longitudes
     lon_diff = lon1 - lon2

@@ -10,26 +10,26 @@ bots = [Bot(team="Alice")]
 other_bots = []
 for name in [
     "Bob",
-    "Charlie",
-    "Dave",
-    "Eve",
-    "Frank",
-    "Grace",
-    "Heidi",
-    "Ivan",
-    "Judy",
-    "Mallory",
-    "Oscar",
-    "Peggy",
-    "Sybil",
-    "Trent",
-    "Victor",
-    "Walter",
+    # "CharlieWinstonGreen",
+    # "Dave",
+    # "Eve",
+    # "Frank",
+    # "Grace",
+    # "Heidi",
+    # "Ivan",
+    # "Judy",
+    # "Mallory",
+    # "Oscar",
+    # "Peggy",
+    # "Sybil",
+    # "Trent",
+    # "Victor",
+    # "Walter",
 ]:
     other_bots.append(Bot2(team=name))
-    for ch in other_bots[-1].course[:-1]:
-        ch.longitude += np.random.uniform(-1, 1)
-        ch.latitude += np.random.uniform(-1, 1)
+    # for ch in other_bots[-1].course[:-1]:
+    #     ch.longitude += np.random.uniform(-1, 1)
+    #     ch.latitude += np.random.uniform(-1, 1)
 
 
 start = None

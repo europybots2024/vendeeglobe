@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import hashlib
+import time
 from typing import Tuple, Union
 
 import numba
@@ -119,6 +120,7 @@ def longitude_difference(lon1, lon2):
 
 
 def pre_compile():
+    t0 = time.time()
     print('Pre-compiling numba functions...', end=' ', flush=True)
     a = np.zeros(2)
     b = 0.0
@@ -132,4 +134,4 @@ def pre_compile():
         distance_on_surface(ab, ab, ab, ab)
     wind_force(a, a)
     longitude_difference(b, b)
-    print('done')
+    print(f'done [{time.time() - t0:.2f} s]')

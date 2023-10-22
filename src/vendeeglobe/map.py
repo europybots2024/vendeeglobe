@@ -13,32 +13,18 @@ from . import config
 
 class Map:
     def __init__(self):
-        print('Loading world map...', end=' ', flush=True)
         t0 = time.time()
+        print('Creating world map...', end=' ', flush=True)
         im = Image.open(os.path.join(config.resourcedir, config.map_file))
-        print(f'loading: {time.time() - t0:.2f} s')
-        t0 = time.time()
         self.array = np.array(im.convert('RGBA'))
-        print(f'converting: {time.time() - t0:.2f} s')
-        t0 = time.time()
         img16 = self.array.astype('int16')
-        print(f'converting to int16: {time.time() - t0:.2f} s')
-        t0 = time.time()
         self.sea_array = np.flipud(
             np.where(img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0)
         )
-        print(f'creating sea array: {time.time() - t0:.2f} s')
-        t0 = time.time()
-        # self.high_contrast_texture = np.ones(self.sea_array.shape + (4,))
-        # self.high_contrast_texture[..., 0] = self.sea_array
-        # self.high_contrast_texture[..., 1] = self.sea_array
-        # self.high_contrast_texture[..., 2] = self.sea_array
         self.high_contrast_texture = np.array(
             Image.fromarray(np.uint8(self.sea_array * 255)).convert('RGBA')
         )
-        print(f'creating high contrast texture: {time.time() - t0:.2f} s')
 
-        t0 = time.time()
         self.nlat, self.nlon, _ = self.array.shape
         lat_min = -90
         lat_max = 90
@@ -53,9 +39,8 @@ class Map:
             lon_min + 0.5 * self.dlon, lon_max - 0.5 * self.dlon, self.nlon
         )
         self.lon_grid, self.lat_grid = np.meshgrid(self.lon, self.lat)
-        print(f'creating lat/lon grids: {time.time() - t0:.2f} s')
         self.sea_array.setflags(write=False)
-        print('done')
+        print(f'done [{time.time() - t0:.2f} s]')
 
     def get_terrain(self, longitudes, latitudes):
         ilon = ((longitudes + 180.0) / self.dlon).astype(int)

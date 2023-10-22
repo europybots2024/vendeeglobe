@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # flake8: noqa F405
-
+import time
 from typing import Any, Dict
 
 import numpy as np
@@ -151,6 +151,7 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
 class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+        t0 = time.time()
         print("Initializing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
         self.window = gl.GLViewWidget()
@@ -258,7 +259,7 @@ class Graphics:
             self.avatars[name].rotate(player.latitude, *perp_vec)
             self.window.addItem(self.avatars[name])
 
-        print('done')
+        print(f'done [{time.time() - t0:.2f} s]')
 
     def update_wind_tracers(
         self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False

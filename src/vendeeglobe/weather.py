@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import time
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -31,6 +32,7 @@ class WeatherForecast:
 
 class Weather:
     def __init__(self, time_limit: int, seed: Optional[int] = None):
+        t0 = time.time()
         print("Generating weather...", end=" ", flush=True)
         rng = np.random.default_rng(seed)
 
@@ -126,7 +128,7 @@ class Weather:
         self.forecast_v.setflags(write=False)
         # self.expensive_forecast_u = np.array(self.expensive_forecast_u)
         # self.expensive_forecast_v = np.array(self.expensive_forecast_v)
-        print("done")
+        print(f"done [{time.time() - t0:.2f} s]")
 
     def get_forecast(self, t: np.ndarray) -> WeatherForecast:
         t = t + self.forecast_times

@@ -56,9 +56,7 @@ class Engine:
         seed: int = None,
         start: Optional[Location] = None,
     ):
-        t0 = time.time()
         pre_compile()
-        print(f"Pre-compilation took {time.time() - t0:.2f} s")
 
         self.time_limit = time_limit
         self.start_time = None
@@ -73,22 +71,16 @@ class Engine:
             self.players[name] = Player(
                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
             )
-        print("done")
-        print(f"Generating players took {time.time() - t0:.2f} s")
+        print(f"done [{time.time() - t0:.2f} s]")
 
-        t0 = time.time()
         self.map = Map()
         self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
-        print(f"Generating map took {time.time() - t0:.2f} s")
-        t0 = time.time()
         self.weather = Weather(
             seed=seed, time_limit=self.time_limit * config.seconds_to_hours
         )
-        print(f"Weather generated in {time.time() - t0:.2f} s")
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )
-        print(f"Generating graphics took {time.time() - t0:.2f} s")
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
         self.tracers_hidden = False

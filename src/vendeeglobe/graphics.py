@@ -11,6 +11,7 @@ from matplotlib.colors import to_rgba
 from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
+
 from . import config
 from . import utils as ut
 from .map import Map
@@ -169,7 +170,21 @@ class Graphics:
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
-        self.is_default_texture = True
+
+        nstars = 5000
+        x, y, z = ut.to_xyz(
+            np.random.uniform(0, 2.0 * np.pi, nstars),
+            np.random.normal(0.5 * np.pi, 0.4, nstars),
+        )
+        f = 100
+        self.background_stars = gl.GLScatterPlotItem(
+            pos=f * np.array([x, y, z]).T,
+            color=np.ones((nstars, 4)),
+            size=1,
+            pxMode=True,
+        )
+        self.background_stars.setGLOptions("opaque")
+        self.window.addItem(self.background_stars)
 
         # Add checkpoints
         scl = [0.96, 0.99]
@@ -229,6 +244,7 @@ class Graphics:
 
         self.tracks = {}
         self.avatars = {}
+        self.labels = {}
         for i, (name, player) in enumerate(players.items()):
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude),
@@ -261,21 +277,12 @@ class Graphics:
 
         print(f'done [{time.time() - t0:.2f} s]')
 
-    def update_wind_tracers(
-        self, tracer_lat: np.ndarray, tracer_lon: np.ndarray, reset_colors: bool = False
-    ):
+    def update_wind_tracers(self, tracer_lat: np.ndarray, tracer_lon: np.ndarray):
         x, y, z = ut.to_xyz(
             ut.lon_to_phi(tracer_lon.ravel()),
             ut.lat_to_theta(tracer_lat.ravel()),
         )
-        kwargs = dict(pos=np.array([x, y, z]).T)
-        if reset_colors:
-            kwargs['color'] = (
-                self.default_tracer_colors
-                if self.is_default_texture
-                else self.high_contrast_tracer_colors
-            )
-        self.tracers.setData(**kwargs)
+        self.tracers.setData(pos=np.array([x, y, z]).T)
 
     def update_player_positions(self, players: Dict[str, Player]):
         latitudes = np.array([player.latitude for player in players.values()])
@@ -285,8 +292,9 @@ class Graphics:
 
         for i, (name, player) in enumerate(players.items()):
             if not player.arrived:
+                arr = np.array([x[i], y[i], z[i]])
                 pos = np.vstack(
-                    [self.tracks[name]['pos'], np.array([x[i], y[i], z[i]])],
+                    [self.tracks[name]['pos'], arr],
                 )
                 npos = len(pos)
                 step = (npos // 1000) if npos > 1000 else 1
@@ -297,18 +305,19 @@ class Graphics:
                 perp_vec /= np.linalg.norm(perp_vec)
                 self.avatars[name].rotate(player.dlat, *perp_vec)
 
-    def hide_wind_tracers(self):
-        self.tracers.setData(color=np.zeros_like(self.default_tracer_colors))
+    def toggle_wind_tracers(self, val):
+        self.tracers.setVisible(val)
 
     def toggle_texture(self, val):
         if val:
             self.sphere.setData(self.high_contrast_texture)
             self.tracers.setData(color=self.high_contrast_tracer_colors)
-            self.is_default_texture = False
         else:
             self.sphere.setData(self.default_texture)
             self.tracers.setData(color=self.default_tracer_colors)
-            self.is_default_texture = True
 
     def set_tracer_thickness(self, val):
         self.tracers.setData(size=val)
+
+    def toggle_stars(self, val):
+        self.background_stars.setVisible(val)

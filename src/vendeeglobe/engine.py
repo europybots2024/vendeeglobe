@@ -85,7 +85,6 @@ class Engine:
         )
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
-        self.tracers_hidden = False
 
         self.set_schedule()
         self.group_counter = 0
@@ -252,15 +251,8 @@ class Engine:
         if self.tracer_checkbox.isChecked():
             self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
             self.graphics.update_wind_tracers(
-                self.weather.tracer_lat,
-                self.weather.tracer_lon,
-                reset_colors=self.tracers_hidden,
+                self.weather.tracer_lat, self.weather.tracer_lon
             )
-            self.tracers_hidden = False
-        else:
-            if not self.tracers_hidden:
-                self.graphics.hide_wind_tracers()
-                self.tracers_hidden = True
         self.graphics.update_player_positions(self.players)
         self.group_counter += 1
 
@@ -335,7 +327,8 @@ class Engine:
 
         self.time_label = QLabel("Time left:")
         widget1_layout.addWidget(self.time_label)
-        self.tracer_checkbox = QCheckBox("Show wind tracers", checked=True)
+        self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
+        self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
         widget1_layout.addWidget(self.tracer_checkbox)
 
         thickness_slider = QSlider(Qt.Horizontal)
@@ -351,6 +344,10 @@ class Engine:
         texture_checkbox = QCheckBox("High contrast", checked=False)
         widget1_layout.addWidget(texture_checkbox)
         texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+
+        stars_checkbox = QCheckBox("Background stars", checked=True)
+        widget1_layout.addWidget(stars_checkbox)
+        stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)

@@ -101,26 +101,24 @@ class Weather:
         #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
         #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
         # # =============================
-        # for i in range(1, nf):
-        #     self.expensive_forecast_u.append(
-        #         uniform_filter(self.u, size=i * 2, mode="wrap")
-        #     )
-        #     self.expensive_forecast_v.append(
-        #         uniform_filter(self.v, size=i * 2, mode="wrap")
-        #     )
-
         for i in range(1, nf):
-            fu = np.repeat(
-                np.repeat(self.u[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
-            )
-            fv = np.repeat(
-                np.repeat(self.v[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
-            )
-            self.forecast_u.append(fu[:, : self.ny, : self.nx])
-            self.forecast_v.append(fv[:, : self.ny, : self.nx])
+            self.forecast_u.append(uniform_filter(self.u, size=i * 2, mode="wrap"))
+            self.forecast_v.append(uniform_filter(self.v, size=i * 2, mode="wrap"))
+
+        # for i in range(1, nf):
+        #     fu = np.repeat(
+        #         np.repeat(self.u[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
+        #     )
+        #     fv = np.repeat(
+        #         np.repeat(self.v[:, :: i + 1, :: i + 1], i + 1, axis=1), i + 1, axis=2
+        #     )
+        #     self.forecast_u.append(fu[:, : self.ny, : self.nx])
+        #     self.forecast_v.append(fv[:, : self.ny, : self.nx])
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
+
+        # self.forecast_u, self.forecast_v = blur_weather(self.u, self.v, nf)
 
         self.u.setflags(write=False)
         self.v.setflags(write=False)

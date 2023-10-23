@@ -204,7 +204,7 @@ class Graphics:
         self.tracers = gl.GLScatterPlotItem(
             pos=np.array([x, y, z]).T,
             color=self.default_tracer_colors,
-            size=4,
+            size=2,
             pxMode=True,
         )
         # self.tracers.setGLOptions("opaque")

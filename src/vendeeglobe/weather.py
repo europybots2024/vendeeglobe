@@ -89,20 +89,66 @@ class Weather:
             0, config.forecast_length * 6, config.weather_update_interval
         )
         nf = len(self.forecast_times)
-        self.forecast_u = [self.u]
-        self.forecast_v = [self.v]
 
-        # # =============================
-        # # Gaussian filter is slow!
-        # for i in range(1, nf):
-        #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
-        #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
-        # # =============================
+        blurred_u = gaussian_filter(self.u, sigma=20, mode="wrap")
+        blurred_v = gaussian_filter(self.v, sigma=20, mode="wrap")
+        self.forecast_u = []
+        self.forecast_v = []
+
+        # # # =============================
+        # # # Gaussian filter is slow!
+        # # for i in range(1, nf):
+        # #     self.forecast_u.append(gaussian_filter(self.u, sigma=i + 1, mode="wrap"))
+        # #     self.forecast_v.append(gaussian_filter(self.v, sigma=i + 1, mode="wrap"))
+        # # # =============================
         for i in range(1, nf):
             self.forecast_u.append(uniform_filter(self.u, size=i * 2, mode="wrap"))
             self.forecast_v.append(uniform_filter(self.v, size=i * 2, mode="wrap"))
             # self.forecast_u.append(self.u)
             # self.forecast_v.append(self.v)
+
+        # # kernel = np.outer(signal.windows.gaussian(70, 8),
+        # #                   signal.windows.gaussian(70, 8))
+        # # blurred = signal.fftconvolve(face, kernel, mode='same')
+
+        # from scipy import signal
+
+        # rng = np.random.default_rng()
+        # sig = rng.standard_normal(1000)
+
+        # for i in range(1, nf):
+        #     sigma = 2 * i + 1
+        #     w = sigma * 2
+        #     # w = 2
+        #     gauss = signal.windows.gaussian(w, sigma)
+        #     # gauss = signal.windows.gaussian(w, w)
+        #     # kernel = np.outer(gauss, gauss, gauss)
+        #     a = np.outer(gauss, gauss)
+        #     b = np.broadcast_to(a, a.shape + (w,))
+        #     # b.shape
+        #     kernel = b * gauss.reshape(1, 1, w)
+        #     kernel /= np.sum(kernel)
+        #     # blurred = signal.fftconvolve(face, kernel, mode='same')
+        #     self.forecast_u.append(signal.fftconvolve(self.u, kernel, mode='same'))
+        #     self.forecast_v.append(signal.fftconvolve(self.v, kernel, mode='same'))
+
+        # for i in range(1, nf):
+        #     sigma = 2 * i + 1
+        #     w = sigma * 2
+        #     # w = 2
+        #     gauss = signal.windows.gaussian(w, sigma)
+        #     # gauss = signal.windows.gaussian(w, w)
+        #     # kernel = np.outer(gauss, gauss, gauss)
+        #     a = np.outer(gauss, gauss)
+        #     b = np.broadcast_to(a, a.shape + (w,))
+        #     # b.shape
+        #     kernel = b * gauss.reshape(1, 1, w)
+        #     kernel /= np.sum(kernel)
+        #     # blurred = signal.fftconvolve(face, kernel, mode='same')
+        #     self.forecast_u.append(signal.fftconvolve(self.u, kernel, mode='same'))
+        #     self.forecast_v.append(signal.fftconvolve(self.v, kernel, mode='same'))
+
+        # autocorr = signal.fftconvolve(sig, sig[::-1], mode='full')
 
         # for i in range(1, nf):
         #     fu = np.repeat(
@@ -113,6 +159,12 @@ class Weather:
         #     )
         #     self.forecast_u.append(fu[:, : self.ny, : self.nx])
         #     self.forecast_v.append(fv[:, : self.ny, : self.nx])
+
+        # a = w.u[0]
+        # b = w.forecast_v[-1, 0, ...]
+
+        # dx = 10.0
+        # c = (b - a) * (9.0/dx) + a
 
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)

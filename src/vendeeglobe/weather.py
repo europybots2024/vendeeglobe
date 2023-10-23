@@ -64,7 +64,7 @@ class Weather:
         self.v = np.sin(angle)
 
         div = np.abs(np.array(sum(np.gradient(normed))))
-        speed = (1.0 - div / div.max()) * 200.0  # 150.0
+        speed = (1.0 - div / div.max()) * 75.0
         self.u *= speed
         self.v *= speed
 
@@ -76,7 +76,7 @@ class Weather:
         self.du = (lon_max - lon_min) / self.nx
 
         size = (config.tracer_lifetime, config.ntracers)
-        self.tracer_lat = np.random.uniform(-90.0, 90.0, size=size)
+        self.tracer_lat = np.random.uniform(-89.9, 89.9, size=size)
         self.tracer_lon = np.random.uniform(-180, 180, size=size)
         self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
         self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
@@ -92,9 +92,6 @@ class Weather:
         self.forecast_u = [self.u]
         self.forecast_v = [self.v]
 
-        # self.expensive_forecast_u = [self.u]
-        # self.expensive_forecast_v = [self.v]
-
         # # =============================
         # # Gaussian filter is slow!
         # for i in range(1, nf):
@@ -104,6 +101,8 @@ class Weather:
         for i in range(1, nf):
             self.forecast_u.append(uniform_filter(self.u, size=i * 2, mode="wrap"))
             self.forecast_v.append(uniform_filter(self.v, size=i * 2, mode="wrap"))
+            # self.forecast_u.append(self.u)
+            # self.forecast_v.append(self.v)
 
         # for i in range(1, nf):
         #     fu = np.repeat(
@@ -118,14 +117,10 @@ class Weather:
         self.forecast_u = np.array(self.forecast_u)
         self.forecast_v = np.array(self.forecast_v)
 
-        # self.forecast_u, self.forecast_v = blur_weather(self.u, self.v, nf)
-
         self.u.setflags(write=False)
         self.v.setflags(write=False)
         self.forecast_u.setflags(write=False)
         self.forecast_v.setflags(write=False)
-        # self.expensive_forecast_u = np.array(self.expensive_forecast_u)
-        # self.expensive_forecast_v = np.array(self.expensive_forecast_v)
         print(f"done [{time.time() - t0:.2f} s]")
 
     def get_forecast(self, t: np.ndarray) -> WeatherForecast:
@@ -139,11 +134,6 @@ class Weather:
             dv=self.dv,
             dt=self.dt,
         )
-
-    # , WeatherForecast(
-    #         u=self.expensive_forecast_u[ik, it, ...],
-    #         v=self.expensive_forecast_v[ik, it, ...],
-    #     )
 
     def get_uv(
         self, lat: np.ndarray, lon: np.ndarray, t: np.ndarray
@@ -161,18 +151,18 @@ class Weather:
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
-        scaling = 0.3  # 0.2 / 1.5
-        incr_lon = u * dt * scaling
-        incr_lat = v * dt * scaling
-        incr_lon = lon_degs_from_length(incr_lon, self.tracer_lat[1, :])
-        incr_lat = lat_degs_from_length(incr_lat)
+        scaling = 1.0
+        incr_x = u * dt * scaling
+        incr_y = v * dt * scaling
+        incr_lon = lon_degs_from_length(incr_x, self.tracer_lat[1, :])
+        incr_lat = lat_degs_from_length(incr_y)
 
         self.tracer_lat[0, :], self.tracer_lon[0, :] = wrap(
             lat=self.tracer_lat[1, :] + incr_lat, lon=self.tracer_lon[1, :] + incr_lon
         )
 
         # Randomly replace tracers
-        new_lat = np.random.uniform(-90.0, 90.0, size=(self.number_of_new_tracers,))
+        new_lat = np.random.uniform(-89.9, 89.9, size=(self.number_of_new_tracers,))
         new_lon = np.random.uniform(-180, 180, size=(self.number_of_new_tracers,))
         istart = self.new_tracer_counter
         iend = self.new_tracer_counter + self.number_of_new_tracers

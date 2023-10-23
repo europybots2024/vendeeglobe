@@ -16,9 +16,11 @@ try:
         QLabel,
         QMainWindow,
         QSizePolicy,
+        QSlider,
         QVBoxLayout,
         QWidget,
     )
+    from PyQt5.QtCore import Qt
 except ImportError:
     from PySide2.QtWidgets import (
         QMainWindow,
@@ -28,8 +30,10 @@ except ImportError:
         QVBoxLayout,
         QCheckBox,
         QSizePolicy,
+        QSlider,
         QFrame,
     )
+    from PySide2.QtCore import Qt
 
 from . import config
 from .core import Location
@@ -138,9 +142,17 @@ class Engine:
 
     def call_player_bots(self, t: float, dt: float, players: List[Player]):
         for player in players:
-            player.execute_bot_instructions(
-                self.execute_player_bot(player=player, t=t, dt=dt)
-            )
+            if self.safe:
+                try:
+                    player.execute_bot_instructions(
+                        self.execute_player_bot(player=player, t=t, dt=dt)
+                    )
+                except:  # noqa
+                    pass
+            else:
+                player.execute_bot_instructions(
+                    self.execute_player_bot(player=player, t=t, dt=dt)
+                )
 
     def move_players(self, weather: Weather, t: float, dt: float):
         latitudes = np.array([player.latitude for player in self.players.values()])
@@ -327,9 +339,20 @@ class Engine:
         widget1_layout.addWidget(self.time_label)
         self.tracer_checkbox = QCheckBox("Show wind tracers", checked=True)
         widget1_layout.addWidget(self.tracer_checkbox)
-        self.texture_checkbox = QCheckBox("High contrast", checked=False)
-        widget1_layout.addWidget(self.texture_checkbox)
-        self.texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+
+        thickness_slider = QSlider(Qt.Horizontal)
+        thickness_slider.setMinimum(1)
+        thickness_slider.setMaximum(10)
+        thickness_slider.setSingleStep(1)
+        thickness_slider.setTickInterval(1)
+        thickness_slider.setTickPosition(QSlider.TicksBelow)
+        thickness_slider.setValue(int(self.graphics.tracers.size))
+        thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
+        widget1_layout.addWidget(thickness_slider)
+
+        texture_checkbox = QCheckBox("High contrast", checked=False)
+        widget1_layout.addWidget(texture_checkbox)
+        texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)

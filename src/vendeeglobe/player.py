@@ -46,14 +46,11 @@ class Player:
         else:
             img = Image.open(config.resourcedir / f'ship{avatar}.png')
             img = img.resize(config.avatar_size).convert("RGBA")
-            # self.avatar = img
             data = img.getdata()
             self.avatar = np.array(data).reshape(img.height, img.width, 4)
-            # print(self.team, self.avatar[..., 3].max())
             rgb = hex2color(self.color)
             for i in range(3):
                 self.avatar[..., i] = int(round(rgb[i] * 255))
-            # self.avatar = Image.fromarray(new_data.astype(np.uint8))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         if [instructions.location, instructions.heading, instructions.vector].count(
@@ -131,24 +128,12 @@ class Player:
         vec = utl.wind_force(self.get_vector(), uv)
         self.speed = np.linalg.norm(vec)
         f = vec * dt * self.sail
-        # print(
-        #     'f',
-        #     np.linalg.norm(f),
-        #     'speed',
-        #     np.linalg.norm(self.speed),
-        #     'dt',
-        #     dt,
-        #     'sail',
-        #     self.sail,
-        #     'uv',
-        #     np.linalg.norm(uv),
-        # )
         dist = np.array(
             [utl.lon_degs_from_length(f[0], pos[1]), utl.lat_degs_from_length(f[1])]
         )
         # Race trace the path
         norm = np.linalg.norm(dist)
-        ray = dist.reshape((2, 1)) * np.linspace(0, norm, (int(norm) + 1) * 8)
+        ray = dist.reshape((2, 1)) * np.linspace(0, 1, (int(norm) + 1) * 8)
         path = np.array(self.get_position()).reshape((2, 1)) + ray
         lat, lon = utl.wrap(lat=path[1, :], lon=path[0, :])
         return lat, lon

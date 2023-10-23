@@ -67,7 +67,7 @@ def wind_force(ship_vector: np.ndarray, wind: np.ndarray) -> np.ndarray:
     vsum = ship_vector + wind / norm
     vsum /= np.linalg.norm(vsum)
     mag = np.abs(np.dot(ship_vector, vsum))
-    return mag * norm * ship_vector
+    return (mag * norm) * ship_vector
 
 
 @numba.njit(cache=True)
@@ -162,7 +162,7 @@ def longitude_difference(lon1: float, lon2: float) -> float:
 
 def pre_compile():
     t0 = time.time()
-    print('Pre-compiling numba functions...', end=' ', flush=True)
+    print('Precompiling utils...', end=' ', flush=True)
     a = np.zeros(2)
     b = 0.0
     for ab in (a, b):

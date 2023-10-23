@@ -31,7 +31,7 @@ class Bot:
         self.course = [
             Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
             Checkpoint(longitude=-68.004373, latitude=18.180470, radius=10),
-            Checkpoint(longitude=-80.3, latitude=9.4875, radius=10),
+            Checkpoint(longitude=-80.0, latitude=9.4875, radius=10),
             Checkpoint(longitude=-79.3977636, latitude=8.6923598, radius=10),
             Checkpoint(longitude=-79.6065038, latitude=5.6673413, radius=10),
             Checkpoint(longitude=-168.943864, latitude=2.806318, radius=500),
@@ -40,7 +40,7 @@ class Bot:
             Checkpoint(longitude=114.565909, latitude=-36.310652, radius=10),
             Checkpoint(longitude=77.674694, latitude=-15.668984, radius=10),
             Checkpoint(longitude=51.301983, latitude=13.007233, radius=10),
-            Checkpoint(longitude=43.603064, latitude=12.001511, radius=5),
+            Checkpoint(longitude=43.853064, latitude=12.001511, radius=5),
             Checkpoint(longitude=34.008390, latitude=27.560352, radius=5),
             Checkpoint(longitude=33.028115, latitude=28.649649, radius=5),
             Checkpoint(longitude=32.542485, latitude=29.813090, radius=5),
@@ -50,7 +50,11 @@ class Bot:
             Checkpoint(latitude=36.318234, longitude=-1.976254, radius=5),
             Checkpoint(latitude=35.501014, longitude=-11.226080, radius=5),
             Checkpoint(latitude=43.830773, longitude=-10.694328, radius=5),
-            config.start,
+            Checkpoint(
+                latitude=config.start.latitude,
+                longitude=config.start.longitude,
+                radius=5,
+            ),
         ]
         # for ch in self.course[:-1]:
         #     ch.reached = True
@@ -136,7 +140,11 @@ class Bot2:
             Checkpoint(latitude=-39.438937, longitude=19.836265, radius=50.0),
             Checkpoint(latitude=14.881699, longitude=-21.024326, radius=50.0),
             Checkpoint(latitude=44.076538, longitude=-18.292936, radius=50.0),
-            config.start,
+            Checkpoint(
+                latitude=config.start.latitude,
+                longitude=config.start.longitude,
+                radius=5,
+            ),
         ]
 
     def run(

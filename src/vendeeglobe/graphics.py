@@ -152,7 +152,7 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 class Graphics:
     def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
         t0 = time.time()
-        print("Initializing graphics...", end=" ", flush=True)
+        print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
         self.window = gl.GLViewWidget()
         self.window.setWindowTitle("Vendee Globe")
@@ -309,3 +309,6 @@ class Graphics:
             self.sphere.setData(self.default_texture)
             self.tracers.setData(color=self.default_tracer_colors)
             self.is_default_texture = True
+
+    def set_tracer_thickness(self, val):
+        self.tracers.setData(size=val)

@@ -55,9 +55,9 @@ class Player:
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         if [instructions.location, instructions.heading, instructions.vector].count(
             None
-        ) != 2:
+        ) < 2:
             raise ValueError(
-                "Instructions must define one of location, heading or vector."
+                "Instructions must define only one of location, heading or vector."
             )
         if instructions.location is not None:
             self.goto(

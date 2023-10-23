@@ -79,9 +79,7 @@ class Engine:
 
         self.map = Map()
         self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
-        self.weather = Weather(
-            seed=seed, time_limit=self.time_limit * config.seconds_to_hours
-        )
+        self.weather = Weather(seed=seed, time_limit=self.time_limit)
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players
         )

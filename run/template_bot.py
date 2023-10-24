@@ -25,8 +25,8 @@ class Bot:
     This is the ship-controlling bot that will be instantiated for the competition.
     """
 
-    def __init__(self, team: str = CREATOR):
-        self.team = team  # Mandatory attribute
+    def __init__(self):
+        self.team = CREATOR  # Mandatory attribute
         self.avatar = 1  # Optional attribute
         self.course = [
             Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
@@ -56,8 +56,8 @@ class Bot:
                 radius=5,
             ),
         ]
-        # for ch in self.course[:-1]:
-        #     ch.reached = True
+        for ch in self.course[:9]:
+            ch.reached = True
 
     def run(
         self,
@@ -125,8 +125,8 @@ class Bot2:
     This is the ship-controlling bot that will be instantiated for the competition.
     """
 
-    def __init__(self, team: str = CREATOR):
-        self.team = team  # Mandatory attribute
+    def __init__(self):
+        self.team = CREATOR  # Mandatory attribute
         self.avatar = 2  # Optional attribute
         self.course = [
             Checkpoint(latitude=43.797109, longitude=-11.264905, radius=50),
@@ -146,6 +146,9 @@ class Bot2:
                 radius=5,
             ),
         ]
+
+        for ch in self.course[:6]:
+            ch.reached = True
 
     def run(
         self,

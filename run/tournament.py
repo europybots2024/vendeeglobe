@@ -5,9 +5,9 @@ import glob
 import vendeeglobe as vg
 
 
-bots = {}
+bots = []
 for repo in glob.glob("*_bot"):
     module = importlib.import_module(f"{repo}")
-    bots[module.CREATOR] = module.Bot()
+    bots.append(module.Bot())
 
 vg.play(bots=bots, test=False)

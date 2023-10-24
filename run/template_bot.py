@@ -56,8 +56,8 @@ class Bot:
                 radius=5,
             ),
         ]
-        for ch in self.course[:9]:
-            ch.reached = True
+        # for ch in self.course[:9]:
+        #     ch.reached = True
 
     def run(
         self,
@@ -147,8 +147,8 @@ class Bot2:
             ),
         ]
 
-        for ch in self.course[:6]:
-            ch.reached = True
+        # for ch in self.course[:6]:
+        #     ch.reached = True
 
     def run(
         self,

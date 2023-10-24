@@ -33,8 +33,6 @@ class Player:
         self.checkpoints = [
             Checkpoint(**asdict(checkpoint)) for checkpoint in config.checkpoints
         ]
-        for ch in self.checkpoints:
-            ch.reached = True
         self.arrived = False
         self.distance_travelled = 0.0
         self.dlat = 0.0

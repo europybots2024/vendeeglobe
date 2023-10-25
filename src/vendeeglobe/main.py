@@ -479,11 +479,14 @@ def play():
             target=spawn_controller,
             args=(tracer_shared_mem, tracer_positions.dtype, tracer_positions.shape),
         )
-        writer1.start()
-        writer2.start()
-        reader.start()
-        writer1.join()
-        writer2.join()
-        reader.join()
+
+        controller.start()
+
+        # writer1.start()
+        # writer2.start()
+        # reader.start()
+        # writer1.join()
+        # writer2.join()
+        # reader.join()
 
         del arr

@@ -41,6 +41,7 @@ except ImportError:
 
 from . import config
 from .core import Location
+from .engine import Engine
 from .graphics import Graphics
 from .map import Map, MapProxy
 from .player import Player
@@ -66,6 +67,18 @@ class Controller:
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
         tracer_shared_data_shape: Tuple[int, ...],
+        u_shared_mem: SharedMemory,
+        u_shared_data_dtype: np.dtype,
+        u_shared_data_shape: Tuple[int, ...],
+        v_shared_mem: SharedMemory,
+        v_shared_data_dtype: np.dtype,
+        v_shared_data_shape: Tuple[int, ...],
+        forecast_u_shared_mem: SharedMemory,
+        forecast_u_shared_data_dtype: np.dtype,
+        forecast_u_shared_data_shape: Tuple[int, ...],
+        forecast_v_shared_mem: SharedMemory,
+        forecast_v_shared_data_dtype: np.dtype,
+        forecast_v_shared_data_shape: Tuple[int, ...],
         # bots: dict,
         # test: bool = True,
         # time_limit: float = 8 * 60,
@@ -429,23 +442,17 @@ class Controller:
         pg.exec()
 
 
-def spawn_controller(
-    tracer_shared_mem: SharedMemory,
-    tracer_shared_data_dtype: np.dtype,
-    tracer_shared_data_shape: Tuple[int, ...],
-):
-    controller = Controller(
-        tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
-    )
+def spawn_controller(*args):
+    controller = Controller(*args)
     controller.run()
 
 
-def spawn_engine():
-    engine = Engine()
+def spawn_engine(*args):
+    engine = Engine(*args)
     engine.run()
 
 
-def play():
+def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
     n_sub_processes = 2
     # n = config.ntracers // self.n_sub_processes
     # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
@@ -455,6 +462,8 @@ def play():
     tracer_positions = np.zeros(
         (n_sub_processes, config.tracer_lifetime, config.ntracers, 3)
     )
+
+    weather = WeatherData(seed=seed, time_limit=time_limit)
 
     # SHARED_DATA_DTYPE = tracer_positions_array.dtype
     # SHARED_DATA_SHAPE = tracer_positions_array.shape
@@ -468,6 +477,10 @@ def play():
     # self.test = test
     with SharedMemoryManager() as smm:
         tracer_shared_mem = smm.SharedMemory(size=tracer_positions.nbytes)
+        u_shared_mem = smm.SharedMemory(size=weather.u.nbytes)
+        v_shared_mem = smm.SharedMemory(size=weather.v.nbytes)
+        forecast_u_shared_mem = smm.SharedMemory(size=weather.forecast_u.nbytes)
+        forecast_v_shared_mem = smm.SharedMemory(size=weather.forecast_v.nbytes)
 
         # writer1 = Process(
         #     target=make_data1, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
@@ -477,16 +490,47 @@ def play():
         # )
         controller = Process(
             target=spawn_controller,
-            args=(tracer_shared_mem, tracer_positions.dtype, tracer_positions.shape),
+            args=(
+                tracer_shared_mem,
+                tracer_positions.dtype,
+                tracer_positions.shape,
+                u_shared_mem,
+                weather.u.dtype,
+                weather.u.shape,
+                v_shared_mem,
+                weather.v.dtype,
+                weather.v.shape,
+                forecast_u_shared_mem,
+                weather.forecast_u.dtype,
+                weather.forecast_u.shape,
+                forecast_v_shared_mem,
+                weather.forecast_v.dtype,
+                weather.forecast_v.shape,
+            ),
+        )
+
+        engine = Process(
+            target=spawn_engine,
+            args=(
+                tracer_shared_mem,
+                tracer_positions.dtype,
+                tracer_positions.shape,
+                u_shared_mem,
+                weather.u.dtype,
+                weather.u.shape,
+                v_shared_mem,
+                weather.v.dtype,
+                weather.v.shape,
+                forecast_u_shared_mem,
+                weather.forecast_u.dtype,
+                weather.forecast_u.shape,
+                forecast_v_shared_mem,
+                weather.forecast_v.dtype,
+                weather.forecast_v.shape,
+            ),
         )
 
         controller.start()
-
-        # writer1.start()
-        # writer2.start()
-        # reader.start()
-        # writer1.join()
-        # writer2.join()
-        # reader.join()
-
-        del arr
+        engine.start()
+        controller.join()
+        engine.join()

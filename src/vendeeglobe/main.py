@@ -3,7 +3,7 @@
 import datetime
 import os
 import time
-from multiprocessing import Process
+from multiprocessing import Lock, Process
 from multiprocessing.managers import SharedMemoryManager
 from multiprocessing.shared_memory import SharedMemory
 from typing import List, Optional, Tuple
@@ -65,6 +65,7 @@ from .weather import Weather, WeatherData
 class Controller:
     def __init__(
         self,
+        # lock: Lock,
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
         tracer_shared_data_shape: Tuple[int, ...],
@@ -97,6 +98,8 @@ class Controller:
         # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
         # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
         #     self.ntracers_per_sub_process[i] += 1
+
+        # self.lock = lock
 
         self.tracer_positions = array_from_shared_mem(
             tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
@@ -162,6 +165,7 @@ class Controller:
         self.last_time_update = self.start_time
         self.last_forecast_update = self.start_time
         self.previous_clock_time = self.start_time
+        self.update_interval = 1 / config.fps
 
     def set_schedule(self):
         times = []
@@ -295,36 +299,42 @@ class Controller:
     def update(self):
         clock_time = time.time()
         t = clock_time - self.start_time
-        dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
-        # if t > self.time_limit:
-        #     self.shutdown()
+        # dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
+        dt = clock_time - self.previous_clock_time
+        if dt > self.update_interval:
+            dt = dt * config.seconds_to_hours
+            # if t > self.time_limit:
+            #     self.shutdown()
 
-        # if (clock_time - self.last_time_update) > config.time_update_interval:
-        #     self.update_scoreboard(self.time_limit - t)
-        #     self.last_time_update = clock_time
+            # if (clock_time - self.last_time_update) > config.time_update_interval:
+            #     self.update_scoreboard(self.time_limit - t)
+            #     self.last_time_update = clock_time
 
-        # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-        #     self.forecast = self.weather.get_forecast(t)
-        #     self.last_forecast_update = clock_time
+            # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+            #     self.forecast = self.weather.get_forecast(t)
+            #     self.last_forecast_update = clock_time
 
-        # self.call_player_bots(
-        #     t=t * config.seconds_to_hours,
-        #     dt=dt,
-        #     players=self.player_groups[self.group_counter % len(self.player_groups)],
-        # )
-        # self.move_players(self.weather, t=t, dt=dt)
-        # if self.tracer_checkbox.isChecked():
-        # self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-        self.graphics.update_wind_tracers(
-            # self.weather.tracer_lat, self.weather.tracer_lon
-        )
-        # self.graphics.update_player_positions(self.players)
-        # self.group_counter += 1
+            # self.call_player_bots(
+            #     t=t * config.seconds_to_hours,
+            #     dt=dt,
+            #     players=self.player_groups[self.group_counter % len(self.player_groups)],
+            # )
+            # self.move_players(self.weather, t=t, dt=dt)
+            # if self.tracer_checkbox.isChecked():
+            # self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+            # self.lock.acquire()
+            self.graphics.update_wind_tracers(
+                # self.weather.tracer_lat, self.weather.tracer_lon
+            )
+            # time.sleep(0.1)
+            # self.lock.release()
+            # self.graphics.update_player_positions(self.players)
+            # self.group_counter += 1
 
-        # if len(self.players_not_arrived) == 0:
-        #     self.shutdown()
+            # if len(self.players_not_arrived) == 0:
+            #     self.shutdown()
 
-        self.previous_clock_time = clock_time
+            self.previous_clock_time = clock_time
 
     def update_scoreboard(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]
@@ -482,9 +492,8 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
     # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
     #     self.ntracers_per_sub_process[i] += 1
 
-    tracer_positions = np.zeros(
-        (n_sub_processes, config.tracer_lifetime, config.ntracers, 3)
-    )
+    ntracers = config.ntracers // n_sub_processes
+    tracer_positions = np.zeros((n_sub_processes, config.tracer_lifetime, ntracers, 3))
     # tracer_positions = 6000 * (
     #     np.random.random((n_sub_processes, config.tracer_lifetime, config.ntracers, 3))
     #     - 0.5
@@ -501,6 +510,8 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
     # SHARED_DATA_DTYPE = tracer_positions_array.dtype
     # SHARED_DATA_SHAPE = tracer_positions_array.shape
     # SHARED_DATA_NBYTES = tracer_positions_array.nbytes
+
+    # lock = Lock()
 
     # pre_compile()
 
@@ -551,6 +562,7 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
         controller = Process(
             target=spawn_controller,
             args=(
+                # lock,
                 tracer_shared_mem,
                 tracer_positions.dtype,
                 tracer_positions.shape,
@@ -575,34 +587,40 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
             ),
         )
 
-        engine = Process(
-            target=spawn_engine,
-            args=(
-                0,
-                tracer_shared_mem,
-                tracer_positions.dtype,
-                tracer_positions.shape,
-                u_shared_mem,
-                weather.u.dtype,
-                weather.u.shape,
-                v_shared_mem,
-                weather.v.dtype,
-                weather.v.shape,
-                forecast_u_shared_mem,
-                weather.forecast_u.dtype,
-                weather.forecast_u.shape,
-                forecast_v_shared_mem,
-                weather.forecast_v.dtype,
-                weather.forecast_v.shape,
-                # terrain_shared_mem,
-                # map_terrain.dtype,
-                # map_terrain.shape,
-            ),
-        )
+        engines = [
+            Process(
+                target=spawn_engine,
+                args=(
+                    # lock,
+                    i,
+                    tracer_shared_mem,
+                    tracer_positions.dtype,
+                    tracer_positions.shape,
+                    u_shared_mem,
+                    weather.u.dtype,
+                    weather.u.shape,
+                    v_shared_mem,
+                    weather.v.dtype,
+                    weather.v.shape,
+                    forecast_u_shared_mem,
+                    weather.forecast_u.dtype,
+                    weather.forecast_u.shape,
+                    forecast_v_shared_mem,
+                    weather.forecast_v.dtype,
+                    weather.forecast_v.shape,
+                    # terrain_shared_mem,
+                    # map_terrain.dtype,
+                    # map_terrain.shape,
+                ),
+            )
+            for i in range(n_sub_processes)
+        ]
 
         controller.start()
-        engine.start()
+        for engine in engines:
+            engine.start()
         controller.join()
-        engine.join()
+        for engine in engines:
+            engine.join()
 
-        del terrain_arr
+        del terrain_arr, u_arr, v_arr, forecast_u_arr, forecast_v_arr

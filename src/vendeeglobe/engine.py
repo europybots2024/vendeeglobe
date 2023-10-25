@@ -60,6 +60,7 @@ from .weather import Weather
 class Engine:
     def __init__(
         self,
+        # lock,
         pid: int,
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
@@ -87,6 +88,8 @@ class Engine:
         self.tracer_positions = array_from_shared_mem(
             tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
         )
+
+        self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
 
         self.pid = pid
         # self.time_limit = time_limit
@@ -120,6 +123,7 @@ class Engine:
             forecast_v_shared_mem,
             forecast_v_shared_data_dtype,
             forecast_v_shared_data_shape,
+            self.tracer_buffer,
         )
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
@@ -138,6 +142,7 @@ class Engine:
         self.last_time_update = self.start_time
         self.last_forecast_update = self.start_time
         self.previous_clock_time = self.start_time
+        self.update_interval = 1 / config.fps
 
     # def set_schedule(self):
     #     times = []
@@ -271,42 +276,50 @@ class Engine:
     def update(self):
         clock_time = time.time()
         t = clock_time - self.start_time
-        dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
-        # if t > self.time_limit:
-        #     self.shutdown()
+        # dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
+        dt = clock_time - self.previous_clock_time
+        if dt > self.update_interval:
+            dt = dt * config.seconds_to_hours
+            # if t > self.time_limit:
+            #     self.shutdown()
 
-        # if (clock_time - self.last_time_update) > config.time_update_interval:
-        #     self.update_scoreboard(self.time_limit - t)
-        #     self.last_time_update = clock_time
+            # if (clock_time - self.last_time_update) > config.time_update_interval:
+            #     self.update_scoreboard(self.time_limit - t)
+            #     self.last_time_update = clock_time
 
-        # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-        #     self.forecast = self.weather.get_forecast(t)
-        #     self.last_forecast_update = clock_time
+            # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+            #     self.forecast = self.weather.get_forecast(t)
+            #     self.last_forecast_update = clock_time
 
-        # self.call_player_bots(
-        #     t=t * config.seconds_to_hours,
-        #     dt=dt,
-        #     players=self.player_groups[self.group_counter % len(self.player_groups)],
-        # )
-        # self.move_players(self.weather, t=t, dt=dt)
-        # if self.tracer_checkbox.isChecked():
-        # self.graphics.update_wind_tracers(
-        #     self.weather.tracer_lat, self.weather.tracer_lon
-        # )
+            # self.call_player_bots(
+            #     t=t * config.seconds_to_hours,
+            #     dt=dt,
+            #     players=self.player_groups[self.group_counter % len(self.player_groups)],
+            # )
+            # self.move_players(self.weather, t=t, dt=dt)
+            # if self.tracer_checkbox.isChecked():
+            # self.graphics.update_wind_tracers(
+            #     self.weather.tracer_lat, self.weather.tracer_lon
+            # )
 
-        x, y, z = self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-        self.tracer_positions[self.pid, ..., 0] = x
-        self.tracer_positions[self.pid, ..., 1] = y
-        self.tracer_positions[self.pid, ..., 2] = z
-        # print("Engine", self.tracer_positions.min(), self.tracer_positions.max())
+            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+            # print(self.pid)
+            # self.tracer_buffer[..., 0] = x
+            # self.tracer_buffer[..., 1] = y
+            # self.tracer_buffer[..., 2] = z
+            self.tracer_positions[self.pid, ...] = self.tracer_buffer
+            # self.tracer_positions[self.pid, ..., 0] = x
+            # self.tracer_positions[self.pid, ..., 1] = y
+            # self.tracer_positions[self.pid, ..., 2] = z
+            # print("Engine", self.tracer_positions.min(), self.tracer_positions.max())
 
-        # self.graphics.update_player_positions(self.players)
-        # self.group_counter += 1
+            # self.graphics.update_player_positions(self.players)
+            # self.group_counter += 1
 
-        # if len(self.players_not_arrived) == 0:
-        #     self.shutdown()
+            # if len(self.players_not_arrived) == 0:
+            #     self.shutdown()
 
-        self.previous_clock_time = clock_time
+            self.previous_clock_time = clock_time
 
     def update_scoreboard(self, t: float):
         time = str(datetime.timedelta(seconds=int(t)))[2:]
@@ -355,8 +368,10 @@ class Engine:
 
     def run(self):
         self.initialize_time()
+        # self.update()
         while True:
             self.update()
+        # time.sleep(0.1)
 
     # def old_run(self):
     #     window = QMainWindow()

@@ -114,6 +114,7 @@ class Weather:
         forecast_v_shared_mem: SharedMemory,
         forecast_v_shared_data_dtype: np.dtype,
         forecast_v_shared_data_shape: Tuple[int, ...],
+        tracer_buffer: np.ndarray,
     ):
         self.pid = pid
         self.u = ut.array_from_shared_mem(
@@ -132,6 +133,7 @@ class Weather:
             forecast_v_shared_data_dtype,
             forecast_v_shared_data_shape,
         )
+        self.tracer_buffer = tracer_buffer
 
         self.nt, self.ny, self.nx = self.u.shape
         self.dt = config.weather_update_interval  # weather changes every 12 hours
@@ -143,11 +145,13 @@ class Weather:
         lon_max = 180
         self.du = (lon_max - lon_min) / self.nx
 
-        size = (config.tracer_lifetime, config.ntracers)
+        # size = (config.tracer_lifetime, config.ntracers)
+        size = self.tracer_buffer.shape[:-1]
         self.tracer_lat = np.random.uniform(-89.9, 89.9, size=size)
         self.tracer_lon = np.random.uniform(-180, 180, size=size)
-        self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
-        self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
+        # self.tracer_colors = np.zeros(self.tracer_lat.shape + (4,))
+        # self.tracer_colors[..., pid] = 1.0
+        # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
         self.number_of_new_tracers = 5
         self.new_tracer_counter = 0
@@ -229,7 +233,9 @@ class Weather:
         self.tracer_lon[0, istart:iend] = new_lon
         self.new_tracer_counter = (
             self.new_tracer_counter + self.number_of_new_tracers
-        ) % config.ntracers
+        ) % self.tracer_lat.shape[
+            1
+        ]  # config.ntracers
 
         x, y, z = ut.to_xyz(
             # ut.lon_to_phi(self.tracer_lon.ravel()),
@@ -237,4 +243,6 @@ class Weather:
             ut.lon_to_phi(self.tracer_lon),
             ut.lat_to_theta(self.tracer_lat),
         )
-        return x, y, z
+        self.tracer_buffer[..., 0] = x
+        self.tracer_buffer[..., 1] = y
+        self.tracer_buffer[..., 2] = z

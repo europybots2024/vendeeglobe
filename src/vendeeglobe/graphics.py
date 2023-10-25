@@ -190,20 +190,20 @@ class Graphics:
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
 
-        nstars = 5000
-        x, y, z = ut.to_xyz(
-            np.random.uniform(0, 2.0 * np.pi, nstars),
-            np.random.normal(0.5 * np.pi, 0.4, nstars),
-        )
-        f = 100
-        self.background_stars = gl.GLScatterPlotItem(
-            pos=f * np.array([x, y, z]).T,
-            color=np.ones((nstars, 4)),
-            size=1,
-            pxMode=True,
-        )
-        self.background_stars.setGLOptions("opaque")
-        self.window.addItem(self.background_stars)
+        # nstars = 5000
+        # x, y, z = ut.to_xyz(
+        #     np.random.uniform(0, 2.0 * np.pi, nstars),
+        #     np.random.normal(0.5 * np.pi, 0.4, nstars),
+        # )
+        # f = 100
+        # self.background_stars = gl.GLScatterPlotItem(
+        #     pos=f * np.array([x, y, z]).T,
+        #     color=np.ones((nstars, 4)),
+        #     size=1,
+        #     pxMode=True,
+        # )
+        # self.background_stars.setGLOptions("opaque")
+        # self.window.addItem(self.background_stars)
 
         # # Add checkpoints
         # scl = [0.96, 0.99]
@@ -248,11 +248,12 @@ class Graphics:
         self.high_contrast_tracer_colors = self.default_tracer_colors.copy()
         self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
-            pos=self.tracer_positions,
-            color=self.default_tracer_colors,
+            pos=self.tracer_positions.reshape((-1, 3)),
+            color=self.default_tracer_colors.reshape((-1, 4)),
             size=2,
             pxMode=True,
         )
+        # print(self.tracer_positions.reshape((-1, 3)).shape)
         # self.tracers.setGLOptions("opaque")
         self.tracers.setGLOptions('translucent')
         self.window.addItem(self.tracers)

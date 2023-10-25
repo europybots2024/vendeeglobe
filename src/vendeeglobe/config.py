@@ -12,7 +12,7 @@ class Config:
     map_file: str = "world.jpg"
     map_radius: float = 6371.0
     resourcedir: Path = Path(__file__).parent / "resources"
-    ntracers: int = 2500
+    ntracers: int = 5000
     tracer_lifetime: int = 50
     start: Checkpoint = Checkpoint(longitude=-1.81, latitude=46.494275, radius=5.0)
     checkpoints: Tuple[Checkpoint, Checkpoint] = (
@@ -27,6 +27,7 @@ class Config:
     avatar_size = [64, 64]
     score_step = 100_000
     max_name_length = 15
+    fps = 30
 
 
 config = Config()

@@ -2,7 +2,8 @@
 
 import datetime
 import time
-from typing import List, Optional
+from multiprocessing.shared_memory import SharedMemory
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pyqtgraph as pg
@@ -38,7 +39,7 @@ except ImportError:
 from . import config
 from .core import Location
 from .graphics import Graphics
-from .map import Map, MapProxy
+from .map import MapProxy
 from .player import Player
 from .scores import (
     finalize_scores,
@@ -47,7 +48,12 @@ from .scores import (
     read_scores,
     write_fastest_times,
 )
-from .utils import distance_on_surface, longitude_difference, pre_compile
+from .utils import (
+    array_from_shared_mem,
+    distance_on_surface,
+    longitude_difference,
+    pre_compile,
+)
 from .weather import Weather
 
 
@@ -55,33 +61,66 @@ class Engine:
     def __init__(
         self,
         pid: int,
-        bots: dict,
-        test: bool = True,
-        time_limit: float = 8 * 60,
-        seed: int = None,
-        start: Optional[Location] = None,
+        tracer_shared_mem: SharedMemory,
+        tracer_shared_data_dtype: np.dtype,
+        tracer_shared_data_shape: Tuple[int, ...],
+        u_shared_mem: SharedMemory,
+        u_shared_data_dtype: np.dtype,
+        u_shared_data_shape: Tuple[int, ...],
+        v_shared_mem: SharedMemory,
+        v_shared_data_dtype: np.dtype,
+        v_shared_data_shape: Tuple[int, ...],
+        forecast_u_shared_mem: SharedMemory,
+        forecast_u_shared_data_dtype: np.dtype,
+        forecast_u_shared_data_shape: Tuple[int, ...],
+        forecast_v_shared_mem: SharedMemory,
+        forecast_v_shared_data_dtype: np.dtype,
+        forecast_v_shared_data_shape: Tuple[int, ...],
+        # bots: dict,
+        # test: bool = True,
+        # time_limit: float = 8 * 60,
+        # seed: int = None,
+        # start: Optional[Location] = None,
     ):
         # pre_compile()
 
-        self.pid = pid
-        self.time_limit = time_limit
-        self.start_time = None
-        self.safe = not test
-        self.test = test
+        self.tracer_positions = array_from_shared_mem(
+            tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        )
 
-        t0 = time.time()
-        print("Generating players...", end=" ", flush=True)
-        self.bots = {bot.team: bot for bot in bots}
-        self.players = {}
-        for name, bot in self.bots.items():
-            self.players[name] = Player(
-                team=name, avatar=getattr(bot, 'avatar', 1), start=start
-            )
-        print(f"done [{time.time() - t0:.2f} s]")
+        self.pid = pid
+        # self.time_limit = time_limit
+        # self.start_time = None
+        # self.safe = not test
+        # self.test = test
+
+        # t0 = time.time()
+        # print("Generating players...", end=" ", flush=True)
+        # self.bots = {bot.team: bot for bot in bots}
+        # self.players = {}
+        # for name, bot in self.bots.items():
+        #     self.players[name] = Player(
+        #         team=name, avatar=getattr(bot, 'avatar', 1), start=start
+        #     )
+        # print(f"done [{time.time() - t0:.2f} s]")
 
         # self.map = Map()
         # self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
-        self.weather = Weather(seed=seed, time_limit=self.time_limit)
+        self.weather = Weather(
+            self.pid,
+            u_shared_mem,
+            u_shared_data_dtype,
+            u_shared_data_shape,
+            v_shared_mem,
+            v_shared_data_dtype,
+            v_shared_data_shape,
+            forecast_u_shared_mem,
+            forecast_u_shared_data_dtype,
+            forecast_u_shared_data_shape,
+            forecast_v_shared_mem,
+            forecast_v_shared_data_dtype,
+            forecast_v_shared_data_shape,
+        )
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
         # )
@@ -251,10 +290,11 @@ class Engine:
             # )
             # self.move_players(self.weather, t=t, dt=dt)
             # if self.tracer_checkbox.isChecked():
-            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-            self.graphics.update_wind_tracers(
-                self.weather.tracer_lat, self.weather.tracer_lon
-            )
+            x, y, z = self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+            # self.tracer_positions[0, ..., 0]
+            # self.graphics.update_wind_tracers(
+            #     self.weather.tracer_lat, self.weather.tracer_lon
+            # )
         # self.graphics.update_player_positions(self.players)
         # self.group_counter += 1
 
@@ -312,95 +352,95 @@ class Engine:
         while True:
             self.update()
 
-    def old_run(self):
-        window = QMainWindow()
-        window.setWindowTitle("Vendée Globe")
-        window.setGeometry(100, 100, 1280, 720)
+    # def old_run(self):
+    #     window = QMainWindow()
+    #     window.setWindowTitle("Vendée Globe")
+    #     window.setGeometry(100, 100, 1280, 720)
 
-        # Create a central widget to hold the two widgets
-        central_widget = QWidget()
-        window.setCentralWidget(central_widget)
+    #     # Create a central widget to hold the two widgets
+    #     central_widget = QWidget()
+    #     window.setCentralWidget(central_widget)
 
-        # Create a layout for the central widget
-        layout = QHBoxLayout(central_widget)
+    #     # Create a layout for the central widget
+    #     layout = QHBoxLayout(central_widget)
 
-        # Create the first widget with vertical checkboxes
-        widget1 = QWidget()
-        layout.addWidget(widget1)
-        widget1_layout = QVBoxLayout(widget1)
-        widget1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        widget1.setMinimumWidth(int(window.width() * 0.2))
+    #     # Create the first widget with vertical checkboxes
+    #     widget1 = QWidget()
+    #     layout.addWidget(widget1)
+    #     widget1_layout = QVBoxLayout(widget1)
+    #     widget1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+    #     widget1.setMinimumWidth(int(window.width() * 0.2))
 
-        self.time_label = QLabel("Time left:")
-        widget1_layout.addWidget(self.time_label)
-        self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
-        self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
-        widget1_layout.addWidget(self.tracer_checkbox)
+    #     self.time_label = QLabel("Time left:")
+    #     widget1_layout.addWidget(self.time_label)
+    #     self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
+    #     self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
+    #     widget1_layout.addWidget(self.tracer_checkbox)
 
-        thickness_slider = QSlider(Qt.Horizontal)
-        thickness_slider.setMinimum(1)
-        thickness_slider.setMaximum(10)
-        thickness_slider.setSingleStep(1)
-        thickness_slider.setTickInterval(1)
-        thickness_slider.setTickPosition(QSlider.TicksBelow)
-        thickness_slider.setValue(int(self.graphics.tracers.size))
-        thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
-        widget1_layout.addWidget(thickness_slider)
+    #     thickness_slider = QSlider(Qt.Horizontal)
+    #     thickness_slider.setMinimum(1)
+    #     thickness_slider.setMaximum(10)
+    #     thickness_slider.setSingleStep(1)
+    #     thickness_slider.setTickInterval(1)
+    #     thickness_slider.setTickPosition(QSlider.TicksBelow)
+    #     thickness_slider.setValue(int(self.graphics.tracers.size))
+    #     thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
+    #     widget1_layout.addWidget(thickness_slider)
 
-        texture_checkbox = QCheckBox("High contrast", checked=False)
-        widget1_layout.addWidget(texture_checkbox)
-        texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+    #     texture_checkbox = QCheckBox("High contrast", checked=False)
+    #     widget1_layout.addWidget(texture_checkbox)
+    #     texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
 
-        stars_checkbox = QCheckBox("Background stars", checked=True)
-        widget1_layout.addWidget(stars_checkbox)
-        stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
+    #     stars_checkbox = QCheckBox("Background stars", checked=True)
+    #     widget1_layout.addWidget(stars_checkbox)
+    #     stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
 
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setLineWidth(1)
-        widget1_layout.addWidget(separator)
+    #     separator = QFrame()
+    #     separator.setFrameShape(QFrame.HLine)
+    #     separator.setLineWidth(1)
+    #     widget1_layout.addWidget(separator)
 
-        self.player_boxes = {}
-        for i, p in enumerate(self.players.values()):
-            self.player_boxes[i] = QLabel("")
-            widget1_layout.addWidget(self.player_boxes[i])
-        widget1_layout.addStretch()
+    #     self.player_boxes = {}
+    #     for i, p in enumerate(self.players.values()):
+    #         self.player_boxes[i] = QLabel("")
+    #         widget1_layout.addWidget(self.player_boxes[i])
+    #     widget1_layout.addStretch()
 
-        layout.addWidget(self.graphics.window)
-        self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    #     layout.addWidget(self.graphics.window)
+    #     self.graphics.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-        widget2 = QWidget()
-        layout.addWidget(widget2)
-        widget2_layout = QVBoxLayout(widget2)
-        widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        widget2.setMinimumWidth(int(window.width() * 0.08))
-        widget2_layout.addWidget(QLabel("Leader board"))
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setLineWidth(1)
-        widget2_layout.addWidget(separator)
-        widget2_layout.addWidget(QLabel("Scores:"))
-        self.score_boxes = {}
-        for i, p in enumerate(self.players.values()):
-            self.score_boxes[i] = QLabel(p.team)
-            widget2_layout.addWidget(self.score_boxes[i])
-        separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setLineWidth(1)
-        widget2_layout.addWidget(separator)
-        widget2_layout.addWidget(QLabel("Fastest finish:"))
-        self.fastest_boxes = {}
-        for i in range(3):
-            self.fastest_boxes[i] = QLabel(str(i + 1))
-            widget2_layout.addWidget(self.fastest_boxes[i])
-        widget2_layout.addStretch()
-        self.update_leaderboard(
-            read_scores(self.players.keys(), test=self.test), self.fastest_times
-        )
+    #     widget2 = QWidget()
+    #     layout.addWidget(widget2)
+    #     widget2_layout = QVBoxLayout(widget2)
+    #     widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+    #     widget2.setMinimumWidth(int(window.width() * 0.08))
+    #     widget2_layout.addWidget(QLabel("Leader board"))
+    #     separator = QFrame()
+    #     separator.setFrameShape(QFrame.HLine)
+    #     separator.setLineWidth(1)
+    #     widget2_layout.addWidget(separator)
+    #     widget2_layout.addWidget(QLabel("Scores:"))
+    #     self.score_boxes = {}
+    #     for i, p in enumerate(self.players.values()):
+    #         self.score_boxes[i] = QLabel(p.team)
+    #         widget2_layout.addWidget(self.score_boxes[i])
+    #     separator = QFrame()
+    #     separator.setFrameShape(QFrame.HLine)
+    #     separator.setLineWidth(1)
+    #     widget2_layout.addWidget(separator)
+    #     widget2_layout.addWidget(QLabel("Fastest finish:"))
+    #     self.fastest_boxes = {}
+    #     for i in range(3):
+    #         self.fastest_boxes[i] = QLabel(str(i + 1))
+    #         widget2_layout.addWidget(self.fastest_boxes[i])
+    #     widget2_layout.addStretch()
+    #     self.update_leaderboard(
+    #         read_scores(self.players.keys(), test=self.test), self.fastest_times
+    #     )
 
-        window.show()
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
-        self.initialize_time()
-        self.timer.start(0)
-        pg.exec()
+    #     window.show()
+    #     self.timer = QtCore.QTimer()
+    #     self.timer.timeout.connect(self.update)
+    #     self.initialize_time()
+    #     self.timer.start(0)
+    #     pg.exec()

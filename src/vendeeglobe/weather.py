@@ -9,12 +9,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
 from . import config
-from .utils import (
-    array_from_shared_mem,
-    lat_degs_from_length,
-    lon_degs_from_length,
-    wrap,
-)
+from . import utils as ut
 
 
 @dataclass(frozen=True)
@@ -106,6 +101,7 @@ class WeatherData:
 class Weather:
     def __init__(
         self,
+        pid: int,
         u_shared_mem: SharedMemory,
         u_shared_data_dtype: np.dtype,
         u_shared_data_shape: Tuple[int, ...],
@@ -119,18 +115,19 @@ class Weather:
         forecast_v_shared_data_dtype: np.dtype,
         forecast_v_shared_data_shape: Tuple[int, ...],
     ):
-        self.u = array_from_shared_mem(
+        self.pid = pid
+        self.u = ut.array_from_shared_mem(
             u_shared_mem, u_shared_data_dtype, u_shared_data_shape
         )
-        self.v = array_from_shared_mem(
+        self.v = ut.array_from_shared_mem(
             v_shared_mem, v_shared_data_dtype, v_shared_data_shape
         )
-        self.forecast_u = array_from_shared_mem(
+        self.forecast_u = ut.array_from_shared_mem(
             forecast_u_shared_mem,
             forecast_u_shared_data_dtype,
             forecast_u_shared_data_shape,
         )
-        self.forecast_v = array_from_shared_mem(
+        self.forecast_v = ut.array_from_shared_mem(
             forecast_v_shared_mem,
             forecast_v_shared_data_dtype,
             forecast_v_shared_data_shape,
@@ -214,10 +211,10 @@ class Weather:
         scaling = 1.0
         incr_x = u * dt * scaling
         incr_y = v * dt * scaling
-        incr_lon = lon_degs_from_length(incr_x, self.tracer_lat[1, :])
-        incr_lat = lat_degs_from_length(incr_y)
+        incr_lon = ut.lon_degs_from_length(incr_x, self.tracer_lat[1, :])
+        incr_lat = ut.lat_degs_from_length(incr_y)
 
-        self.tracer_lat[0, :], self.tracer_lon[0, :] = wrap(
+        self.tracer_lat[0, :], self.tracer_lon[0, :] = ut.wrap(
             lat=self.tracer_lat[1, :] + incr_lat, lon=self.tracer_lon[1, :] + incr_lon
         )
 
@@ -231,3 +228,9 @@ class Weather:
         self.new_tracer_counter = (
             self.new_tracer_counter + self.number_of_new_tracers
         ) % config.ntracers
+
+        x, y, z = ut.to_xyz(
+            ut.lon_to_phi(self.tracer_lon.ravel()),
+            ut.lat_to_theta(self.tracer_lat.ravel()),
+        )
+        return x, y, z

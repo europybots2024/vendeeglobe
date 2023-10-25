@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import datetime
+import os
 import time
 from multiprocessing import Process
 from multiprocessing.managers import SharedMemoryManager
@@ -43,7 +44,7 @@ from . import config
 from .core import Location
 from .engine import Engine
 from .graphics import Graphics
-from .map import Map, MapProxy
+from .map import MapData, MapProxy, MapTextures
 from .player import Player
 from .scores import (
     finalize_scores,
@@ -67,18 +68,24 @@ class Controller:
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
         tracer_shared_data_shape: Tuple[int, ...],
-        u_shared_mem: SharedMemory,
-        u_shared_data_dtype: np.dtype,
-        u_shared_data_shape: Tuple[int, ...],
-        v_shared_mem: SharedMemory,
-        v_shared_data_dtype: np.dtype,
-        v_shared_data_shape: Tuple[int, ...],
-        forecast_u_shared_mem: SharedMemory,
-        forecast_u_shared_data_dtype: np.dtype,
-        forecast_u_shared_data_shape: Tuple[int, ...],
-        forecast_v_shared_mem: SharedMemory,
-        forecast_v_shared_data_dtype: np.dtype,
-        forecast_v_shared_data_shape: Tuple[int, ...],
+        # u_shared_mem: SharedMemory,
+        # u_shared_data_dtype: np.dtype,
+        # u_shared_data_shape: Tuple[int, ...],
+        # v_shared_mem: SharedMemory,
+        # v_shared_data_dtype: np.dtype,
+        # v_shared_data_shape: Tuple[int, ...],
+        # forecast_u_shared_mem: SharedMemory,
+        # forecast_u_shared_data_dtype: np.dtype,
+        # forecast_u_shared_data_shape: Tuple[int, ...],
+        # forecast_v_shared_mem: SharedMemory,
+        # forecast_v_shared_data_dtype: np.dtype,
+        # forecast_v_shared_data_shape: Tuple[int, ...],
+        # default_texture_shared_mem: SharedMemory,
+        # default_texture_shared_data_dtype: np.dtype,
+        # default_texture_shared_data_shape: Tuple[int, ...],
+        # high_contrast_texture_shared_mem: SharedMemory,
+        # high_contrast_texture_shared_data_dtype: np.dtype,
+        # high_contrast_texture_shared_data_shape: Tuple[int, ...],
         # bots: dict,
         # test: bool = True,
         # time_limit: float = 8 * 60,
@@ -94,6 +101,18 @@ class Controller:
         self.tracer_positions = array_from_shared_mem(
             tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
         )
+
+        # self.default_texture = array_from_shared_mem(
+        #     default_texture_shared_mem,
+        #     default_texture_shared_data_dtype,
+        #     default_texture_shared_data_shape,
+        # )
+
+        # self.high_contrast_texture = array_from_shared_mem(
+        #     high_contrast_texture_shared_mem,
+        #     high_contrast_texture_shared_data_dtype,
+        #     high_contrast_texture_shared_data_shape,
+        # )
 
         # SHARED_DATA_DTYPE = self.tracer_positions_array.dtype
         # SHARED_DATA_SHAPE = self.tracer_positions_array.shape
@@ -119,18 +138,22 @@ class Controller:
         # self.map = Map()
         # self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
 
+        # self.map_textures = MapTextures()
+
         self.graphics = Graphics(
-            game_map=self.map, weather=self.weather, players=self.players
+            # game_map=self.map, weather=self.weather, players=self.players
+            tracer_positions=self.tracer_positions,
+            # default_texture=self.map_textures.default_texture,
         )
 
-        self.weather = WeatherData(seed=seed, time_limit=self.time_limit)
+        # self.weather = WeatherData(seed=seed, time_limit=self.time_limit)
 
-        self.players_not_arrived = list(self.players.keys())
-        self.forecast = self.weather.get_forecast(0)
+        # self.players_not_arrived = list(self.players.keys())
+        # self.forecast = self.weather.get_forecast(0)
 
-        self.set_schedule()
-        self.group_counter = 0
-        self.fastest_times = read_fastest_times(self.players)
+        # self.set_schedule()
+        # self.group_counter = 0
+        # self.fastest_times = read_fastest_times(self.players)
 
     def initialize_time(self):
         self.start_time = time.time()
@@ -370,7 +393,7 @@ class Controller:
         self.time_label = QLabel("Time left:")
         widget1_layout.addWidget(self.time_label)
         self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
-        self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
+        # self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
         widget1_layout.addWidget(self.tracer_checkbox)
 
         thickness_slider = QSlider(Qt.Horizontal)
@@ -379,27 +402,27 @@ class Controller:
         thickness_slider.setSingleStep(1)
         thickness_slider.setTickInterval(1)
         thickness_slider.setTickPosition(QSlider.TicksBelow)
-        thickness_slider.setValue(int(self.graphics.tracers.size))
-        thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
+        # thickness_slider.setValue(int(self.graphics.tracers.size))
+        # thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
         widget1_layout.addWidget(thickness_slider)
 
         texture_checkbox = QCheckBox("High contrast", checked=False)
         widget1_layout.addWidget(texture_checkbox)
-        texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+        # texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
 
         stars_checkbox = QCheckBox("Background stars", checked=True)
         widget1_layout.addWidget(stars_checkbox)
-        stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
+        # stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
         separator.setLineWidth(1)
         widget1_layout.addWidget(separator)
 
-        self.player_boxes = {}
-        for i, p in enumerate(self.players.values()):
-            self.player_boxes[i] = QLabel("")
-            widget1_layout.addWidget(self.player_boxes[i])
+        # self.player_boxes = {}
+        # for i, p in enumerate(self.players.values()):
+        #     self.player_boxes[i] = QLabel("")
+        #     widget1_layout.addWidget(self.player_boxes[i])
         widget1_layout.addStretch()
 
         layout.addWidget(self.graphics.window)
@@ -416,29 +439,29 @@ class Controller:
         separator.setLineWidth(1)
         widget2_layout.addWidget(separator)
         widget2_layout.addWidget(QLabel("Scores:"))
-        self.score_boxes = {}
-        for i, p in enumerate(self.players.values()):
-            self.score_boxes[i] = QLabel(p.team)
-            widget2_layout.addWidget(self.score_boxes[i])
+        # self.score_boxes = {}
+        # for i, p in enumerate(self.players.values()):
+        #     self.score_boxes[i] = QLabel(p.team)
+        #     widget2_layout.addWidget(self.score_boxes[i])
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
         separator.setLineWidth(1)
         widget2_layout.addWidget(separator)
         widget2_layout.addWidget(QLabel("Fastest finish:"))
-        self.fastest_boxes = {}
-        for i in range(3):
-            self.fastest_boxes[i] = QLabel(str(i + 1))
-            widget2_layout.addWidget(self.fastest_boxes[i])
+        # self.fastest_boxes = {}
+        # for i in range(3):
+        #     self.fastest_boxes[i] = QLabel(str(i + 1))
+        #     widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
-        self.update_leaderboard(
-            read_scores(self.players.keys(), test=self.test), self.fastest_times
-        )
+        # self.update_leaderboard(
+        #     read_scores(self.players.keys(), test=self.test), self.fastest_times
+        # )
 
         window.show()
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
-        self.initialize_time()
-        self.timer.start(0)
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.update)
+        # self.initialize_time()
+        # self.timer.start(0)
         pg.exec()
 
 
@@ -462,8 +485,18 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
     tracer_positions = np.zeros(
         (n_sub_processes, config.tracer_lifetime, config.ntracers, 3)
     )
+    # tracer_positions = 6000 * (
+    #     np.random.random((n_sub_processes, config.tracer_lifetime, config.ntracers, 3))
+    #     - 0.5
+    # )
 
     weather = WeatherData(seed=seed, time_limit=time_limit)
+
+    # map_terrain = MapData()
+
+    map_terrain = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))['sea_array']
+    # # self.array = mapdata['array']
+    # self.sea_array = mapdata
 
     # SHARED_DATA_DTYPE = tracer_positions_array.dtype
     # SHARED_DATA_SHAPE = tracer_positions_array.shape
@@ -481,6 +514,19 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
         v_shared_mem = smm.SharedMemory(size=weather.v.nbytes)
         forecast_u_shared_mem = smm.SharedMemory(size=weather.forecast_u.nbytes)
         forecast_v_shared_mem = smm.SharedMemory(size=weather.forecast_v.nbytes)
+        # default_texture_shared_mem = smm.SharedMemory(size=game_map.array.nbytes)
+        terrain_shared_mem = smm.SharedMemory(size=map_terrain.nbytes)
+        # high_contrast_texture_shared_mem = smm.SharedMemory(
+        #     size=game_map.high_contrast_texture.nbytes
+        # )
+
+        # Populate map terrain
+        terrain_arr = array_from_shared_mem(
+            terrain_shared_mem, map_terrain.dtype, map_terrain.shape
+        )
+        terrain_arr[...] = map_terrain
+
+        # Fill in map data
 
         # writer1 = Process(
         #     target=make_data1, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
@@ -506,12 +552,19 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
                 forecast_v_shared_mem,
                 weather.forecast_v.dtype,
                 weather.forecast_v.shape,
+                # default_texture_shared_mem,
+                # game_map.array.dtype,
+                # game_map.array.shape,
+                # high_contrast_texture_shared_mem,
+                # game_map.high_contrast_texture.dtype,
+                # game_map.high_contrast_texture.shape,
             ),
         )
 
         engine = Process(
             target=spawn_engine,
             args=(
+                0,
                 tracer_shared_mem,
                 tracer_positions.dtype,
                 tracer_positions.shape,
@@ -527,6 +580,9 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
                 forecast_v_shared_mem,
                 weather.forecast_v.dtype,
                 weather.forecast_v.shape,
+                # terrain_shared_mem,
+                # map_terrain.dtype,
+                # map_terrain.shape,
             ),
         )
 
@@ -534,3 +590,5 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
         engine.start()
         controller.join()
         engine.join()
+
+        del terrain_arr

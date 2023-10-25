@@ -14,7 +14,7 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 from . import config
 from . import utils as ut
-from .map import Map
+from .map import MapTextures
 from .player import Player
 from .utils import array_from_shared_mem
 from .weather import Weather
@@ -160,6 +160,7 @@ class Graphics:
         # tracer_shared_data_dtype: np.dtype,
         # tracer_shared_data_shape: Tuple[int, ...],
         tracer_positions: np.ndarray,
+        # default_texture: np.array,
     ):
         t0 = time.time()
         print("Composing graphics...", end=" ", flush=True)
@@ -172,13 +173,17 @@ class Graphics:
             azimuth=180 + config.start.longitude,
         )
 
-        # self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
+        self.map_textures = MapTextures()
+
+        self.default_texture = np.fliplr(
+            np.transpose(self.map_textures.default_texture, axes=[1, 0, 2])
+        )
         # self.high_contrast_texture = np.transpose(
         #     game_map.high_contrast_texture, axes=[1, 0, 2]
         # )
 
-        self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
-        self.default_texture[..., 3] = 255
+        # self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
+        # self.default_texture[..., 3] = 255
         self.high_contrast_texture = self.default_texture.copy()
 
         self.sphere = GLTexturedSphereItem(self.default_texture)
@@ -240,9 +245,7 @@ class Graphics:
         ).reshape((-1, 1))
 
         # self.default_tracer_colors = weather.tracer_colors
-        self.high_contrast_tracer_colors = (
-            self.default_tracer_colors.tracer_colors.copy()
-        )
+        self.high_contrast_tracer_colors = self.default_tracer_colors.copy()
         self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
             pos=self.tracer_positions,

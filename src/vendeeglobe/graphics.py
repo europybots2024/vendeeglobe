@@ -159,7 +159,9 @@ class Graphics:
         # tracer_shared_mem: SharedMemory,
         # tracer_shared_data_dtype: np.dtype,
         # tracer_shared_data_shape: Tuple[int, ...],
+        player_colors: Dict[str, str],
         tracer_positions: np.ndarray,
+        player_positions: np.ndarray,
         # default_texture: np.array,
     ):
         t0 = time.time()
@@ -261,15 +263,16 @@ class Graphics:
         # # Add players
         # latitudes = np.array([player.latitude for player in players.values()])
         # longitudes = np.array([player.longitude for player in players.values()])
-        # colors = np.array([to_rgba(player.color) for player in players.values()])
+        self.player_positions = player_positions
+        colors = np.array([to_rgba(color) for color in player_colors])
         # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
-        # self.players = gl.GLScatterPlotItem(
-        #     pos=np.array([x, y, z]).T,
-        #     color=colors,
-        #     size=10,
-        #     pxMode=True,
-        # )
+        self.players = gl.GLScatterPlotItem(
+            pos=self.player_positions,
+            color=colors,
+            size=10,
+            pxMode=True,
+        )
         # self.players.setGLOptions("opaque")
         # # self.tracers.setGLOptions('translucent')
         # self.window.addItem(self.players)
@@ -317,11 +320,12 @@ class Graphics:
         # print("Graphics", self.tracer_positions.min(), self.tracer_positions.max())
         self.tracers.setData(pos=self.tracer_positions.reshape((-1, 3)))
 
-    # def update_player_positions(self, players: Dict[str, Player]):
-    #     latitudes = np.array([player.latitude for player in players.values()])
-    #     longitudes = np.array([player.longitude for player in players.values()])
-    #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
-    #     self.players.setData(pos=np.array([x, y, z]).T)
+    def update_player_positions(self, players: Dict[str, Player]):
+        #     latitudes = np.array([player.latitude for player in players.values()])
+        #     longitudes = np.array([player.longitude for player in players.values()])
+        #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        #     self.players.setData(pos=np.array([x, y, z]).T)
+        self.players.setData(pos=self.player_positions)
 
     #     for i, (name, player) in enumerate(players.items()):
     #         if not player.arrived:

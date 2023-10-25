@@ -3,7 +3,7 @@
 import datetime
 import time
 from multiprocessing.shared_memory import SharedMemory
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pyqtgraph as pg
@@ -48,12 +48,7 @@ from .scores import (
     read_scores,
     write_fastest_times,
 )
-from .utils import (
-    array_from_shared_mem,
-    distance_on_surface,
-    longitude_difference,
-    pre_compile,
-)
+from . import utils as ut
 from .weather import Weather
 
 
@@ -62,6 +57,8 @@ class Engine:
         self,
         # lock,
         pid: int,
+        bots: dict,
+        bot_index_begin: int,
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
         tracer_shared_data_shape: Tuple[int, ...],
@@ -77,6 +74,9 @@ class Engine:
         forecast_v_shared_mem: SharedMemory,
         forecast_v_shared_data_dtype: np.dtype,
         forecast_v_shared_data_shape: Tuple[int, ...],
+        player_positions_shared_mem: SharedMemory,
+        player_positions_data_dtype: np.dtype,
+        player_positions_data_shape: Tuple[int, ...],
         # bots: dict,
         # test: bool = True,
         # time_limit: float = 8 * 60,
@@ -84,9 +84,17 @@ class Engine:
         # start: Optional[Location] = None,
     ):
         # pre_compile()
+        self.bot_index_begin = bot_index_begin
+        self.bot_index_end = bot_index_begin + len(bots)
 
-        self.tracer_positions = array_from_shared_mem(
+        self.tracer_positions = ut.array_from_shared_mem(
             tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        )
+
+        self.player_positions = ut.array_from_shared_mem(
+            player_positions_shared_mem,
+            player_positions_data_dtype,
+            player_positions_data_shape,
         )
 
         self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
@@ -100,12 +108,18 @@ class Engine:
         # t0 = time.time()
         # print("Generating players...", end=" ", flush=True)
         # self.bots = {bot.team: bot for bot in bots}
+        print(bots)
+        self.bots = {}
+        self.players = {}
+        for name, (bot, player) in bots.items():
+            self.bots[name] = bot
+            self.players[name] = player
+
+        # self.bots = {name: item[0] for name, item in bots.items()}
         # self.players = {}
-        # for name, bot in self.bots.items():
-        #     self.players[name] = Player(
-        #         team=name, avatar=getattr(bot, 'avatar', 1), start=start
-        #     )
-        # print(f"done [{time.time() - t0:.2f} s]")
+        # for name, items in self.bots.items():
+        #     self.players[name] =
+        # # # print(f"done [{time.time() - t0:.2f} s]")
 
         # self.map = Map()
         # self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
@@ -212,14 +226,14 @@ class Engine:
             if ind > 0:
                 next_lat = lat[ind]
                 next_lon = lon[ind]
-                player.distance_travelled += distance_on_surface(
+                player.distance_travelled += ut.distance_on_surface(
                     longitude1=player.longitude,
                     latitude1=player.latitude,
                     longitude2=next_lon,
                     latitude2=next_lat,
                 )
                 player.dlat = next_lat - player.latitude
-                player.dlon = longitude_difference(next_lon, player.longitude)
+                player.dlon = ut.longitude_difference(next_lon, player.longitude)
                 player.latitude = next_lat
                 player.longitude = next_lon
             else:
@@ -228,7 +242,7 @@ class Engine:
 
             for checkpoint in player.checkpoints:
                 if not checkpoint.reached:
-                    d = distance_on_surface(
+                    d = ut.distance_on_surface(
                         longitude1=player.longitude,
                         latitude1=player.latitude,
                         longitude2=checkpoint.longitude,
@@ -237,7 +251,7 @@ class Engine:
                     if d < checkpoint.radius:
                         checkpoint.reached = True
                         print(f"{player.team} reached {checkpoint}")
-            dist_to_finish = distance_on_surface(
+            dist_to_finish = ut.distance_on_surface(
                 longitude1=player.longitude,
                 latitude1=player.latitude,
                 longitude2=config.start.longitude,
@@ -266,6 +280,12 @@ class Engine:
                 self.fastest_times[player.team] = min(
                     t, self.fastest_times[player.team]
                 )
+        latitudes = np.array([player.latitude for player in self.players.values()])
+        longitudes = np.array([player.longitude for player in self.players.values()])
+        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        self.player_positions[self.bot_index_begin : self.bot_index_end, :] = np.stack(
+            (x, y, z), axis=-1
+        )
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)
@@ -296,7 +316,7 @@ class Engine:
             #     dt=dt,
             #     players=self.player_groups[self.group_counter % len(self.player_groups)],
             # )
-            # self.move_players(self.weather, t=t, dt=dt)
+            self.move_players(self.weather, t=t, dt=dt)
             # if self.tracer_checkbox.isChecked():
             # self.graphics.update_wind_tracers(
             #     self.weather.tracer_lat, self.weather.tracer_lon

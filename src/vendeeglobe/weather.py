@@ -153,7 +153,7 @@ class Weather:
         # self.tracer_colors[..., pid] = 1.0
         # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
-        self.number_of_new_tracers = 5
+        self.number_of_new_tracers = 2
         self.new_tracer_counter = 0
 
         # # Make forecast data
@@ -233,9 +233,7 @@ class Weather:
         self.tracer_lon[0, istart:iend] = new_lon
         self.new_tracer_counter = (
             self.new_tracer_counter + self.number_of_new_tracers
-        ) % self.tracer_lat.shape[
-            1
-        ]  # config.ntracers
+        ) % self.tracer_lat.shape[1]
 
         x, y, z = ut.to_xyz(
             # ut.lon_to_phi(self.tracer_lon.ravel()),

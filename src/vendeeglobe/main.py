@@ -58,6 +58,7 @@ from .utils import (
     distance_on_surface,
     longitude_difference,
     pre_compile,
+    string_to_color,
 )
 from .weather import Weather, WeatherData
 
@@ -66,9 +67,13 @@ class Controller:
     def __init__(
         self,
         # lock: Lock,
+        player_names,
         tracer_shared_mem: SharedMemory,
         tracer_shared_data_dtype: np.dtype,
         tracer_shared_data_shape: Tuple[int, ...],
+        player_positions_shared_mem: SharedMemory,
+        player_positions_data_dtype: np.dtype,
+        player_positions_data_shape: Tuple[int, ...],
         # u_shared_mem: SharedMemory,
         # u_shared_data_dtype: np.dtype,
         # u_shared_data_shape: Tuple[int, ...],
@@ -105,6 +110,12 @@ class Controller:
             tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
         )
 
+        self.player_positions = array_from_shared_mem(
+            player_positions_shared_mem,
+            player_positions_data_dtype,
+            player_positions_data_shape,
+        )
+
         # self.default_texture = array_from_shared_mem(
         #     default_texture_shared_mem,
         #     default_texture_shared_data_dtype,
@@ -122,6 +133,8 @@ class Controller:
         # SHARED_DATA_NBYTES = self.tracer_positions_array.nbytes
 
         # pre_compile()
+
+        self.player_colors = [string_to_color(name) for name in player_names]
 
         self.time_limit = 8 * 60  # time_limit
         self.start_time = None
@@ -145,7 +158,9 @@ class Controller:
 
         self.graphics = Graphics(
             # game_map=self.map, weather=self.weather, players=self.players
+            player_colors=self.player_colors,
             tracer_positions=self.tracer_positions,
+            player_positions=self.player_positions,
             # default_texture=self.map_textures.default_texture,
         )
 
@@ -485,15 +500,27 @@ def spawn_engine(*args):
     engine.run()
 
 
-def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
+def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     n_sub_processes = 2
     # n = config.ntracers // self.n_sub_processes
     # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
     # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
     #     self.ntracers_per_sub_process[i] += 1
 
+    bots = {bot.team: bot for bot in bots}
+    players = {}
+    for name, bot in bots.items():
+        players[name] = Player(team=name, avatar=getattr(bot, 'avatar', 1), start=start)
+
+    groups = np.array_split(list(bots.keys()), n_sub_processes)
+    bot_groups = [
+        {name: (bots[name], players[name])} for group in groups for name in group
+    ]
+    print(bot_groups)
+
     ntracers = config.ntracers // n_sub_processes
-    tracer_positions = np.zeros((n_sub_processes, config.tracer_lifetime, ntracers, 3))
+    tracer_positions = np.empty((n_sub_processes, config.tracer_lifetime, ntracers, 3))
+    player_positions = np.empty((len(bots), 3))
     # tracer_positions = 6000 * (
     #     np.random.random((n_sub_processes, config.tracer_lifetime, config.ntracers, 3))
     #     - 0.5
@@ -527,6 +554,9 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
         forecast_v_shared_mem = smm.SharedMemory(size=weather.forecast_v.nbytes)
         # default_texture_shared_mem = smm.SharedMemory(size=game_map.array.nbytes)
         terrain_shared_mem = smm.SharedMemory(size=map_terrain.nbytes)
+
+        player_positions_shared_mem = smm.SharedMemory(size=player_positions.nbytes)
+
         # high_contrast_texture_shared_mem = smm.SharedMemory(
         #     size=game_map.high_contrast_texture.nbytes
         # )
@@ -563,9 +593,14 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
             target=spawn_controller,
             args=(
                 # lock,
+                # bots,
+                list(bots.keys()),
                 tracer_shared_mem,
                 tracer_positions.dtype,
                 tracer_positions.shape,
+                player_positions_shared_mem,
+                player_positions.dtype,
+                player_positions.shape,
                 # u_shared_mem,
                 # weather.u.dtype,
                 # weather.u.shape,
@@ -587,34 +622,42 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
             ),
         )
 
-        engines = [
-            Process(
-                target=spawn_engine,
-                args=(
-                    # lock,
-                    i,
-                    tracer_shared_mem,
-                    tracer_positions.dtype,
-                    tracer_positions.shape,
-                    u_shared_mem,
-                    weather.u.dtype,
-                    weather.u.shape,
-                    v_shared_mem,
-                    weather.v.dtype,
-                    weather.v.shape,
-                    forecast_u_shared_mem,
-                    weather.forecast_u.dtype,
-                    weather.forecast_u.shape,
-                    forecast_v_shared_mem,
-                    weather.forecast_v.dtype,
-                    weather.forecast_v.shape,
-                    # terrain_shared_mem,
-                    # map_terrain.dtype,
-                    # map_terrain.shape,
-                ),
+        engines = []
+        bot_index_begin = 0
+        for i in range(n_sub_processes):
+            engines.append(
+                Process(
+                    target=spawn_engine,
+                    args=(
+                        # lock,
+                        i,
+                        bot_groups[i],
+                        bot_index_begin,
+                        tracer_shared_mem,
+                        tracer_positions.dtype,
+                        tracer_positions.shape,
+                        u_shared_mem,
+                        weather.u.dtype,
+                        weather.u.shape,
+                        v_shared_mem,
+                        weather.v.dtype,
+                        weather.v.shape,
+                        forecast_u_shared_mem,
+                        weather.forecast_u.dtype,
+                        weather.forecast_u.shape,
+                        forecast_v_shared_mem,
+                        weather.forecast_v.dtype,
+                        weather.forecast_v.shape,
+                        player_positions_shared_mem,
+                        player_positions.dtype,
+                        player_positions.shape,
+                        # terrain_shared_mem,
+                        # map_terrain.dtype,
+                        # map_terrain.shape,
+                    ),
+                )
             )
-            for i in range(n_sub_processes)
-        ]
+            bot_index_begin += len(bot_groups[i])
 
         controller.start()
         for engine in engines:

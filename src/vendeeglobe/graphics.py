@@ -313,7 +313,8 @@ class Graphics:
         #     ut.lon_to_phi(tracer_lon.ravel()),
         #     ut.lat_to_theta(tracer_lat.ravel()),
         # )
-        self.tracers.setData(pos=self.tracer_positions)
+        # print("Graphics", self.tracer_positions.min(), self.tracer_positions.max())
+        self.tracers.setData(pos=self.tracer_positions.reshape((-1, 3)))
 
     # def update_player_positions(self, players: Dict[str, Player]):
     #     latitudes = np.array([player.latitude for player in players.values()])

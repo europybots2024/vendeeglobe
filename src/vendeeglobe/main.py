@@ -296,33 +296,33 @@ class Controller:
         clock_time = time.time()
         t = clock_time - self.start_time
         dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
-        if t > self.time_limit:
-            self.shutdown()
+        # if t > self.time_limit:
+        #     self.shutdown()
 
-        if (clock_time - self.last_time_update) > config.time_update_interval:
-            self.update_scoreboard(self.time_limit - t)
-            self.last_time_update = clock_time
+        # if (clock_time - self.last_time_update) > config.time_update_interval:
+        #     self.update_scoreboard(self.time_limit - t)
+        #     self.last_time_update = clock_time
 
-        if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-            self.forecast = self.weather.get_forecast(t)
-            self.last_forecast_update = clock_time
+        # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+        #     self.forecast = self.weather.get_forecast(t)
+        #     self.last_forecast_update = clock_time
 
-        self.call_player_bots(
-            t=t * config.seconds_to_hours,
-            dt=dt,
-            players=self.player_groups[self.group_counter % len(self.player_groups)],
+        # self.call_player_bots(
+        #     t=t * config.seconds_to_hours,
+        #     dt=dt,
+        #     players=self.player_groups[self.group_counter % len(self.player_groups)],
+        # )
+        # self.move_players(self.weather, t=t, dt=dt)
+        # if self.tracer_checkbox.isChecked():
+        # self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+        self.graphics.update_wind_tracers(
+            # self.weather.tracer_lat, self.weather.tracer_lon
         )
-        self.move_players(self.weather, t=t, dt=dt)
-        if self.tracer_checkbox.isChecked():
-            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-            self.graphics.update_wind_tracers(
-                self.weather.tracer_lat, self.weather.tracer_lon
-            )
-        self.graphics.update_player_positions(self.players)
-        self.group_counter += 1
+        # self.graphics.update_player_positions(self.players)
+        # self.group_counter += 1
 
-        if len(self.players_not_arrived) == 0:
-            self.shutdown()
+        # if len(self.players_not_arrived) == 0:
+        #     self.shutdown()
 
         self.previous_clock_time = clock_time
 
@@ -458,10 +458,10 @@ class Controller:
         # )
 
         window.show()
-        # self.timer = QtCore.QTimer()
-        # self.timer.timeout.connect(self.update)
-        # self.initialize_time()
-        # self.timer.start(0)
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        self.initialize_time()
+        self.timer.start(0)
         pg.exec()
 
 
@@ -526,6 +526,20 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
         )
         terrain_arr[...] = map_terrain
 
+        # Populate weather arrays
+        u_arr = array_from_shared_mem(u_shared_mem, weather.u.dtype, weather.u.shape)
+        u_arr[...] = weather.u
+        v_arr = array_from_shared_mem(v_shared_mem, weather.v.dtype, weather.v.shape)
+        v_arr[...] = weather.v
+        forecast_u_arr = array_from_shared_mem(
+            forecast_u_shared_mem, weather.forecast_u.dtype, weather.forecast_u.shape
+        )
+        forecast_u_arr[...] = weather.forecast_u
+        forecast_v_arr = array_from_shared_mem(
+            forecast_v_shared_mem, weather.forecast_v.dtype, weather.forecast_v.shape
+        )
+        forecast_v_arr[...] = weather.forecast_v
+
         # Fill in map data
 
         # writer1 = Process(
@@ -540,18 +554,18 @@ def play(seed=None, time_limit=8 * 60, bots=None, start=None, test=True):
                 tracer_shared_mem,
                 tracer_positions.dtype,
                 tracer_positions.shape,
-                u_shared_mem,
-                weather.u.dtype,
-                weather.u.shape,
-                v_shared_mem,
-                weather.v.dtype,
-                weather.v.shape,
-                forecast_u_shared_mem,
-                weather.forecast_u.dtype,
-                weather.forecast_u.shape,
-                forecast_v_shared_mem,
-                weather.forecast_v.dtype,
-                weather.forecast_v.shape,
+                # u_shared_mem,
+                # weather.u.dtype,
+                # weather.u.shape,
+                # v_shared_mem,
+                # weather.v.dtype,
+                # weather.v.shape,
+                # forecast_u_shared_mem,
+                # weather.forecast_u.dtype,
+                # weather.forecast_u.shape,
+                # forecast_v_shared_mem,
+                # weather.forecast_v.dtype,
+                # weather.forecast_v.shape,
                 # default_texture_shared_mem,
                 # game_map.array.dtype,
                 # game_map.array.shape,

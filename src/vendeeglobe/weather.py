@@ -134,6 +134,7 @@ class Weather:
         )
 
         self.nt, self.ny, self.nx = self.u.shape
+        self.dt = config.weather_update_interval  # weather changes every 12 hours
 
         lat_min = -90
         lat_max = 90
@@ -178,7 +179,7 @@ class Weather:
         # self.v.setflags(write=False)
         # self.forecast_u.setflags(write=False)
         # self.forecast_v.setflags(write=False)
-        print(f"done [{time.time() - t0:.2f} s]")
+        # print(f"done [{time.time() - t0:.2f} s]")
 
     def get_forecast(self, t: float) -> WeatherForecast:
         t = t + self.forecast_times
@@ -203,6 +204,7 @@ class Weather:
         return u, v
 
     def update_wind_tracers(self, t: float, dt: float):
+        # print('update_wind_tracers', t)
         self.tracer_lat = np.roll(self.tracer_lat, 1, axis=0)
         self.tracer_lon = np.roll(self.tracer_lon, 1, axis=0)
 
@@ -230,7 +232,9 @@ class Weather:
         ) % config.ntracers
 
         x, y, z = ut.to_xyz(
-            ut.lon_to_phi(self.tracer_lon.ravel()),
-            ut.lat_to_theta(self.tracer_lat.ravel()),
+            # ut.lon_to_phi(self.tracer_lon.ravel()),
+            # ut.lat_to_theta(self.tracer_lat.ravel()),
+            ut.lon_to_phi(self.tracer_lon),
+            ut.lat_to_theta(self.tracer_lat),
         )
         return x, y, z

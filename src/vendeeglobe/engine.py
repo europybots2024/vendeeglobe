@@ -124,12 +124,12 @@ class Engine:
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
         # )
-        self.players_not_arrived = list(self.players.keys())
+        # self.players_not_arrived = list(self.players.keys())
         # self.forecast = self.weather.get_forecast(0)
 
         # self.set_schedule()
         # self.group_counter = 0
-        self.fastest_times = read_fastest_times(self.players)
+        # self.fastest_times = read_fastest_times(self.players)
 
     def initialize_time(self):
         self.start_time = time.time()
@@ -272,34 +272,39 @@ class Engine:
         clock_time = time.time()
         t = clock_time - self.start_time
         dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
-        if t > self.time_limit:
-            self.shutdown()
+        # if t > self.time_limit:
+        #     self.shutdown()
 
-            # if (clock_time - self.last_time_update) > config.time_update_interval:
-            #     self.update_scoreboard(self.time_limit - t)
-            #     self.last_time_update = clock_time
+        # if (clock_time - self.last_time_update) > config.time_update_interval:
+        #     self.update_scoreboard(self.time_limit - t)
+        #     self.last_time_update = clock_time
 
-            # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-            #     self.forecast = self.weather.get_forecast(t)
-            #     self.last_forecast_update = clock_time
+        # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+        #     self.forecast = self.weather.get_forecast(t)
+        #     self.last_forecast_update = clock_time
 
-            # self.call_player_bots(
-            #     t=t * config.seconds_to_hours,
-            #     dt=dt,
-            #     players=self.player_groups[self.group_counter % len(self.player_groups)],
-            # )
-            # self.move_players(self.weather, t=t, dt=dt)
-            # if self.tracer_checkbox.isChecked():
-            x, y, z = self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-            # self.tracer_positions[0, ..., 0]
-            # self.graphics.update_wind_tracers(
-            #     self.weather.tracer_lat, self.weather.tracer_lon
-            # )
+        # self.call_player_bots(
+        #     t=t * config.seconds_to_hours,
+        #     dt=dt,
+        #     players=self.player_groups[self.group_counter % len(self.player_groups)],
+        # )
+        # self.move_players(self.weather, t=t, dt=dt)
+        # if self.tracer_checkbox.isChecked():
+        # self.graphics.update_wind_tracers(
+        #     self.weather.tracer_lat, self.weather.tracer_lon
+        # )
+
+        x, y, z = self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+        self.tracer_positions[self.pid, ..., 0] = x
+        self.tracer_positions[self.pid, ..., 1] = y
+        self.tracer_positions[self.pid, ..., 2] = z
+        # print("Engine", self.tracer_positions.min(), self.tracer_positions.max())
+
         # self.graphics.update_player_positions(self.players)
         # self.group_counter += 1
 
-        if len(self.players_not_arrived) == 0:
-            self.shutdown()
+        # if len(self.players_not_arrived) == 0:
+        #     self.shutdown()
 
         self.previous_clock_time = clock_time
 
@@ -349,6 +354,7 @@ class Engine:
             )
 
     def run(self):
+        self.initialize_time()
         while True:
             self.update()
 

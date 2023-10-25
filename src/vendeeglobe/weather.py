@@ -2,13 +2,19 @@
 
 import time
 from dataclasses import dataclass
+from multiprocessing.shared_memory import SharedMemory
 from typing import Optional, Tuple
 
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
 from . import config
-from .utils import lat_degs_from_length, lon_degs_from_length, wrap
+from .utils import (
+    array_from_shared_mem,
+    lat_degs_from_length,
+    lon_degs_from_length,
+    wrap,
+)
 
 
 @dataclass(frozen=True)
@@ -30,7 +36,7 @@ class WeatherForecast:
         return u, v
 
 
-class Weather:
+class WeatherData:
     def __init__(self, time_limit: int, seed: Optional[int] = None):
         t0 = time.time()
         print("Generating weather...", end=" ", flush=True)
@@ -68,22 +74,6 @@ class Weather:
         self.u *= speed
         self.v *= speed
 
-        lat_min = -90
-        lat_max = 90
-        self.dv = (lat_max - lat_min) / self.ny
-        lon_min = -180
-        lon_max = 180
-        self.du = (lon_max - lon_min) / self.nx
-
-        size = (config.tracer_lifetime, config.ntracers)
-        self.tracer_lat = np.random.uniform(-89.9, 89.9, size=size)
-        self.tracer_lon = np.random.uniform(-180, 180, size=size)
-        self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
-        self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
-
-        self.number_of_new_tracers = 5
-        self.new_tracer_counter = 0
-
         # Make forecast data
         self.forecast_times = np.arange(
             0, config.forecast_length * 6, config.weather_update_interval
@@ -111,6 +101,86 @@ class Weather:
         self.v.setflags(write=False)
         self.forecast_u.setflags(write=False)
         self.forecast_v.setflags(write=False)
+
+
+class Weather:
+    def __init__(
+        self,
+        u_shared_mem: SharedMemory,
+        u_shared_data_dtype: np.dtype,
+        u_shared_data_shape: Tuple[int, ...],
+        v_shared_mem: SharedMemory,
+        v_shared_data_dtype: np.dtype,
+        v_shared_data_shape: Tuple[int, ...],
+        forecast_u_shared_mem: SharedMemory,
+        forecast_u_shared_data_dtype: np.dtype,
+        forecast_u_shared_data_shape: Tuple[int, ...],
+        forecast_v_shared_mem: SharedMemory,
+        forecast_v_shared_data_dtype: np.dtype,
+        forecast_v_shared_data_shape: Tuple[int, ...],
+    ):
+        self.u = array_from_shared_mem(
+            u_shared_mem, u_shared_data_dtype, u_shared_data_shape
+        )
+        self.v = array_from_shared_mem(
+            v_shared_mem, v_shared_data_dtype, v_shared_data_shape
+        )
+        self.forecast_u = array_from_shared_mem(
+            forecast_u_shared_mem,
+            forecast_u_shared_data_dtype,
+            forecast_u_shared_data_shape,
+        )
+        self.forecast_v = array_from_shared_mem(
+            forecast_v_shared_mem,
+            forecast_v_shared_data_dtype,
+            forecast_v_shared_data_shape,
+        )
+
+        self.nt, self.ny, self.nx = self.u.shape
+
+        lat_min = -90
+        lat_max = 90
+        self.dv = (lat_max - lat_min) / self.ny
+        lon_min = -180
+        lon_max = 180
+        self.du = (lon_max - lon_min) / self.nx
+
+        size = (config.tracer_lifetime, config.ntracers)
+        self.tracer_lat = np.random.uniform(-89.9, 89.9, size=size)
+        self.tracer_lon = np.random.uniform(-180, 180, size=size)
+        self.tracer_colors = np.ones(self.tracer_lat.shape + (4,))
+        self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
+
+        self.number_of_new_tracers = 5
+        self.new_tracer_counter = 0
+
+        # # Make forecast data
+        # self.forecast_times = np.arange(
+        #     0, config.forecast_length * 6, config.weather_update_interval
+        # )
+        # nf = len(self.forecast_times)
+
+        # blurred_u = uniform_filter(self.u, size=30, mode="wrap")
+        # blurred_v = uniform_filter(self.v, size=30, mode="wrap")
+        # coeffs_a = np.linspace(0, 1, nf)
+        # coeffs_b = np.linspace(1, 0, nf)
+        # shape = self.u.shape + (1,)
+        # u_r = self.u.reshape(shape)
+        # v_r = self.v.reshape(shape)
+        # bu_r = blurred_u.reshape(shape)
+        # bv_r = blurred_v.reshape(shape)
+
+        # self.forecast_u = np.transpose(
+        #     coeffs_b * u_r + coeffs_a * bu_r, axes=[3, 0, 1, 2]
+        # )
+        # self.forecast_v = np.transpose(
+        #     coeffs_b * v_r + coeffs_a * bv_r, axes=[3, 0, 1, 2]
+        # )
+
+        # self.u.setflags(write=False)
+        # self.v.setflags(write=False)
+        # self.forecast_u.setflags(write=False)
+        # self.forecast_v.setflags(write=False)
         print(f"done [{time.time() - t0:.2f} s]")
 
     def get_forecast(self, t: float) -> WeatherForecast:

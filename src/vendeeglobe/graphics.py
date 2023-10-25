@@ -16,6 +16,7 @@ from . import config
 from . import utils as ut
 from .map import Map
 from .player import Player
+from .utils import array_from_shared_mem
 from .weather import Weather
 
 
@@ -151,7 +152,15 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
 
 class Graphics:
-    def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+    def __init__(
+        self,
+        #  game_map: Map,
+        # total_number_of_tracers: int,
+        # tracer_shared_mem: SharedMemory,
+        # tracer_shared_data_dtype: np.dtype,
+        # tracer_shared_data_shape: Tuple[int, ...],
+        tracer_positions: np.ndarray,
+    ):
         t0 = time.time()
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
@@ -163,10 +172,15 @@ class Graphics:
             azimuth=180 + config.start.longitude,
         )
 
-        self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
-        self.high_contrast_texture = np.transpose(
-            game_map.high_contrast_texture, axes=[1, 0, 2]
-        )
+        # self.default_texture = np.fliplr(np.transpose(game_map.array, axes=[1, 0, 2]))
+        # self.high_contrast_texture = np.transpose(
+        #     game_map.high_contrast_texture, axes=[1, 0, 2]
+        # )
+
+        self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
+        self.default_texture[..., 3] = 255
+        self.high_contrast_texture = self.default_texture.copy()
+
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
         self.window.addItem(self.sphere)
@@ -186,38 +200,52 @@ class Graphics:
         self.background_stars.setGLOptions("opaque")
         self.window.addItem(self.background_stars)
 
-        # Add checkpoints
-        scl = [0.96, 0.99]
-        for i, ch in enumerate(config.checkpoints):
-            md = gl.MeshData.cylinder(
-                rows=10,
-                cols=20,
-                radius=[ch.radius, ch.radius],
-                length=scl[i] * config.map_radius,
-            )
-            color = (0.2, 0.2, 0.2, 1)
-            colors = np.tile(color, md.faceCount()).reshape((-1, 4))
-            md.setFaceColors(colors)
-            mesh = gl.GLMeshItem(
-                meshdata=md,
-                smooth=True,
-                drawEdges=True,
-                edgeColor=color,
-            )
-            mesh.rotate(np.degrees(ut.lat_to_theta(ch.latitude)), 0, 1, 0)
-            mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
-            self.window.addItem(mesh)
+        # # Add checkpoints
+        # scl = [0.96, 0.99]
+        # for i, ch in enumerate(config.checkpoints):
+        #     md = gl.MeshData.cylinder(
+        #         rows=10,
+        #         cols=20,
+        #         radius=[ch.radius, ch.radius],
+        #         length=scl[i] * config.map_radius,
+        #     )
+        #     color = (0.2, 0.2, 0.2, 1)
+        #     colors = np.tile(color, md.faceCount()).reshape((-1, 4))
+        #     md.setFaceColors(colors)
+        #     mesh = gl.GLMeshItem(
+        #         meshdata=md,
+        #         smooth=True,
+        #         drawEdges=True,
+        #         edgeColor=color,
+        #     )
+        #     mesh.rotate(np.degrees(ut.lat_to_theta(ch.latitude)), 0, 1, 0)
+        #     mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
+        #     self.window.addItem(mesh)
 
-        # Add tracers
-        x, y, z = ut.to_xyz(
-            ut.lon_to_phi(weather.tracer_lon.ravel()),
-            ut.lat_to_theta(weather.tracer_lat.ravel()),
+        # self.tracer_positions = array_from_shared_mem(
+        #     tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        # )
+        self.tracer_positions = tracer_positions
+
+        # # Add tracers
+        # x, y, z = ut.to_xyz(
+        #     ut.lon_to_phi(weather.tracer_lon.ravel()),
+        #     ut.lat_to_theta(weather.tracer_lat.ravel()),
+        # )
+
+        # size = (config.tracer_lifetime, total_number_of_tracers)
+        self.default_tracer_colors = np.ones(self.tracer_positions.shape[:-1] + (4,))
+        self.default_tracer_colors[..., 3] = np.linspace(
+            1, 0, config.tracer_lifetime
+        ).reshape((-1, 1))
+
+        # self.default_tracer_colors = weather.tracer_colors
+        self.high_contrast_tracer_colors = (
+            self.default_tracer_colors.tracer_colors.copy()
         )
-        self.default_tracer_colors = weather.tracer_colors
-        self.high_contrast_tracer_colors = weather.tracer_colors.copy()
         self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
-            pos=np.array([x, y, z]).T,
+            pos=self.tracer_positions,
             color=self.default_tracer_colors,
             size=2,
             pxMode=True,
@@ -226,98 +254,98 @@ class Graphics:
         self.tracers.setGLOptions('translucent')
         self.window.addItem(self.tracers)
 
-        # Add players
-        latitudes = np.array([player.latitude for player in players.values()])
-        longitudes = np.array([player.longitude for player in players.values()])
-        colors = np.array([to_rgba(player.color) for player in players.values()])
-        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        # # Add players
+        # latitudes = np.array([player.latitude for player in players.values()])
+        # longitudes = np.array([player.longitude for player in players.values()])
+        # colors = np.array([to_rgba(player.color) for player in players.values()])
+        # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
-        self.players = gl.GLScatterPlotItem(
-            pos=np.array([x, y, z]).T,
-            color=colors,
-            size=10,
-            pxMode=True,
-        )
-        self.players.setGLOptions("opaque")
-        # self.tracers.setGLOptions('translucent')
-        self.window.addItem(self.players)
+        # self.players = gl.GLScatterPlotItem(
+        #     pos=np.array([x, y, z]).T,
+        #     color=colors,
+        #     size=10,
+        #     pxMode=True,
+        # )
+        # self.players.setGLOptions("opaque")
+        # # self.tracers.setGLOptions('translucent')
+        # self.window.addItem(self.players)
 
-        self.tracks = {}
-        self.avatars = {}
-        self.labels = {}
-        for i, (name, player) in enumerate(players.items()):
-            x, y, z = ut.to_xyz(
-                ut.lon_to_phi(player.longitude),
-                ut.lat_to_theta(player.latitude),
-            )
-            pos = np.array([[x], [y], [z]]).T
-            self.tracks[name] = {
-                'pos': pos,
-                'artist': gl.GLLinePlotItem(
-                    pos=pos, color=tuple(colors[i]), width=4, antialias=True
-                ),
-            }
-            self.tracks[name]['artist'].setGLOptions("opaque")
-            self.window.addItem(self.tracks[name]['artist'])
+        # self.tracks = {}
+        # self.avatars = {}
+        # self.labels = {}
+        # for i, (name, player) in enumerate(players.items()):
+        #     x, y, z = ut.to_xyz(
+        #         ut.lon_to_phi(player.longitude),
+        #         ut.lat_to_theta(player.latitude),
+        #     )
+        #     pos = np.array([[x], [y], [z]]).T
+        #     self.tracks[name] = {
+        #         'pos': pos,
+        #         'artist': gl.GLLinePlotItem(
+        #             pos=pos, color=tuple(colors[i]), width=4, antialias=True
+        #         ),
+        #     }
+        #     self.tracks[name]['artist'].setGLOptions("opaque")
+        #     self.window.addItem(self.tracks[name]['artist'])
 
-            self.avatars[name] = gl.GLImageItem(
-                np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
-            )
-            offset = config.avatar_size[0] / 2
-            self.avatars[name].translate(-offset, -offset, 0)
-            self.avatars[name].rotate(90, 1, 0, 0)
-            self.avatars[name].rotate(180, 0, 0, 1)
-            self.avatars[name].translate(0, config.map_radius, 0)
-            self.avatars[name].rotate(90, 0, 0, 1)
-            self.avatars[name].rotate(player.longitude, 0, 0, 1)
-            perp_vec = np.cross([x, y, 0], [0, 0, 1])
-            perp_vec /= np.linalg.norm(perp_vec)
-            self.avatars[name].rotate(player.latitude, *perp_vec)
-            self.window.addItem(self.avatars[name])
+        #     self.avatars[name] = gl.GLImageItem(
+        #         np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
+        #     )
+        #     offset = config.avatar_size[0] / 2
+        #     self.avatars[name].translate(-offset, -offset, 0)
+        #     self.avatars[name].rotate(90, 1, 0, 0)
+        #     self.avatars[name].rotate(180, 0, 0, 1)
+        #     self.avatars[name].translate(0, config.map_radius, 0)
+        #     self.avatars[name].rotate(90, 0, 0, 1)
+        #     self.avatars[name].rotate(player.longitude, 0, 0, 1)
+        #     perp_vec = np.cross([x, y, 0], [0, 0, 1])
+        #     perp_vec /= np.linalg.norm(perp_vec)
+        #     self.avatars[name].rotate(player.latitude, *perp_vec)
+        #     self.window.addItem(self.avatars[name])
 
         print(f'done [{time.time() - t0:.2f} s]')
 
-    def update_wind_tracers(self, tracer_lat: np.ndarray, tracer_lon: np.ndarray):
-        x, y, z = ut.to_xyz(
-            ut.lon_to_phi(tracer_lon.ravel()),
-            ut.lat_to_theta(tracer_lat.ravel()),
-        )
-        self.tracers.setData(pos=np.array([x, y, z]).T)
+    def update_wind_tracers(self):  # , tracer_lat: np.ndarray, tracer_lon: np.ndarray):
+        # x, y, z = ut.to_xyz(
+        #     ut.lon_to_phi(tracer_lon.ravel()),
+        #     ut.lat_to_theta(tracer_lat.ravel()),
+        # )
+        self.tracers.setData(pos=self.tracer_positions)
 
-    def update_player_positions(self, players: Dict[str, Player]):
-        latitudes = np.array([player.latitude for player in players.values()])
-        longitudes = np.array([player.longitude for player in players.values()])
-        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
-        self.players.setData(pos=np.array([x, y, z]).T)
+    # def update_player_positions(self, players: Dict[str, Player]):
+    #     latitudes = np.array([player.latitude for player in players.values()])
+    #     longitudes = np.array([player.longitude for player in players.values()])
+    #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+    #     self.players.setData(pos=np.array([x, y, z]).T)
 
-        for i, (name, player) in enumerate(players.items()):
-            if not player.arrived:
-                arr = np.array([x[i], y[i], z[i]])
-                pos = np.vstack(
-                    [self.tracks[name]['pos'], arr],
-                )
-                npos = len(pos)
-                step = (npos // 1000) if npos > 1000 else 1
-                self.tracks[name]['artist'].setData(pos=pos[::step])
-                self.tracks[name]['pos'] = pos
-                self.avatars[name].rotate(player.dlon, 0, 0, 1)
-                perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
-                perp_vec /= np.linalg.norm(perp_vec)
-                self.avatars[name].rotate(player.dlat, *perp_vec)
+    #     for i, (name, player) in enumerate(players.items()):
+    #         if not player.arrived:
+    #             arr = np.array([x[i], y[i], z[i]])
+    #             pos = np.vstack(
+    #                 [self.tracks[name]['pos'], arr],
+    #             )
+    #             npos = len(pos)
+    #             step = (npos // 1000) if npos > 1000 else 1
+    #             self.tracks[name]['artist'].setData(pos=pos[::step])
+    #             self.tracks[name]['pos'] = pos
+    #             self.avatars[name].rotate(player.dlon, 0, 0, 1)
+    #             perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
+    #             perp_vec /= np.linalg.norm(perp_vec)
+    #             self.avatars[name].rotate(player.dlat, *perp_vec)
 
-    def toggle_wind_tracers(self, val):
-        self.tracers.setVisible(val)
+    # def toggle_wind_tracers(self, val):
+    #     self.tracers.setVisible(val)
 
-    def toggle_texture(self, val):
-        if val:
-            self.sphere.setData(self.high_contrast_texture)
-            self.tracers.setData(color=self.high_contrast_tracer_colors)
-        else:
-            self.sphere.setData(self.default_texture)
-            self.tracers.setData(color=self.default_tracer_colors)
+    # def toggle_texture(self, val):
+    #     if val:
+    #         self.sphere.setData(self.high_contrast_texture)
+    #         self.tracers.setData(color=self.high_contrast_tracer_colors)
+    #     else:
+    #         self.sphere.setData(self.default_texture)
+    #         self.tracers.setData(color=self.default_tracer_colors)
 
-    def set_tracer_thickness(self, val):
-        self.tracers.setData(size=val)
+    # def set_tracer_thickness(self, val):
+    #     self.tracers.setData(size=val)
 
     def toggle_stars(self, val):
         self.background_stars.setVisible(val)

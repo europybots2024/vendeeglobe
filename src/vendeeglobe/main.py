@@ -2,7 +2,11 @@
 
 import datetime
 import time
-from typing import List, Optional
+from multiprocessing import Process
+from multiprocessing.managers import SharedMemoryManager
+from multiprocessing.shared_memory import SharedMemory
+from typing import List, Optional, Tuple
+
 
 import numpy as np
 import pyqtgraph as pg
@@ -47,49 +51,72 @@ from .scores import (
     read_scores,
     write_fastest_times,
 )
-from .utils import distance_on_surface, longitude_difference, pre_compile
-from .weather import Weather
+from .utils import (
+    array_from_shared_mem,
+    distance_on_surface,
+    longitude_difference,
+    pre_compile,
+)
+from .weather import Weather, WeatherData
 
 
-class Engine:
+class Controller:
     def __init__(
         self,
-        pid: int,
-        bots: dict,
-        test: bool = True,
-        time_limit: float = 8 * 60,
-        seed: int = None,
-        start: Optional[Location] = None,
+        tracer_shared_mem: SharedMemory,
+        tracer_shared_data_dtype: np.dtype,
+        tracer_shared_data_shape: Tuple[int, ...],
+        # bots: dict,
+        # test: bool = True,
+        # time_limit: float = 8 * 60,
+        # seed: int = None,
+        # start: Optional[Location] = None,
     ):
+        # self.n_sub_processes = 2
+        # n = config.ntracers // self.n_sub_processes
+        # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
+        # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
+        #     self.ntracers_per_sub_process[i] += 1
+
+        self.tracer_positions = array_from_shared_mem(
+            tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        )
+
+        # SHARED_DATA_DTYPE = self.tracer_positions_array.dtype
+        # SHARED_DATA_SHAPE = self.tracer_positions_array.shape
+        # SHARED_DATA_NBYTES = self.tracer_positions_array.nbytes
+
         # pre_compile()
 
-        self.pid = pid
-        self.time_limit = time_limit
+        self.time_limit = 8 * 60  # time_limit
         self.start_time = None
-        self.safe = not test
-        self.test = test
+        self.safe = False  # not test
+        self.test = True  # test
 
-        t0 = time.time()
-        print("Generating players...", end=" ", flush=True)
-        self.bots = {bot.team: bot for bot in bots}
-        self.players = {}
-        for name, bot in self.bots.items():
-            self.players[name] = Player(
-                team=name, avatar=getattr(bot, 'avatar', 1), start=start
-            )
-        print(f"done [{time.time() - t0:.2f} s]")
+        # t0 = time.time()
+        # print("Generating players...", end=" ", flush=True)
+        # self.bots = {bot.team: bot for bot in bots}
+        # self.players = {}
+        # for name, bot in self.bots.items():
+        #     self.players[name] = Player(
+        #         team=name, avatar=getattr(bot, 'avatar', 1), start=start
+        #     )
+        # print(f"done [{time.time() - t0:.2f} s]")
 
         # self.map = Map()
         # self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
-        self.weather = Weather(seed=seed, time_limit=self.time_limit)
-        # self.graphics = Graphics(
-        #     game_map=self.map, weather=self.weather, players=self.players
-        # )
-        self.players_not_arrived = list(self.players.keys())
-        # self.forecast = self.weather.get_forecast(0)
 
-        # self.set_schedule()
-        # self.group_counter = 0
+        self.graphics = Graphics(
+            game_map=self.map, weather=self.weather, players=self.players
+        )
+
+        self.weather = WeatherData(seed=seed, time_limit=self.time_limit)
+
+        self.players_not_arrived = list(self.players.keys())
+        self.forecast = self.weather.get_forecast(0)
+
+        self.set_schedule()
+        self.group_counter = 0
         self.fastest_times = read_fastest_times(self.players)
 
     def initialize_time(self):
@@ -100,22 +127,22 @@ class Engine:
         self.last_forecast_update = self.start_time
         self.previous_clock_time = self.start_time
 
-    # def set_schedule(self):
-    #     times = []
-    #     for player in self.players.values():
-    #         t0 = time.time()
-    #         self.execute_player_bot(player=player, t=0, dt=0)
-    #         times.append(((time.time() - t0), player))
-    #     ng = 3
-    #     time_groups = {i: [] for i in range(ng)}
-    #     self.player_groups = {i: [] for i in range(ng)}
-    #     for t in sorted(times, key=lambda tup: tup[0], reverse=True):
-    #         ind = np.argmin([sum(g) for g in time_groups.values()])
-    #         time_groups[ind].append(t[0])
-    #         self.player_groups[ind].append(t[1])
-    #     empty_groups = [i for i, g in time_groups.items() if len(g) == 0]
-    #     for i in empty_groups:
-    #         del self.player_groups[i]
+    def set_schedule(self):
+        times = []
+        for player in self.players.values():
+            t0 = time.time()
+            self.execute_player_bot(player=player, t=0, dt=0)
+            times.append(((time.time() - t0), player))
+        ng = 3
+        time_groups = {i: [] for i in range(ng)}
+        self.player_groups = {i: [] for i in range(ng)}
+        for t in sorted(times, key=lambda tup: tup[0], reverse=True):
+            ind = np.argmin([sum(g) for g in time_groups.values()])
+            time_groups[ind].append(t[0])
+            self.player_groups[ind].append(t[1])
+        empty_groups = [i for i, g in time_groups.items() if len(g) == 0]
+        for i in empty_groups:
+            del self.player_groups[i]
 
     def execute_player_bot(self, player, t: float, dt: float):
         instructions = None
@@ -236,27 +263,27 @@ class Engine:
         if t > self.time_limit:
             self.shutdown()
 
-            # if (clock_time - self.last_time_update) > config.time_update_interval:
-            #     self.update_scoreboard(self.time_limit - t)
-            #     self.last_time_update = clock_time
+        if (clock_time - self.last_time_update) > config.time_update_interval:
+            self.update_scoreboard(self.time_limit - t)
+            self.last_time_update = clock_time
 
-            # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-            #     self.forecast = self.weather.get_forecast(t)
-            #     self.last_forecast_update = clock_time
+        if (clock_time - self.last_forecast_update) > config.weather_update_interval:
+            self.forecast = self.weather.get_forecast(t)
+            self.last_forecast_update = clock_time
 
-            # self.call_player_bots(
-            #     t=t * config.seconds_to_hours,
-            #     dt=dt,
-            #     players=self.player_groups[self.group_counter % len(self.player_groups)],
-            # )
-            # self.move_players(self.weather, t=t, dt=dt)
-            # if self.tracer_checkbox.isChecked():
+        self.call_player_bots(
+            t=t * config.seconds_to_hours,
+            dt=dt,
+            players=self.player_groups[self.group_counter % len(self.player_groups)],
+        )
+        self.move_players(self.weather, t=t, dt=dt)
+        if self.tracer_checkbox.isChecked():
             self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
             self.graphics.update_wind_tracers(
                 self.weather.tracer_lat, self.weather.tracer_lon
             )
-        # self.graphics.update_player_positions(self.players)
-        # self.group_counter += 1
+        self.graphics.update_player_positions(self.players)
+        self.group_counter += 1
 
         if len(self.players_not_arrived) == 0:
             self.shutdown()
@@ -309,10 +336,6 @@ class Engine:
             )
 
     def run(self):
-        while True:
-            self.update()
-
-    def old_run(self):
         window = QMainWindow()
         window.setWindowTitle("Vendée Globe")
         window.setGeometry(100, 100, 1280, 720)
@@ -404,3 +427,63 @@ class Engine:
         self.initialize_time()
         self.timer.start(0)
         pg.exec()
+
+
+def spawn_controller(
+    tracer_shared_mem: SharedMemory,
+    tracer_shared_data_dtype: np.dtype,
+    tracer_shared_data_shape: Tuple[int, ...],
+):
+    controller = Controller(
+        tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+    )
+    controller.run()
+
+
+def spawn_engine():
+    engine = Engine()
+    engine.run()
+
+
+def play():
+    n_sub_processes = 2
+    # n = config.ntracers // self.n_sub_processes
+    # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
+    # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
+    #     self.ntracers_per_sub_process[i] += 1
+
+    tracer_positions = np.zeros(
+        (n_sub_processes, config.tracer_lifetime, config.ntracers, 3)
+    )
+
+    # SHARED_DATA_DTYPE = tracer_positions_array.dtype
+    # SHARED_DATA_SHAPE = tracer_positions_array.shape
+    # SHARED_DATA_NBYTES = tracer_positions_array.nbytes
+
+    # pre_compile()
+
+    # self.time_limit = time_limit
+    # self.start_time = None
+    # self.safe = not test
+    # self.test = test
+    with SharedMemoryManager() as smm:
+        tracer_shared_mem = smm.SharedMemory(size=tracer_positions.nbytes)
+
+        # writer1 = Process(
+        #     target=make_data1, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
+        # )
+        # writer2 = Process(
+        #     target=make_data2, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
+        # )
+        controller = Process(
+            target=spawn_controller,
+            args=(tracer_shared_mem, tracer_positions.dtype, tracer_positions.shape),
+        )
+        writer1.start()
+        writer2.start()
+        reader.start()
+        writer1.join()
+        writer2.join()
+        reader.join()
+
+        del arr

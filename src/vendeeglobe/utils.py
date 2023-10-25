@@ -2,6 +2,7 @@
 
 import hashlib
 import time
+from multiprocessing.shared_memory import SharedMemory
 from typing import Tuple, Union
 
 import numba
@@ -10,6 +11,16 @@ import numpy as np
 from . import config
 
 RADIUS = float(config.map_radius)
+
+
+def array_from_shared_mem(
+    shared_mem: SharedMemory,
+    shared_data_dtype: np.dtype,
+    shared_data_shape: Tuple[int, ...],
+) -> np.ndarray:
+    arr = np.frombuffer(shared_mem.buf, dtype=shared_data_dtype)
+    arr = arr.reshape(shared_data_shape)
+    return arr
 
 
 def string_to_color(input_string: str) -> str:

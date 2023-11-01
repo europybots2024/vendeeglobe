@@ -1,3 +1,5 @@
+![10a25dab-de92-42ec-a5dc-12aea06a8cb4](https://github.com/europybots2024/vendeeglobe/assets/39047984/9032ef05-07c8-4d13-807c-bad82e0f89f0)
+
 # vendeeglobe
 
 Around the world sailing race

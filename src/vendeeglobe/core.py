@@ -43,6 +43,8 @@ class Instructions:
     - a location to go to
     - a heading to point to
     - a vector to follow
+    - a number of degrees to turn left
+    - a number of degrees to turn right
 
     Optionally, define a sail value between 0 and 1.
     """
@@ -50,6 +52,8 @@ class Instructions:
     location: Optional[Location] = None
     heading: Optional[Heading] = None
     vector: Optional[Vector] = None
+    left: Optional[float] = None
+    right: Optional[float] = None
     sail: Optional[float] = None
 
 

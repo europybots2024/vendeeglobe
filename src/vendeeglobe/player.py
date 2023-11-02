@@ -53,11 +53,16 @@ class Player:
                 self.avatar[..., i] = int(round(rgb[i] * 255))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
-        if [instructions.location, instructions.heading, instructions.vector].count(
-            None
-        ) < 2:
+        if [
+            instructions.location,
+            instructions.heading,
+            instructions.vector,
+            instructions.left,
+            instructions.right,
+        ].count(None) < 2:
             raise ValueError(
-                "Instructions must define only one of location, heading or vector."
+                "Instructions must define only one of location, heading, vector, "
+                "left, or right."
             )
         if instructions.location is not None:
             self.goto(
@@ -68,6 +73,10 @@ class Player:
             self.set_heading(instructions.heading.angle)
         elif instructions.vector is not None:
             self.set_vector([instructions.vector.u, instructions.vector.v])
+        elif instructions.left is not None:
+            self.set_heading(self.heading + instructions.left)
+        elif instructions.right is not None:
+            self.set_heading(self.heading - instructions.right)
         if instructions.sail is not None:
             self.sail = min(max(0, instructions.sail), 1)
 
@@ -82,7 +91,7 @@ class Player:
         Set the heading angle (in degrees) of the vehicle.
         East is 0, North is 90, West is 180, South is 270.
         """
-        self.heading = angle
+        self.heading = angle % 360
 
     def get_vector(self) -> np.ndarray:
         h = self.get_heading() * np.pi / 180.0

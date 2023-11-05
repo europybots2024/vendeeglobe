@@ -78,7 +78,7 @@ class Engine:
         print(f"done [{time.time() - t0:.2f} s]")
 
         self.map = Map()
-        self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
+        self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(seed=seed, time_limit=self.time_limit)
         self.graphics = Graphics(
             game_map=self.map, weather=self.weather, players=self.players

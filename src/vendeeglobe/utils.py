@@ -136,47 +136,6 @@ def goto(origin: Location, to: Location):
     return (np.degrees(initial_bearing) + 360) % 360
 
 
-# def gkern(sigma=1):
-#     """
-#     Creates gaussian kernel
-#     """
-#     ax = np.linspace(-(sigma - 1) / 2.0, (sigma - 1) / 2.0, sigma)
-#     gauss = np.exp(-0.5 * np.square(ax) / np.square(sigma))
-#     kernel = np.outer(gauss, gauss)
-#     return kernel / np.sum(kernel)
-
-
-# @numba.njit(cache=True)
-# def blur_weather(u: np.ndarray, v: np.ndarray, n: int) -> Tuple[np.ndarray, np.ndarray]:
-#     u_out = np.zeros((n,) + u.shape)
-#     v_out = np.zeros_like(u_out)
-#     nt, ny, nx = u.shape
-#     for k in range(n):
-#         sigma = 2 * k + 1
-#         ax = np.linspace(-(sigma - 1) / 2.0, (sigma - 1) / 2.0, sigma)
-#         gauss = np.exp(-0.5 * np.square(ax) / np.square(sigma))
-#         kernel = np.outer(gauss, gauss)
-#         kernel /= np.sum(kernel)
-
-#         for t in range(nt):
-#             for j in range(ny):
-#                 for i in range(nx):
-#                     for jj in range(-k, k + 1):
-#                         for ii in range(-k, k + 1):
-#                             u_out[k, t, j, i] += (
-#                                 kernel[jj, ii] * u[t, (j + jj) % ny, (i + ii) % nx]
-#                             )
-#                             v_out[k, t, j, i] += (
-#                                 kernel[jj, ii] * v[t, (j + jj) % ny, (i + ii) % nx]
-#                             )
-#     # u_out[0] = u
-#     # v_out[0] = v
-#     # for i in range(1, n):
-#     #     u_out[i] = uniform_filter(u, size=i * 2, mode="wrap")
-#     #     v_out[i] = uniform_filter(v, size=i * 2, mode="wrap")
-#     return u_out, v_out
-
-
 def pre_compile():
     t0 = time.time()
     print('Precompiling utils...', end=' ', flush=True)

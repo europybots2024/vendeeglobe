@@ -2,7 +2,7 @@
 
 # flake8: noqa F405
 import time
-from typing import Any, Dict, Optional, List, Union
+from typing import Any, Dict, Optional, List,
 
 import numpy as np
 import pyqtgraph as pg
@@ -148,10 +148,8 @@ In this example, the image data is sampled from a volume and the image planes
 placed as if they slice through the volume.
 """
 
-from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
-
-def make_course_preview(course_preview):
+def _make_course_preview(course_preview: List[Checkpoint]) -> tuple:
     course_preview = [
         Checkpoint(
             latitude=config.start.latitude,
@@ -225,7 +223,7 @@ class Graphics:
         game_map: Map,
         weather: Weather,
         players: Dict[str, Player],
-        course_preview: Optional[List[Union[Location, Checkpoint]]] = None,
+        course_preview: Optional[List[Checkpoint]] = None,
     ):
         t0 = time.time()
         print("Composing graphics...", end=" ", flush=True)
@@ -351,7 +349,7 @@ class Graphics:
             self.window.addItem(self.avatars[name])
 
         if course_preview is not None:
-            line, vertices = make_course_preview(course_preview)
+            line, vertices = _make_course_preview(course_preview)
             self.window.addItem(line)
             self.window.addItem(vertices)
 

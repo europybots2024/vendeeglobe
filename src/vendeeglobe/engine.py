@@ -2,7 +2,7 @@
 
 import datetime
 import time
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import numpy as np
 import pyqtgraph as pg
@@ -59,7 +59,7 @@ class Engine:
         time_limit: float = 8 * 60,
         seed: int = None,
         start: Optional[Location] = None,
-        course_preview: Optional[List[Union[Location, Checkpoint]]] = None,
+        course_preview: Optional[List[Checkpoint]] = None,
     ):
         pre_compile()
 

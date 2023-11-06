@@ -149,13 +149,15 @@ class Weather:
         v = self.v[it, iv, iu]
         return u, v
 
-    def update_wind_tracers(self, t: float, dt: float):
+    def update_wind_tracers(self, t: float, dt: float, speedup: Optional[float]):
         self.tracer_lat = np.roll(self.tracer_lat, 1, axis=0)
         self.tracer_lon = np.roll(self.tracer_lon, 1, axis=0)
 
         u, v = self.get_uv(self.tracer_lat[1, :], self.tracer_lon[1, :], t)
 
         scaling = 1.0
+        if speedup is not None:
+            scaling /= speedup
         incr_x = u * dt * scaling
         incr_y = v * dt * scaling
         incr_lon = lon_degs_from_length(incr_x, self.tracer_lat[1, :])

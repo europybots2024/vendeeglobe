@@ -59,6 +59,7 @@ class Engine:
         time_limit: float = 8 * 60,
         seed: int = None,
         start: Optional[Location] = None,
+        speedup: Optional[float] = None,
     ):
         pre_compile()
 
@@ -66,6 +67,7 @@ class Engine:
         self.start_time = None
         self.safe = not test
         self.test = test
+        self.speedup = speedup
 
         t0 = time.time()
         print("Generating players...", end=" ", flush=True)
@@ -97,6 +99,7 @@ class Engine:
         self.last_time_update = self.start_time
         self.last_forecast_update = self.start_time
         self.previous_clock_time = self.start_time
+        self.current_time = 0.0
 
     def set_schedule(self):
         times = []
@@ -229,27 +232,34 @@ class Engine:
 
     def update(self):
         clock_time = time.time()
-        t = clock_time - self.start_time
-        dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
-        if t > self.time_limit:
+        dt_raw = clock_time - self.previous_clock_time
+        if self.speedup is not None:
+            dt_raw *= self.speedup
+            self.current_time += dt_raw
+        else:
+            self.current_time = clock_time - self.start_time
+        dt = dt_raw * config.seconds_to_hours
+        if self.current_time > self.time_limit:
             self.shutdown()
 
         if (clock_time - self.last_time_update) > config.time_update_interval:
-            self.update_scoreboard(self.time_limit - t)
+            self.update_scoreboard(self.time_limit - self.current_time)
             self.last_time_update = clock_time
 
         if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-            self.forecast = self.weather.get_forecast(t)
+            self.forecast = self.weather.get_forecast(self.current_time)
             self.last_forecast_update = clock_time
 
         self.call_player_bots(
-            t=t * config.seconds_to_hours,
+            t=self.current_time * config.seconds_to_hours,
             dt=dt,
             players=self.player_groups[self.group_counter % len(self.player_groups)],
         )
-        self.move_players(self.weather, t=t, dt=dt)
+        self.move_players(self.weather, t=self.current_time, dt=dt)
         if self.tracer_checkbox.isChecked():
-            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+            self.weather.update_wind_tracers(
+                t=np.array([self.current_time]), dt=dt, speedup=self.speedup
+            )
             self.graphics.update_wind_tracers(
                 self.weather.tracer_lat, self.weather.tracer_lon
             )

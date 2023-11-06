@@ -2,7 +2,7 @@
 
 # flake8: noqa F405
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional, List, Union
 
 import numpy as np
 import pyqtgraph as pg
@@ -14,6 +14,7 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 from . import config
 from . import utils as ut
+from .core import Location, Checkpoint
 from .map import Map
 from .player import Player
 from .weather import Weather
@@ -151,7 +152,13 @@ from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
 
 
 class Graphics:
-    def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+    def __init__(
+        self,
+        game_map: Map,
+        weather: Weather,
+        players: Dict[str, Player],
+        course_preview: Optional[List[Union[Location, Checkpoint]]] = None,
+    ):
         t0 = time.time()
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
@@ -274,6 +281,26 @@ class Graphics:
             perp_vec /= np.linalg.norm(perp_vec)
             self.avatars[name].rotate(player.latitude, *perp_vec)
             self.window.addItem(self.avatars[name])
+
+        if course_preview is not None:
+            n = 100
+            lats = []
+            lons = []
+            for i in range(len(course_preview) - 1):
+                lats.append(
+                    np.linspace(
+                        course_preview[i].latitude,
+                        course_preview[i + 1].latitude,
+                        n,
+                    )
+                )
+                lons.append(
+                    np.linspace(
+                        course_preview[i].longitude,
+                        course_preview[i + 1].longitude,
+                        n,
+                    )
+                )
 
         print(f'done [{time.time() - t0:.2f} s]')
 

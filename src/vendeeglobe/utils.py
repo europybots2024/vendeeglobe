@@ -8,6 +8,7 @@ import numba
 import numpy as np
 
 from . import config
+from .core import Location
 
 RADIUS = float(config.map_radius)
 
@@ -117,6 +118,22 @@ def longitude_difference(lon1: float, lon2: float) -> float:
         return min(lon_diff, crossing_diff)
     else:
         return -min(-lon_diff, crossing_diff)
+
+
+def goto(origin: Location, to: Location):
+    """
+    Find the heading angle (in degrees) for the shortest distance from `origin` to `to`.
+    """
+    lon1 = np.radians(origin.longitude)
+    lat1 = np.radians(origin.latitude)
+    lon2 = np.radians(to.longitude)
+    lat2 = np.radians(to.latitude)
+
+    dlon = lon2 - lon1
+    y = np.sin(dlon) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
+    initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
+    return (np.degrees(initial_bearing) + 360) % 360
 
 
 # def gkern(sigma=1):

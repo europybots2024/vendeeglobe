@@ -160,7 +160,7 @@ class Bot2:
         speed: float,
         vector: np.ndarray,
         forecast: WeatherForecast,
-        map: MapProxy,
+        world_map: MapProxy,
     ):
         loc = None
         for ch in self.course:

@@ -111,16 +111,22 @@ class Player:
         """
         Point the vehicle towards the given longitude and latitude.
         """
-        lon1 = np.radians(self.longitude)
-        lat1 = np.radians(self.latitude)
-        lon2 = np.radians(longitude)
-        lat2 = np.radians(latitude)
+        # lon1 = np.radians(self.longitude)
+        # lat1 = np.radians(self.latitude)
+        # lon2 = np.radians(longitude)
+        # lat2 = np.radians(latitude)
 
-        dlon = lon2 - lon1
-        y = np.sin(dlon) * np.cos(lat2)
-        x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
-        initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
-        self.set_heading((np.degrees(initial_bearing) + 360) % 360)
+        # dlon = lon2 - lon1
+        # y = np.sin(dlon) * np.cos(lat2)
+        # x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
+        # initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
+        # self.set_heading((np.degrees(initial_bearing) + 360) % 360)
+        self.set_heading(
+            utl.goto(
+                origin=Location(longitude=self.longitude, latitude=self.latitude),
+                to=Location(longitude=longitude, latitude=latitude),
+            )
+        )
 
     def get_distance(self, longitude: float, latitude: float) -> float:
         """

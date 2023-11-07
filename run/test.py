@@ -16,5 +16,10 @@ for team, bot in players.items():
     bots[-1].team = team
 
 vg.play(
-    bots=bots, start=start, seed=None, time_limit=60 * 8, course_preview=bots[0].course
+    bots=bots,
+    start=start,
+    seed=None,
+    time_limit=60 * 8,
+    speedup=None,
+    course_preview=bots[0].course,
 )

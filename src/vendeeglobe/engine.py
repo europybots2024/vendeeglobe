@@ -36,7 +36,7 @@ except ImportError:
     from PySide2.QtCore import Qt
 
 from . import config
-from .core import Location
+from .core import Checkpoint, Location
 from .graphics import Graphics
 from .map import Map, MapProxy
 from .player import Player
@@ -60,6 +60,7 @@ class Engine:
         seed: int = None,
         start: Optional[Location] = None,
         speedup: Optional[float] = None,
+        course_preview: Optional[List[Checkpoint]] = None,
     ):
         pre_compile()
 
@@ -83,7 +84,10 @@ class Engine:
         self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(seed=seed, time_limit=self.time_limit)
         self.graphics = Graphics(
-            game_map=self.map, weather=self.weather, players=self.players
+            game_map=self.map,
+            weather=self.weather,
+            players=self.players,
+            course_preview=course_preview,
         )
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
@@ -129,7 +133,7 @@ class Engine:
             "speed": player.speed,
             "vector": player.get_vector(),
             "forecast": self.forecast,
-            "map": self.map_proxy,
+            "world_map": self.map_proxy,
         }
         if self.safe:
             try:

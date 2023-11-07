@@ -2,7 +2,7 @@
 
 # flake8: noqa F405
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional, List,
 
 import numpy as np
 import pyqtgraph as pg
@@ -14,6 +14,7 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 
 from . import config
 from . import utils as ut
+from .core import Location, Checkpoint
 from .map import Map
 from .player import Player
 from .weather import Weather
@@ -147,11 +148,83 @@ In this example, the image data is sampled from a volume and the image planes
 placed as if they slice through the volume.
 """
 
-from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
+
+def _make_course_preview(course_preview: List[Checkpoint]) -> tuple:
+    course_preview = [
+        Checkpoint(
+            latitude=config.start.latitude,
+            longitude=config.start.longitude,
+            radius=5,
+        )
+    ] + course_preview
+    ind = 0
+    lats = [config.start.latitude]
+    lons = [config.start.longitude]
+    while ind < len(course_preview):
+        lat = lats[-1]
+        lon = lons[-1]
+        ch = course_preview[ind]
+        if (
+            ut.distance_on_surface(
+                longitude1=lon,
+                latitude1=lat,
+                longitude2=ch.longitude,
+                latitude2=ch.latitude,
+            )
+            < ch.radius
+        ):
+            ind += 1
+        else:
+            heading = ut.goto(
+                origin=Location(
+                    latitude=lat,
+                    longitude=lon,
+                ),
+                to=Location(
+                    latitude=ch.latitude,
+                    longitude=ch.longitude,
+                ),
+            )
+            h = heading * np.pi / 180.0
+            v = np.array([np.cos(h), np.sin(h)]) * 5.0
+            d = [ut.lon_degs_from_length(v[0], lat), ut.lat_degs_from_length(v[1])]
+            new_lat, new_lon = ut.wrap(lat=lat + d[1], lon=lon + d[0])
+            lats.append(new_lat)
+            lons.append(new_lon)
+
+    lats = np.array(lats).ravel()
+    lons = np.array(lons).ravel()
+    x, y, z = ut.to_xyz(ut.lon_to_phi(lons), ut.lat_to_theta(lats))
+    line = gl.GLLinePlotItem(
+        pos=np.array([x, y, z]).T,
+        color=(255, 0, 0, 255),
+        width=2,
+        antialias=True,
+    )
+    line.setGLOptions("opaque")
+
+    lats = np.array([ch.latitude for ch in course_preview])
+    lons = np.array([ch.longitude for ch in course_preview])
+    lats, lons = ut.wrap(lat=lats, lon=lons)
+    x, y, z = ut.to_xyz(ut.lon_to_phi(lons), ut.lat_to_theta(lats))
+    vertices = gl.GLScatterPlotItem(
+        pos=np.array([x, y, z]).T,
+        color=(255, 0, 128, 255),
+        size=8,
+        pxMode=True,
+    )
+    vertices.setGLOptions("opaque")
+    return line, vertices
 
 
 class Graphics:
-    def __init__(self, game_map: Map, weather: Weather, players: Dict[str, Player]):
+    def __init__(
+        self,
+        game_map: Map,
+        weather: Weather,
+        players: Dict[str, Player],
+        course_preview: Optional[List[Checkpoint]] = None,
+    ):
         t0 = time.time()
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
@@ -274,6 +347,11 @@ class Graphics:
             perp_vec /= np.linalg.norm(perp_vec)
             self.avatars[name].rotate(player.latitude, *perp_vec)
             self.window.addItem(self.avatars[name])
+
+        if course_preview is not None:
+            line, vertices = _make_course_preview(course_preview)
+            self.window.addItem(line)
+            self.window.addItem(vertices)
 
         print(f'done [{time.time() - t0:.2f} s]')
 

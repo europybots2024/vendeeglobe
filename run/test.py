@@ -15,4 +15,6 @@ for team, bot in players.items():
     bots.append(bot())
     bots[-1].team = team
 
-vg.play(bots=bots, start=start, seed=None, time_limit=60 * 8)
+vg.play(
+    bots=bots, start=start, seed=None, time_limit=60 * 8, course_preview=bots[0].course
+)

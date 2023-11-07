@@ -2,7 +2,7 @@
 
 # flake8: noqa F405
 import time
-from typing import Any, Dict, Optional, List,
+from typing import Any, Dict, Optional, List
 
 import numpy as np
 import pyqtgraph as pg

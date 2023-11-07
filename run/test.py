@@ -21,5 +21,5 @@ vg.play(
     seed=None,
     time_limit=60 * 8,
     speedup=None,
-    course_preview=bots[0].course,
+    course_preview=None,
 )

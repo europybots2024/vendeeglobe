@@ -6,9 +6,11 @@ Around the world sailing race
 
 ## TL;DR
 
-1. Create a repository for your bot from the template https://github.com/europybots2024/template_bot
+1. Register your team at https://forms.gle/yZLGZMannpxNjGnD7
 
-2. Get started with:
+2. Create a repository for your bot from the template https://github.com/europybots2024/template_bot
+
+3. Get started with:
 
 ```
 conda create -n <NAME> -c conda-forge python=3.10.*

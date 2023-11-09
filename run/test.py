@@ -11,7 +11,6 @@ for repo in glob.glob("*_bot"):
     module = importlib.import_module(f"{repo}")
     bots.append(module.Bot())
 
-
 start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 

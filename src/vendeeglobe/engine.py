@@ -111,7 +111,7 @@ class Engine:
             t0 = time.time()
             self.execute_player_bot(player=player, t=0, dt=0)
             times.append(((time.time() - t0), player))
-        ng = 3
+        ng = 1
         time_groups = {i: [] for i in range(ng)}
         self.player_groups = {i: [] for i in range(ng)}
         for t in sorted(times, key=lambda tup: tup[0], reverse=True):

@@ -6,14 +6,18 @@ Around the world sailing race
 
 ## TL;DR
 
-Get started with:
+1. Create a repository for your bot from the template https://github.com/europybots2024/template_bot
+
+2. Get started with:
 
 ```
 conda create -n <NAME> -c conda-forge python=3.10.*
 conda activate <NAME>
 git clone https://github.com/europybots2024/vendeeglobe.git
+git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
 cd vendeeglobe/
 python -m pip install -e .
 cd run/
+ln -s ../../<MYBOTNAME> .
 python test.py
 ```

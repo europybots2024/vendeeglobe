@@ -1,14 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import importlib
+import glob
+
 import vendeeglobe as vg
-from template_bot import Bot
+
+
+bots = []
+for repo in glob.glob("*_bot"):
+    module = importlib.import_module(f"{repo}")
+    bots.append(module.Bot())
 
 
 start = None
 # start = vg.Location(longitude=-68.004373, latitude=18.180470)
 
 vg.play(
-    bots=[Bot()],  # List of bots to use
+    bots=bots,  # List of bots to use
     start=start,  # Starting location for all bots
     seed=None,  # Seed for generating the weather
     time_limit=60 * 8,  # Time limit in seconds

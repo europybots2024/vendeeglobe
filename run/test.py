@@ -21,4 +21,5 @@ vg.play(
     time_limit=60 * 8,  # Time limit in seconds
     speedup=None,  # Time speedup factor
     course_preview=None,  # A list of checkpoints should be supplied
+    high_contrast=False,
 )

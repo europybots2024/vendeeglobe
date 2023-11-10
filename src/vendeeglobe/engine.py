@@ -61,6 +61,7 @@ class Engine:
         start: Optional[Location] = None,
         speedup: Optional[float] = None,
         course_preview: Optional[List[Checkpoint]] = None,
+        high_contrast: bool = False,
     ):
         pre_compile()
 
@@ -69,6 +70,7 @@ class Engine:
         self.safe = not test
         self.test = test
         self.speedup = speedup
+        self.high_contrast = high_contrast
 
         t0 = time.time()
         print("Generating players...", end=" ", flush=True)
@@ -358,6 +360,7 @@ class Engine:
         texture_checkbox = QCheckBox("High contrast", checked=False)
         widget1_layout.addWidget(texture_checkbox)
         texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+        texture_checkbox.setChecked(self.high_contrast)
 
         stars_checkbox = QCheckBox("Background stars", checked=True)
         widget1_layout.addWidget(stars_checkbox)

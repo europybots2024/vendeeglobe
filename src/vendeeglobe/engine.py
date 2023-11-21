@@ -39,7 +39,7 @@ except ImportError:
 from . import config
 from .core import Location
 from .graphics import Graphics
-from .map import MapProxy
+from .map import MapProxy, MapData
 from .player import Player
 from .scores import (
     finalize_scores,
@@ -121,8 +121,8 @@ class Engine:
         #     self.players[name] =
         # # # print(f"done [{time.time() - t0:.2f} s]")
 
-        # self.map = Map()
-        # self.map_proxy = MapProxy(self.map.array, self.map.dlat, self.map.dlon)
+        self.map = MapData()
+        self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(
             self.pid,
             u_shared_mem,
@@ -316,7 +316,9 @@ class Engine:
             #     dt=dt,
             #     players=self.player_groups[self.group_counter % len(self.player_groups)],
             # )
+
             self.move_players(self.weather, t=t, dt=dt)
+
             # if self.tracer_checkbox.isChecked():
             # self.graphics.update_wind_tracers(
             #     self.weather.tracer_lat, self.weather.tracer_lon

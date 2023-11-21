@@ -53,7 +53,7 @@ class MapData:
         # self.sea_array = mapdata['sea_array']
         # self.high_contrast_texture = mapdata['high_contrast_texture']
 
-        self.nlat, self.nlon, _ = self.array.shape
+        self.nlat, self.nlon, _ = mapdata['array'].shape
         lat_min = -90
         lat_max = 90
         self.dlat = (lat_max - lat_min) / self.nlat

@@ -348,7 +348,7 @@ class Controller:
             )
             # time.sleep(0.1)
             # self.lock.release()
-            # self.graphics.update_player_positions(self.players)
+            self.graphics.update_player_positions()
             # self.group_counter += 1
 
             # if len(self.players_not_arrived) == 0:

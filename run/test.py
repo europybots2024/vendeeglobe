@@ -4,7 +4,14 @@ import vendeeglobe as vg
 from template_bot import Bot, Bot2
 
 
-players = {"Alice": Bot, "Bob": Bot2}
+players = {
+    "Alice": Bot,
+    "Bob": Bot2,
+    "Charlie": Bot,
+    "David": Bot2,
+    "Eve": Bot,
+    "Frank": Bot2,
+}
 
 
 start = None

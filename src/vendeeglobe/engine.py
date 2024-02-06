@@ -60,24 +60,25 @@ class Engine:
         seed: int,
         bots: dict,
         bot_index_begin: int,
-        tracer_shared_mem: SharedMemory,
-        tracer_shared_data_dtype: np.dtype,
-        tracer_shared_data_shape: Tuple[int, ...],
-        u_shared_mem: SharedMemory,
-        u_shared_data_dtype: np.dtype,
-        u_shared_data_shape: Tuple[int, ...],
-        v_shared_mem: SharedMemory,
-        v_shared_data_dtype: np.dtype,
-        v_shared_data_shape: Tuple[int, ...],
-        forecast_u_shared_mem: SharedMemory,
-        forecast_u_shared_data_dtype: np.dtype,
-        forecast_u_shared_data_shape: Tuple[int, ...],
-        forecast_v_shared_mem: SharedMemory,
-        forecast_v_shared_data_dtype: np.dtype,
-        forecast_v_shared_data_shape: Tuple[int, ...],
-        player_positions_shared_mem: SharedMemory,
-        player_positions_data_dtype: np.dtype,
-        player_positions_data_shape: Tuple[int, ...],
+        buffers: dict,
+        # tracer_shared_mem: SharedMemory,
+        # tracer_shared_data_dtype: np.dtype,
+        # tracer_shared_data_shape: Tuple[int, ...],
+        # u_shared_mem: SharedMemory,
+        # u_shared_data_dtype: np.dtype,
+        # u_shared_data_shape: Tuple[int, ...],
+        # v_shared_mem: SharedMemory,
+        # v_shared_data_dtype: np.dtype,
+        # v_shared_data_shape: Tuple[int, ...],
+        # forecast_u_shared_mem: SharedMemory,
+        # forecast_u_shared_data_dtype: np.dtype,
+        # forecast_u_shared_data_shape: Tuple[int, ...],
+        # forecast_v_shared_mem: SharedMemory,
+        # forecast_v_shared_data_dtype: np.dtype,
+        # forecast_v_shared_data_shape: Tuple[int, ...],
+        # player_positions_shared_mem: SharedMemory,
+        # player_positions_data_dtype: np.dtype,
+        # player_positions_data_shape: Tuple[int, ...],
         # bots: dict,
         # test: bool = True,
         # time_limit: float = 8 * 60,
@@ -88,17 +89,21 @@ class Engine:
         self.bot_index_begin = bot_index_begin
         self.bot_index_end = bot_index_begin + len(bots)
 
-        self.tracer_positions = ut.array_from_shared_mem(
-            tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
-        )
+        self.buffers = {
+            key: ut.array_from_shared_mem(*value) for key, value in buffers.items()
+        }
 
-        self.player_positions = ut.array_from_shared_mem(
-            player_positions_shared_mem,
-            player_positions_data_dtype,
-            player_positions_data_shape,
-        )
+        # self.tracer_positions = ut.array_from_shared_mem(
+        #     tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        # )
 
-        self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
+        # self.player_positions = ut.array_from_shared_mem(
+        #     player_positions_shared_mem,
+        #     player_positions_data_dtype,
+        #     player_positions_data_shape,
+        # )
+
+        # self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
 
         self.pid = pid
         # self.time_limit = time_limit
@@ -127,19 +132,24 @@ class Engine:
         self.weather = Weather(
             self.pid,
             seed,
-            u_shared_mem,
-            u_shared_data_dtype,
-            u_shared_data_shape,
-            v_shared_mem,
-            v_shared_data_dtype,
-            v_shared_data_shape,
-            forecast_u_shared_mem,
-            forecast_u_shared_data_dtype,
-            forecast_u_shared_data_shape,
-            forecast_v_shared_mem,
-            forecast_v_shared_data_dtype,
-            forecast_v_shared_data_shape,
-            self.tracer_buffer,
+            weather_u=self.buffers["weather_u"],
+            weather_v=self.buffers["weather_v"],
+            forecast_u=self.buffers["forecast_u"],
+            forecast_v=self.buffers["forecast_v"],
+            tracer_positions=self.buffers["tracer_positions"],
+            # u_shared_mem,
+            # u_shared_data_dtype,
+            # u_shared_data_shape,
+            # v_shared_mem,
+            # v_shared_data_dtype,
+            # v_shared_data_shape,
+            # forecast_u_shared_mem,
+            # forecast_u_shared_data_dtype,
+            # forecast_u_shared_data_shape,
+            # forecast_v_shared_mem,
+            # forecast_v_shared_data_dtype,
+            # forecast_v_shared_data_shape,
+            # self.tracer_buffer,
         )
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
@@ -285,9 +295,9 @@ class Engine:
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
         x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
-        self.player_positions[self.bot_index_begin : self.bot_index_end, :] = np.stack(
-            (x, y, z), axis=-1
-        )
+        self.buffers['player_positions'][
+            self.bot_index_begin : self.bot_index_end, :
+        ] = np.stack((x, y, z), axis=-1)
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)
@@ -331,7 +341,7 @@ class Engine:
             # self.tracer_buffer[..., 0] = x
             # self.tracer_buffer[..., 1] = y
             # self.tracer_buffer[..., 2] = z
-            self.tracer_positions[self.pid, ...] = self.tracer_buffer
+            # self.tracer_positions[self.pid, ...] = self.tracer_buffer
             # self.tracer_positions[self.pid, ..., 0] = x
             # self.tracer_positions[self.pid, ..., 1] = y
             # self.tracer_positions[self.pid, ..., 2] = z

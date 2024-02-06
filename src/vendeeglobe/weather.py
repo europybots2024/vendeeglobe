@@ -103,38 +103,48 @@ class Weather:
         self,
         pid: int,
         seed: int,
-        u_shared_mem: SharedMemory,
-        u_shared_data_dtype: np.dtype,
-        u_shared_data_shape: Tuple[int, ...],
-        v_shared_mem: SharedMemory,
-        v_shared_data_dtype: np.dtype,
-        v_shared_data_shape: Tuple[int, ...],
-        forecast_u_shared_mem: SharedMemory,
-        forecast_u_shared_data_dtype: np.dtype,
-        forecast_u_shared_data_shape: Tuple[int, ...],
-        forecast_v_shared_mem: SharedMemory,
-        forecast_v_shared_data_dtype: np.dtype,
-        forecast_v_shared_data_shape: Tuple[int, ...],
-        tracer_buffer: np.ndarray,
+        weather_u: np.ndarray,
+        weather_v: np.ndarray,
+        forecast_u: np.ndarray,
+        forecast_v: np.ndarray,
+        tracer_positions: np.ndarray,
+        # u_shared_mem: SharedMemory,
+        # u_shared_data_dtype: np.dtype,
+        # u_shared_data_shape: Tuple[int, ...],
+        # v_shared_mem: SharedMemory,
+        # v_shared_data_dtype: np.dtype,
+        # v_shared_data_shape: Tuple[int, ...],
+        # forecast_u_shared_mem: SharedMemory,
+        # forecast_u_shared_data_dtype: np.dtype,
+        # forecast_u_shared_data_shape: Tuple[int, ...],
+        # forecast_v_shared_mem: SharedMemory,
+        # forecast_v_shared_data_dtype: np.dtype,
+        # forecast_v_shared_data_shape: Tuple[int, ...],
+        # tracer_buffer: np.ndarray,
     ):
         self.pid = pid
-        self.u = ut.array_from_shared_mem(
-            u_shared_mem, u_shared_data_dtype, u_shared_data_shape
-        )
-        self.v = ut.array_from_shared_mem(
-            v_shared_mem, v_shared_data_dtype, v_shared_data_shape
-        )
-        self.forecast_u = ut.array_from_shared_mem(
-            forecast_u_shared_mem,
-            forecast_u_shared_data_dtype,
-            forecast_u_shared_data_shape,
-        )
-        self.forecast_v = ut.array_from_shared_mem(
-            forecast_v_shared_mem,
-            forecast_v_shared_data_dtype,
-            forecast_v_shared_data_shape,
-        )
-        self.tracer_buffer = tracer_buffer
+        # self.u = ut.array_from_shared_mem(
+        #     u_shared_mem, u_shared_data_dtype, u_shared_data_shape
+        # )
+        # self.v = ut.array_from_shared_mem(
+        #     v_shared_mem, v_shared_data_dtype, v_shared_data_shape
+        # )
+        # self.forecast_u = ut.array_from_shared_mem(
+        #     forecast_u_shared_mem,
+        #     forecast_u_shared_data_dtype,
+        #     forecast_u_shared_data_shape,
+        # )
+        # self.forecast_v = ut.array_from_shared_mem(
+        #     forecast_v_shared_mem,
+        #     forecast_v_shared_data_dtype,
+        #     forecast_v_shared_data_shape,
+        # )
+        # self.tracer_buffer = tracer_buffer
+        self.u = weather_u
+        self.v = weather_v
+        self.forecast_u = forecast_u
+        self.forecast_v = forecast_v
+        self.tracer_positions = tracer_positions
 
         self.nt, self.ny, self.nx = self.u.shape
         self.dt = config.weather_update_interval  # weather changes every 12 hours
@@ -147,7 +157,7 @@ class Weather:
         self.du = (lon_max - lon_min) / self.nx
 
         # size = (config.tracer_lifetime, config.ntracers)
-        size = self.tracer_buffer.shape[:-1]
+        size = self.tracer_positions.shape[1:-1]
         rng = np.random.default_rng(pid + (seed if seed is not None else 0))
 
         self.tracer_lat = rng.uniform(-89.9, 89.9, size=size)
@@ -244,6 +254,6 @@ class Weather:
             ut.lon_to_phi(self.tracer_lon),
             ut.lat_to_theta(self.tracer_lat),
         )
-        self.tracer_buffer[..., 0] = x
-        self.tracer_buffer[..., 1] = y
-        self.tracer_buffer[..., 2] = z
+        self.tracer_positions[self.pid, ..., 0] = x
+        self.tracer_positions[self.pid, ..., 1] = y
+        self.tracer_positions[self.pid, ..., 2] = z

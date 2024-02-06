@@ -68,12 +68,13 @@ class Controller:
         self,
         # lock: Lock,
         player_names,
-        tracer_shared_mem: SharedMemory,
-        tracer_shared_data_dtype: np.dtype,
-        tracer_shared_data_shape: Tuple[int, ...],
-        player_positions_shared_mem: SharedMemory,
-        player_positions_data_dtype: np.dtype,
-        player_positions_data_shape: Tuple[int, ...],
+        buffers,
+        # tracer_shared_mem: SharedMemory,
+        # tracer_shared_data_dtype: np.dtype,
+        # tracer_shared_data_shape: Tuple[int, ...],
+        # player_positions_shared_mem: SharedMemory,
+        # player_positions_data_dtype: np.dtype,
+        # player_positions_data_shape: Tuple[int, ...],
         # u_shared_mem: SharedMemory,
         # u_shared_data_dtype: np.dtype,
         # u_shared_data_shape: Tuple[int, ...],
@@ -106,15 +107,19 @@ class Controller:
 
         # self.lock = lock
 
-        self.tracer_positions = array_from_shared_mem(
-            tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
-        )
+        self.buffers = {
+            key: array_from_shared_mem(*value) for key, value in buffers.items()
+        }
 
-        self.player_positions = array_from_shared_mem(
-            player_positions_shared_mem,
-            player_positions_data_dtype,
-            player_positions_data_shape,
-        )
+        # self.tracer_positions = array_from_shared_mem(
+        #     tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
+        # )
+
+        # self.player_positions = array_from_shared_mem(
+        #     player_positions_shared_mem,
+        #     player_positions_data_dtype,
+        #     player_positions_data_shape,
+        # )
 
         # self.default_texture = array_from_shared_mem(
         #     default_texture_shared_mem,
@@ -159,8 +164,8 @@ class Controller:
         self.graphics = Graphics(
             # game_map=self.map, weather=self.weather, players=self.players
             player_colors=self.player_colors,
-            tracer_positions=self.tracer_positions,
-            player_positions=self.player_positions,
+            tracer_positions=self.buffers['tracer_positions'],
+            player_positions=self.buffers['player_positions'],
             # default_texture=self.map_textures.default_texture,
         )
 
@@ -547,15 +552,15 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     # self.safe = not test
     # self.test = test
     with SharedMemoryManager() as smm:
-        tracer_shared_mem = smm.SharedMemory(size=tracer_positions.nbytes)
-        u_shared_mem = smm.SharedMemory(size=weather.u.nbytes)
-        v_shared_mem = smm.SharedMemory(size=weather.v.nbytes)
-        forecast_u_shared_mem = smm.SharedMemory(size=weather.forecast_u.nbytes)
-        forecast_v_shared_mem = smm.SharedMemory(size=weather.forecast_v.nbytes)
+        tracer_positions_mem = smm.SharedMemory(size=tracer_positions.nbytes)
+        weather_u_mem = smm.SharedMemory(size=weather.u.nbytes)
+        weather_v_mem = smm.SharedMemory(size=weather.v.nbytes)
+        forecast_u_mem = smm.SharedMemory(size=weather.forecast_u.nbytes)
+        forecast_v_mem = smm.SharedMemory(size=weather.forecast_v.nbytes)
         # default_texture_shared_mem = smm.SharedMemory(size=game_map.array.nbytes)
-        terrain_shared_mem = smm.SharedMemory(size=map_terrain.nbytes)
+        terrain_mem = smm.SharedMemory(size=map_terrain.nbytes)
 
-        player_positions_shared_mem = smm.SharedMemory(size=player_positions.nbytes)
+        player_positions_mem = smm.SharedMemory(size=player_positions.nbytes)
 
         # high_contrast_texture_shared_mem = smm.SharedMemory(
         #     size=game_map.high_contrast_texture.nbytes
@@ -563,44 +568,68 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
 
         # Populate map terrain
         terrain_arr = array_from_shared_mem(
-            terrain_shared_mem, map_terrain.dtype, map_terrain.shape
+            terrain_mem, map_terrain.dtype, map_terrain.shape
         )
         terrain_arr[...] = map_terrain
 
         # Populate weather arrays
-        u_arr = array_from_shared_mem(u_shared_mem, weather.u.dtype, weather.u.shape)
-        u_arr[...] = weather.u
-        v_arr = array_from_shared_mem(v_shared_mem, weather.v.dtype, weather.v.shape)
-        v_arr[...] = weather.v
+        weather_u_arr = array_from_shared_mem(
+            weather_u_mem, weather.u.dtype, weather.u.shape
+        )
+        weather_u_arr[...] = weather.u
+        weather_v_arr = array_from_shared_mem(
+            weather_v_mem, weather.v.dtype, weather.v.shape
+        )
+        weather_v_arr[...] = weather.v
         forecast_u_arr = array_from_shared_mem(
-            forecast_u_shared_mem, weather.forecast_u.dtype, weather.forecast_u.shape
+            forecast_u_mem, weather.forecast_u.dtype, weather.forecast_u.shape
         )
         forecast_u_arr[...] = weather.forecast_u
         forecast_v_arr = array_from_shared_mem(
-            forecast_v_shared_mem, weather.forecast_v.dtype, weather.forecast_v.shape
+            forecast_v_mem, weather.forecast_v.dtype, weather.forecast_v.shape
         )
         forecast_v_arr[...] = weather.forecast_v
 
         # Fill in map data
 
-        # writer1 = Process(
-        #     target=make_data1, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
-        # )
-        # writer2 = Process(
-        #     target=make_data2, args=(shared_mem, SHARED_DATA_DTYPE, SHARED_DATA_SHAPE)
-        # )
+        buffers = {
+            'tracer_positions': (
+                tracer_positions_mem,
+                tracer_positions.dtype,
+                tracer_positions.shape,
+            ),
+            'player_positions': (
+                player_positions_mem,
+                player_positions.dtype,
+                player_positions.shape,
+            ),
+            'weather_u': (weather_u_mem, weather.u.dtype, weather.u.shape),
+            'weather_v': (weather_v_mem, weather.v.dtype, weather.v.shape),
+            'forecast_u': (
+                forecast_u_mem,
+                weather.forecast_u.dtype,
+                weather.forecast_u.shape,
+            ),
+            'forecast_v': (
+                forecast_v_mem,
+                weather.forecast_v.dtype,
+                weather.forecast_v.shape,
+            ),
+        }
+
         controller = Process(
             target=spawn_controller,
             args=(
                 # lock,
                 # bots,
                 list(bots.keys()),
-                tracer_shared_mem,
-                tracer_positions.dtype,
-                tracer_positions.shape,
-                player_positions_shared_mem,
-                player_positions.dtype,
-                player_positions.shape,
+                {key: buffers[key] for key in ('tracer_positions', 'player_positions')},
+                # tracer_shared_mem,
+                # tracer_positions.dtype,
+                # tracer_positions.shape,
+                # player_positions_shared_mem,
+                # player_positions.dtype,
+                # player_positions.shape,
                 # u_shared_mem,
                 # weather.u.dtype,
                 # weather.u.shape,
@@ -634,27 +663,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                         seed,
                         bot_groups[i],
                         bot_index_begin,
-                        tracer_shared_mem,
-                        tracer_positions.dtype,
-                        tracer_positions.shape,
-                        u_shared_mem,
-                        weather.u.dtype,
-                        weather.u.shape,
-                        v_shared_mem,
-                        weather.v.dtype,
-                        weather.v.shape,
-                        forecast_u_shared_mem,
-                        weather.forecast_u.dtype,
-                        weather.forecast_u.shape,
-                        forecast_v_shared_mem,
-                        weather.forecast_v.dtype,
-                        weather.forecast_v.shape,
-                        player_positions_shared_mem,
-                        player_positions.dtype,
-                        player_positions.shape,
-                        # terrain_shared_mem,
-                        # map_terrain.dtype,
-                        # map_terrain.shape,
+                        buffers,
                     ),
                 )
             )
@@ -667,4 +676,4 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         for engine in engines:
             engine.join()
 
-        del terrain_arr, u_arr, v_arr, forecast_u_arr, forecast_v_arr
+        del terrain_arr, weather_u_arr, weather_v_arr, forecast_u_arr, forecast_v_arr

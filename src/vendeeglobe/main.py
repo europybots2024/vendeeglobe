@@ -631,6 +631,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                     args=(
                         # lock,
                         i,
+                        seed,
                         bot_groups[i],
                         bot_index_begin,
                         tracer_shared_mem,

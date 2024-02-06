@@ -102,6 +102,7 @@ class Weather:
     def __init__(
         self,
         pid: int,
+        seed: int,
         u_shared_mem: SharedMemory,
         u_shared_data_dtype: np.dtype,
         u_shared_data_shape: Tuple[int, ...],
@@ -147,8 +148,10 @@ class Weather:
 
         # size = (config.tracer_lifetime, config.ntracers)
         size = self.tracer_buffer.shape[:-1]
-        self.tracer_lat = np.random.uniform(-89.9, 89.9, size=size)
-        self.tracer_lon = np.random.uniform(-180, 180, size=size)
+        rng = np.random.default_rng(pid + (seed if seed is not None else 0))
+
+        self.tracer_lat = rng.uniform(-89.9, 89.9, size=size)
+        self.tracer_lon = rng.uniform(-180, 180, size=size)
         # self.tracer_colors = np.zeros(self.tracer_lat.shape + (4,))
         # self.tracer_colors[..., pid] = 1.0
         # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))

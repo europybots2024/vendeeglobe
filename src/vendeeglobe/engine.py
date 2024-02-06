@@ -57,6 +57,7 @@ class Engine:
         self,
         # lock,
         pid: int,
+        seed: int,
         bots: dict,
         bot_index_begin: int,
         tracer_shared_mem: SharedMemory,
@@ -125,6 +126,7 @@ class Engine:
         self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(
             self.pid,
+            seed,
             u_shared_mem,
             u_shared_data_dtype,
             u_shared_data_shape,

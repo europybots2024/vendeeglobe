@@ -546,6 +546,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     # SHARED_DATA_NBYTES = tracer_positions_array.nbytes
 
     # lock = Lock()
+    game_flow = np.empty(2, dtype=int)  # pause, exit
 
     # pre_compile()
 
@@ -563,6 +564,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         terrain_mem = smm.SharedMemory(size=map_terrain.nbytes)
 
         player_positions_mem = smm.SharedMemory(size=player_positions.nbytes)
+        game_flow_mem = smm.SharedMemory(size=game_flow.nbytes)
 
         # high_contrast_texture_shared_mem = smm.SharedMemory(
         #     size=game_map.high_contrast_texture.nbytes
@@ -592,6 +594,11 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         )
         forecast_v_arr[...] = weather.forecast_v
 
+        game_flow_arr = array_from_shared_mem(
+            game_flow_mem, game_flow.dtype, game_flow.shape
+        )
+        game_flow_arr[...] = 0
+
         # Fill in map data
 
         buffers = {
@@ -617,6 +624,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                 weather.forecast_v.dtype,
                 weather.forecast_v.shape,
             ),
+            'game_flow': (game_flow_mem, game_flow.dtype, game_flow.shape),
         }
 
         graphics = Process(
@@ -625,7 +633,10 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                 # lock,
                 # bots,
                 list(bots.keys()),
-                {key: buffers[key] for key in ('tracer_positions', 'player_positions')},
+                {
+                    key: buffers[key]
+                    for key in ('tracer_positions', 'player_positions', 'game_flow')
+                },
                 # tracer_shared_mem,
                 # tracer_positions.dtype,
                 # tracer_positions.shape,
@@ -678,4 +689,11 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         for engine in engines:
             engine.join()
 
-        del terrain_arr, weather_u_arr, weather_v_arr, forecast_u_arr, forecast_v_arr
+        del (
+            terrain_arr,
+            weather_u_arr,
+            weather_v_arr,
+            forecast_u_arr,
+            forecast_v_arr,
+            game_flow_arr,
+        )

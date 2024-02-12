@@ -79,9 +79,9 @@ class Graphics:
         self.default_texture = np.fliplr(
             np.transpose(self.map_textures.default_texture, axes=[1, 0, 2])
         )
-        # self.high_contrast_texture = np.transpose(
-        #     game_map.high_contrast_texture, axes=[1, 0, 2]
-        # )
+        self.high_contrast_texture = np.transpose(
+            self.map_textures.contrast_texture, axes=[1, 0, 2]
+        )
 
         self.buffers = {
             key: array_from_shared_mem(*value) for key, value in buffers.items()
@@ -89,7 +89,7 @@ class Graphics:
 
         # self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
         # self.default_texture[..., 3] = 255
-        self.high_contrast_texture = self.default_texture.copy()
+        # self.high_contrast_texture = self.default_texture.copy()
 
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
@@ -251,24 +251,26 @@ class Graphics:
         #         perp_vec /= np.linalg.norm(perp_vec)
         #         self.avatars[name].rotate(player.dlat, *perp_vec)
 
-    # def toggle_wind_tracers(self, val):
-    #     self.tracers.setVisible(val)
+    def toggle_wind_tracers(self, val):
+        self.tracers.setVisible(val)
 
-    # def toggle_texture(self, val):
-    #     if val:
-    #         self.sphere.setData(self.high_contrast_texture)
-    #         self.tracers.setData(color=self.high_contrast_tracer_colors)
-    #     else:
-    #         self.sphere.setData(self.default_texture)
-    #         self.tracers.setData(color=self.default_tracer_colors)
+    def toggle_texture(self, val):
+        if val:
+            self.sphere.setData(self.high_contrast_texture)
+            self.tracers.setData(color=self.high_contrast_tracer_colors)
+        else:
+            self.sphere.setData(self.default_texture)
+            self.tracers.setData(color=self.default_tracer_colors)
 
-    # def set_tracer_thickness(self, val):
-    #     self.tracers.setData(size=val)
+    def set_tracer_thickness(self, val):
+        self.tracers.setData(size=val)
 
     def toggle_stars(self, val):
         self.background_stars.setVisible(val)
 
     def update(self):
+        if self.buffers['game_flow'][0]:
+            return
         self.update_wind_tracers()
         self.update_player_positions()
 
@@ -294,7 +296,7 @@ class Graphics:
         self.time_label = QLabel("Time left:")
         widget1_layout.addWidget(self.time_label)
         self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
-        # self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
+        self.tracer_checkbox.stateChanged.connect(self.toggle_wind_tracers)
         widget1_layout.addWidget(self.tracer_checkbox)
 
         thickness_slider = QSlider(Qt.Horizontal)
@@ -303,17 +305,17 @@ class Graphics:
         thickness_slider.setSingleStep(1)
         thickness_slider.setTickInterval(1)
         thickness_slider.setTickPosition(QSlider.TicksBelow)
-        # thickness_slider.setValue(int(self.graphics.tracers.size))
-        # thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
+        thickness_slider.setValue(int(self.tracers.size))
+        thickness_slider.valueChanged.connect(self.set_tracer_thickness)
         widget1_layout.addWidget(thickness_slider)
 
         texture_checkbox = QCheckBox("High contrast", checked=False)
         widget1_layout.addWidget(texture_checkbox)
-        # texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+        texture_checkbox.stateChanged.connect(self.toggle_texture)
 
         stars_checkbox = QCheckBox("Background stars", checked=True)
         widget1_layout.addWidget(stars_checkbox)
-        # stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
+        stars_checkbox.stateChanged.connect(self.toggle_stars)
 
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
@@ -365,3 +367,5 @@ class Graphics:
         self.timer.setInterval(1000 // config.fps)
         self.timer.start()
         pg.exec()
+
+        self.buffers['game_flow'][1] = 1

@@ -325,22 +325,12 @@ class Engine:
         # self.
         self.position_counter += 1
 
-        step = (
-            (self.position_counter // config.max_track_length)
-            if self.position_counter > config.max_track_length
-            else 1
-        )
-        # self.tracks[name]['artist'].setData(pos=pos[::step])
-        # tracks = np.array(
-
-        # self.buffers['player_positions'][
-        #     self.bot_index_begin : self.bot_index_end, :
-        # ] = np.stack((x, y, z), axis=-1)
-
-        size = min(self.position_counter, config.max_track_length)
+        inds = np.round(
+            np.linspace(0, self.position_counter - 1, config.max_track_length)
+        ).astype(int)
         self.buffers['player_positions'][
-            self.bot_index_begin : self.bot_index_end, :size, :
-        ] = self.player_tracks[:, ::step, :][:, :size, :][:, ::-1, :]
+            self.bot_index_begin : self.bot_index_end, ...
+        ] = self.player_tracks[:, inds, :][:, ::-1, :]
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)
@@ -349,10 +339,17 @@ class Engine:
         self.timer.stop()
 
     def update(self):
+
+        # if self.buffers['game_flow'][1]:
+        #     raise KeyboardInterrupt
+        if self.buffers['game_flow'][0]:
+            return
+
         clock_time = time.time()
         t = clock_time - self.start_time
         # dt = (clock_time - self.previous_clock_time) * config.seconds_to_hours
         dt = clock_time - self.previous_clock_time
+
         if dt > self.update_interval:
             dt = dt * config.seconds_to_hours
             # if t > self.time_limit:
@@ -448,7 +445,7 @@ class Engine:
     def run(self):
         self.initialize_time()
         # self.update()
-        while True:
+        while not self.buffers['game_flow'][1]:
             self.update()
         # time.sleep(0.1)
 

@@ -59,6 +59,7 @@ class Engine:
         pid: int,
         seed: int,
         bots: dict,
+        players: dict,
         bot_index_begin: int,
         buffers: dict,
         # tracer_shared_mem: SharedMemory,
@@ -117,18 +118,16 @@ class Engine:
         print("=========", pid, "=========")
         print(bots)
         print("=====================")
-        self.bots = {}
-        self.players = {}
-        for name, bot in bots.items():
-            self.bots[name] = bot
-            self.players[name] = Player(
-                team=name, avatar=getattr(bot, 'avatar', 1), start=start
-            )
-        #  for name, bot in self.bots.items():
-        #             self.players[name] = Player(
-        #                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
-        #             )
-        # print(f"done [{time.time() - t0:.2f} s]")
+        self.bots = bots
+        self.players = players
+        # for name, bot in bots.items():
+        #     self.bots[name] = bot
+        #     self.players[name] = player
+        # #  for name, bot in self.bots.items():
+        # #             self.players[name] = Player(
+        # #                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
+        # #             )
+        # # print(f"done [{time.time() - t0:.2f} s]")
 
         # self.player_tracks = {
         #     name: np.zeros([2 * config.time_limit * config.fps, 3])
@@ -331,6 +330,10 @@ class Engine:
         self.buffers['player_positions'][
             self.bot_index_begin : self.bot_index_end, ...
         ] = self.player_tracks[:, inds, :][:, ::-1, :]
+
+        self.buffers['player_delta_angles'][
+            self.bot_index_begin : self.bot_index_end, ...
+        ] = np.array([[player.dlat, player.dlon] for player in self.players.values()])
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)

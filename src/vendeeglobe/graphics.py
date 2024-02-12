@@ -8,6 +8,35 @@ import pyqtgraph.opengl as gl
 from matplotlib.colors import to_rgba
 from OpenGL.GL import *  # noqa
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
+from pyqtgraph.Qt import QtCore
+
+
+try:
+    from PyQt5.QtWidgets import (
+        QCheckBox,
+        QFrame,
+        QHBoxLayout,
+        QLabel,
+        QMainWindow,
+        QSizePolicy,
+        QSlider,
+        QVBoxLayout,
+        QWidget,
+    )
+    from PyQt5.QtCore import Qt
+except ImportError:
+    from PySide2.QtWidgets import (
+        QMainWindow,
+        QWidget,
+        QLabel,
+        QHBoxLayout,
+        QVBoxLayout,
+        QCheckBox,
+        QSizePolicy,
+        QSlider,
+        QFrame,
+    )
+    from PySide2.QtCore import Qt
 
 
 from . import config
@@ -15,7 +44,7 @@ from . import utils as ut
 from .map import MapTextures
 from .player import Player
 from .sphere import GLTexturedSphereItem
-from .utils import array_from_shared_mem
+from .utils import array_from_shared_mem, string_to_color
 from .weather import Weather
 
 
@@ -27,9 +56,11 @@ class Graphics:
         # tracer_shared_mem: SharedMemory,
         # tracer_shared_data_dtype: np.dtype,
         # tracer_shared_data_shape: Tuple[int, ...],
-        player_colors: Dict[str, str],
-        tracer_positions: np.ndarray,
-        player_positions: np.ndarray,
+        # player_colors: Dict[str, str],
+        player_names,
+        buffers: Dict[str, Any],
+        # tracer_positions: np.ndarray,
+        # player_positions: np.ndarray,
         # default_texture: np.array,
     ):
         t0 = time.time()
@@ -51,6 +82,10 @@ class Graphics:
         # self.high_contrast_texture = np.transpose(
         #     game_map.high_contrast_texture, axes=[1, 0, 2]
         # )
+
+        self.buffers = {
+            key: array_from_shared_mem(*value) for key, value in buffers.items()
+        }
 
         # self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
         # self.default_texture[..., 3] = 255
@@ -100,7 +135,7 @@ class Graphics:
         # self.tracer_positions = array_from_shared_mem(
         #     tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
         # )
-        self.tracer_positions = tracer_positions
+        self.tracer_positions = self.buffers['tracer_positions']
 
         # # Add tracers
         # x, y, z = ut.to_xyz(
@@ -131,7 +166,8 @@ class Graphics:
         # # Add players
         # latitudes = np.array([player.latitude for player in players.values()])
         # longitudes = np.array([player.longitude for player in players.values()])
-        self.player_positions = player_positions
+        self.player_positions = self.buffers['player_positions']
+        player_colors = [string_to_color(name) for name in player_names]
         colors = np.array([to_rgba(color) for color in player_colors])
         # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
@@ -226,3 +262,100 @@ class Graphics:
 
     def toggle_stars(self, val):
         self.background_stars.setVisible(val)
+
+    def update(self):
+        self.update_wind_tracers()
+        self.update_player_positions()
+
+    def run(self):
+        main_window = QMainWindow()
+        main_window.setWindowTitle("Vendée Globe")
+        main_window.setGeometry(100, 100, 1280, 720)
+
+        # Create a central widget to hold the two widgets
+        central_widget = QWidget()
+        main_window.setCentralWidget(central_widget)
+
+        # Create a layout for the central widget
+        layout = QHBoxLayout(central_widget)
+
+        # Create the first widget with vertical checkboxes
+        widget1 = QWidget()
+        layout.addWidget(widget1)
+        widget1_layout = QVBoxLayout(widget1)
+        widget1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        widget1.setMinimumWidth(int(main_window.width() * 0.2))
+
+        self.time_label = QLabel("Time left:")
+        widget1_layout.addWidget(self.time_label)
+        self.tracer_checkbox = QCheckBox("Wind tracers", checked=True)
+        # self.tracer_checkbox.stateChanged.connect(self.graphics.toggle_wind_tracers)
+        widget1_layout.addWidget(self.tracer_checkbox)
+
+        thickness_slider = QSlider(Qt.Horizontal)
+        thickness_slider.setMinimum(1)
+        thickness_slider.setMaximum(10)
+        thickness_slider.setSingleStep(1)
+        thickness_slider.setTickInterval(1)
+        thickness_slider.setTickPosition(QSlider.TicksBelow)
+        # thickness_slider.setValue(int(self.graphics.tracers.size))
+        # thickness_slider.valueChanged.connect(self.graphics.set_tracer_thickness)
+        widget1_layout.addWidget(thickness_slider)
+
+        texture_checkbox = QCheckBox("High contrast", checked=False)
+        widget1_layout.addWidget(texture_checkbox)
+        # texture_checkbox.stateChanged.connect(self.graphics.toggle_texture)
+
+        stars_checkbox = QCheckBox("Background stars", checked=True)
+        widget1_layout.addWidget(stars_checkbox)
+        # stars_checkbox.stateChanged.connect(self.graphics.toggle_stars)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget1_layout.addWidget(separator)
+
+        # self.player_boxes = {}
+        # for i, p in enumerate(self.players.values()):
+        #     self.player_boxes[i] = QLabel("")
+        #     widget1_layout.addWidget(self.player_boxes[i])
+        widget1_layout.addStretch()
+
+        layout.addWidget(self.window)
+        self.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+        widget2 = QWidget()
+        layout.addWidget(widget2)
+        widget2_layout = QVBoxLayout(widget2)
+        widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        widget2.setMinimumWidth(int(main_window.width() * 0.08))
+        widget2_layout.addWidget(QLabel("Leader board"))
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget2_layout.addWidget(separator)
+        widget2_layout.addWidget(QLabel("Scores:"))
+        # self.score_boxes = {}
+        # for i, p in enumerate(self.players.values()):
+        #     self.score_boxes[i] = QLabel(p.team)
+        #     widget2_layout.addWidget(self.score_boxes[i])
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setLineWidth(1)
+        widget2_layout.addWidget(separator)
+        widget2_layout.addWidget(QLabel("Fastest finish:"))
+        # self.fastest_boxes = {}
+        # for i in range(3):
+        #     self.fastest_boxes[i] = QLabel(str(i + 1))
+        #     widget2_layout.addWidget(self.fastest_boxes[i])
+        widget2_layout.addStretch()
+        # self.update_leaderboard(
+        #     read_scores(self.players.keys(), test=self.test), self.fastest_times
+        # )
+
+        main_window.show()
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update)
+        # self.initialize_time()
+        self.timer.start(0)
+        pg.exec()

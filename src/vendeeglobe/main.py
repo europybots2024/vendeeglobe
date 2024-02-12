@@ -495,9 +495,9 @@ class Controller:
         pg.exec()
 
 
-def spawn_controller(*args):
-    controller = Controller(*args)
-    controller.run()
+def spawn_graphics(*args):
+    graphics = Graphics(*args)
+    graphics.run()
 
 
 def spawn_engine(*args):
@@ -617,8 +617,8 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
             ),
         }
 
-        controller = Process(
-            target=spawn_controller,
+        graphics = Process(
+            target=spawn_graphics,
             args=(
                 # lock,
                 # bots,
@@ -669,10 +669,10 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
             )
             bot_index_begin += len(bot_groups[i])
 
-        controller.start()
+        graphics.start()
         for engine in engines:
             engine.start()
-        controller.join()
+        graphics.join()
         for engine in engines:
             engine.join()
 

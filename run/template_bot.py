@@ -58,6 +58,9 @@ class Bot:
         ]
         # for ch in self.course[:9]:
         #     ch.reached = True
+        for ch in self.course:
+            ch.latitude += np.random.uniform(-0.1, 0.1)
+            ch.longitude += np.random.uniform(-0.1, 0.1)
 
     def run(
         self,
@@ -147,8 +150,9 @@ class Bot2:
             ),
         ]
 
-        # for ch in self.course[:6]:
-        #     ch.reached = True
+        for ch in self.course:
+            ch.latitude += np.random.uniform(-0.5, 0.5)
+            ch.longitude += np.random.uniform(-0.5, 0.5)
 
     def run(
         self,

@@ -80,10 +80,10 @@ class Engine:
         # player_positions_data_dtype: np.dtype,
         # player_positions_data_shape: Tuple[int, ...],
         # bots: dict,
-        # test: bool = True,
+        test: bool = True,
         # time_limit: float = 8 * 60,
         # seed: int = None,
-        # start: Optional[Location] = None,
+        start: Optional[Location] = None,
     ):
         # pre_compile()
         self.bot_index_begin = bot_index_begin
@@ -108,18 +108,27 @@ class Engine:
         self.pid = pid
         # self.time_limit = time_limit
         # self.start_time = None
-        # self.safe = not test
+        self.safe = not test
         # self.test = test
 
         # t0 = time.time()
         # print("Generating players...", end=" ", flush=True)
         # self.bots = {bot.team: bot for bot in bots}
+        print("=========", pid, "=========")
         print(bots)
+        print("=====================")
         self.bots = {}
         self.players = {}
-        for name, (bot, player) in bots.items():
+        for name, bot in bots.items():
             self.bots[name] = bot
-            self.players[name] = player
+            self.players[name] = Player(
+                team=name, avatar=getattr(bot, 'avatar', 1), start=start
+            )
+        #  for name, bot in self.bots.items():
+        #             self.players[name] = Player(
+        #                 team=name, avatar=getattr(bot, 'avatar', 1), start=start
+        #             )
+        # print(f"done [{time.time() - t0:.2f} s]")
 
         # self.player_tracks = {
         #     name: np.zeros([2 * config.time_limit * config.fps, 3])
@@ -206,7 +215,7 @@ class Engine:
             "heading": player.heading,
             "speed": player.speed,
             "vector": player.get_vector(),
-            "forecast": self.forecast,
+            "forecast": None,  # TODO self.forecast,
             "map": self.map_proxy,
         }
         if self.safe:
@@ -218,8 +227,8 @@ class Engine:
             instructions = self.bots[player.team].run(**args)
         return instructions
 
-    def call_player_bots(self, t: float, dt: float, players: List[Player]):
-        for player in players:
+    def call_player_bots(self, t: float, dt: float):
+        for player in self.players.values():
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -357,11 +366,13 @@ class Engine:
             #     self.forecast = self.weather.get_forecast(t)
             #     self.last_forecast_update = clock_time
 
-            # self.call_player_bots(
-            #     t=t * config.seconds_to_hours,
-            #     dt=dt,
-            #     players=self.player_groups[self.group_counter % len(self.player_groups)],
-            # )
+            self.call_player_bots(
+                t=t * config.seconds_to_hours,
+                dt=dt,
+                # players=self.player_groups[
+                #     self.group_counter % len(self.player_groups)
+                # ],
+            )
 
             self.move_players(self.weather, t=t, dt=dt)
 

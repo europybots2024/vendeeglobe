@@ -518,10 +518,12 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         players[name] = Player(team=name, avatar=getattr(bot, 'avatar', 1), start=start)
 
     groups = np.array_split(list(bots.keys()), n_sub_processes)
-    bot_groups = [
-        {name: (bots[name], players[name])} for group in groups for name in group
-    ]
-    print(bot_groups)
+    print('groups', groups)
+    bot_groups = []
+    for group in groups:
+        bot_groups.append({name: bots[name] for name in group})
+    print(len(bot_groups))
+    print('keys', [it.keys() for it in bot_groups])
 
     ntracers = config.ntracers // n_sub_processes
     tracer_positions = np.empty((n_sub_processes, config.tracer_lifetime, ntracers, 3))

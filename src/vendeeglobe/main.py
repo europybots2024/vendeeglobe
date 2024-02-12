@@ -525,7 +525,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
 
     ntracers = config.ntracers // n_sub_processes
     tracer_positions = np.empty((n_sub_processes, config.tracer_lifetime, ntracers, 3))
-    player_positions = np.empty((len(bots), 3))
+    player_positions = np.empty((len(bots), config.max_track_length, 3))
     # tracer_positions = 6000 * (
     #     np.random.random((n_sub_processes, config.tracer_lifetime, config.ntracers, 3))
     #     - 0.5

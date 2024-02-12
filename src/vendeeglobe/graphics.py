@@ -181,23 +181,25 @@ class Graphics:
         # # self.tracers.setGLOptions('translucent')
         self.window.addItem(self.players)
 
-        # self.tracks = {}
-        # self.avatars = {}
-        # self.labels = {}
+        self.tracks = []
+        self.avatars = {}
+        self.labels = {}
         # for i, (name, player) in enumerate(players.items()):
-        #     x, y, z = ut.to_xyz(
-        #         ut.lon_to_phi(player.longitude),
-        #         ut.lat_to_theta(player.latitude),
-        #     )
-        #     pos = np.array([[x], [y], [z]]).T
-        #     self.tracks[name] = {
-        #         'pos': pos,
-        #         'artist': gl.GLLinePlotItem(
-        #             pos=pos, color=tuple(colors[i]), width=4, antialias=True
-        #         ),
-        #     }
-        #     self.tracks[name]['artist'].setGLOptions("opaque")
-        #     self.window.addItem(self.tracks[name]['artist'])
+        for i in range(len(self.player_positions)):
+            # x, y, z = ut.to_xyz(
+            #     ut.lon_to_phi(player.longitude),
+            #     ut.lat_to_theta(player.latitude),
+            # )
+            # pos = np.array([[x], [y], [z]]).T
+            track = gl.GLLinePlotItem(
+                pos=self.player_positions[i, 0, :],
+                color=tuple(colors[i]),
+                width=4,
+                antialias=True,
+            )
+            track.setGLOptions("opaque")
+            self.window.addItem(track)
+            self.tracks.append(track)
 
         #     self.avatars[name] = gl.GLImageItem(
         #         np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
@@ -229,22 +231,25 @@ class Graphics:
         #     longitudes = np.array([player.longitude for player in players.values()])
         #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
         #     self.players.setData(pos=np.array([x, y, z]).T)
-        self.players.setData(pos=self.player_positions)
+        self.players.setData(pos=self.player_positions[:, 0, :])
 
-    #     for i, (name, player) in enumerate(players.items()):
-    #         if not player.arrived:
-    #             arr = np.array([x[i], y[i], z[i]])
-    #             pos = np.vstack(
-    #                 [self.tracks[name]['pos'], arr],
-    #             )
-    #             npos = len(pos)
-    #             step = (npos // 1000) if npos > 1000 else 1
-    #             self.tracks[name]['artist'].setData(pos=pos[::step])
-    #             self.tracks[name]['pos'] = pos
-    #             self.avatars[name].rotate(player.dlon, 0, 0, 1)
-    #             perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
-    #             perp_vec /= np.linalg.norm(perp_vec)
-    #             self.avatars[name].rotate(player.dlat, *perp_vec)
+        for i in range(len(self.player_positions)):
+            self.tracks[i].setData(pos=self.player_positions[i, ...])
+
+        # # for i, (name, player) in enumerate(players.items()):
+        #     if not player.arrived:
+        #         arr = np.array([x[i], y[i], z[i]])
+        #         pos = np.vstack(
+        #             [self.tracks[name]['pos'], arr],
+        #         )
+        #         npos = len(pos)
+        #         step = (npos // 1000) if npos > 1000 else 1
+        #         self.tracks[name]['artist'].setData(pos=pos[::step])
+        #         self.tracks[name]['pos'] = pos
+        #         self.avatars[name].rotate(player.dlon, 0, 0, 1)
+        #         perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
+        #         perp_vec /= np.linalg.norm(perp_vec)
+        #         self.avatars[name].rotate(player.dlat, *perp_vec)
 
     # def toggle_wind_tracers(self, val):
     #     self.tracers.setVisible(val)
@@ -357,5 +362,6 @@ class Graphics:
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         # self.initialize_time()
-        self.timer.start(0)
+        self.timer.setInterval(1000 // config.fps)
+        self.timer.start()
         pg.exec()

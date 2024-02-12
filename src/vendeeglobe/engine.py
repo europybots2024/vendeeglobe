@@ -121,6 +121,15 @@ class Engine:
             self.bots[name] = bot
             self.players[name] = player
 
+        # self.player_tracks = {
+        #     name: np.zeros([2 * config.time_limit * config.fps, 3])
+        #     for name in self.players.keys()
+        # }
+        self.player_tracks = np.zeros(
+            [len(self.players), 2 * config.time_limit * config.fps, 3]
+        )
+        self.position_counter = 0
+
         # self.bots = {name: item[0] for name, item in bots.items()}
         # self.players = {}
         # for name, items in self.bots.items():
@@ -227,6 +236,7 @@ class Engine:
         latitudes = np.array([player.latitude for player in self.players.values()])
         longitudes = np.array([player.longitude for player in self.players.values()])
         u, v = weather.get_uv(latitudes, longitudes, np.array([t]))
+        # positions = []
         for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
             lat, lon = player.get_path(dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
@@ -292,12 +302,36 @@ class Engine:
                 self.fastest_times[player.team] = min(
                     t, self.fastest_times[player.team]
                 )
-        latitudes = np.array([player.latitude for player in self.players.values()])
-        longitudes = np.array([player.longitude for player in self.players.values()])
-        x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+
+            x, y, z = ut.to_xyz(
+                ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
+            )
+            self.player_tracks[i, self.position_counter, ...] = [x, y, z]
+
+            # positions.append([x, y, z])
+
+        # latitudes = np.array([player.latitude for player in self.players.values()])
+        # longitudes = np.array([player.longitude for player in self.players.values()])
+        # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
+        # self.
+        self.position_counter += 1
+
+        step = (
+            (self.position_counter // config.max_track_length)
+            if self.position_counter > config.max_track_length
+            else 1
+        )
+        # self.tracks[name]['artist'].setData(pos=pos[::step])
+        # tracks = np.array(
+
+        # self.buffers['player_positions'][
+        #     self.bot_index_begin : self.bot_index_end, :
+        # ] = np.stack((x, y, z), axis=-1)
+
+        size = min(self.position_counter, config.max_track_length)
         self.buffers['player_positions'][
-            self.bot_index_begin : self.bot_index_end, :
-        ] = np.stack((x, y, z), axis=-1)
+            self.bot_index_begin : self.bot_index_end, :size, :
+        ] = self.player_tracks[:, ::step, :][:, :size, :][:, ::-1, :]
 
     def shutdown(self):
         final_scores = finalize_scores(players=self.players, test=self.test)

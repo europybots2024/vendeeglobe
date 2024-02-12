@@ -27,7 +27,9 @@ class Config:
     avatar_size = [64, 64]
     score_step = 100_000
     max_name_length = 15
+    max_track_length = 1000
     fps = 30
+    time_limit: float = 8 * 60  # in seconds
 
 
 config = Config()

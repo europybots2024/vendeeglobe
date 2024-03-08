@@ -203,21 +203,21 @@ class Graphics:
             self.window.addItem(track)
             self.tracks.append(track)
 
-            avatar = gl.GLImageItem(
-                np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
-            )
-            offset = config.avatar_size[0] / 2
-            avatar.translate(-offset, -offset, 0)
-            avatar.rotate(90, 1, 0, 0)
-            avatar.rotate(180, 0, 0, 1)
-            avatar.translate(0, config.map_radius, 0)
-            avatar.rotate(90, 0, 0, 1)
-            avatar.rotate(player.longitude, 0, 0, 1)
-            perp_vec = np.cross([x, y, 0], [0, 0, 1])
-            perp_vec /= np.linalg.norm(perp_vec)
-            avatar.rotate(player.latitude, *perp_vec)
-            self.window.addItem(avatar)
-            self.avatars.append(avatar)
+            # avatar = gl.GLImageItem(
+            #     np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
+            # )
+            # offset = config.avatar_size[0] / 2
+            # avatar.translate(-offset, -offset, 0)
+            # avatar.rotate(90, 1, 0, 0)
+            # avatar.rotate(180, 0, 0, 1)
+            # avatar.translate(0, config.map_radius, 0)
+            # avatar.rotate(90, 0, 0, 1)
+            # avatar.rotate(player.longitude, 0, 0, 1)
+            # perp_vec = np.cross([x, y, 0], [0, 0, 1])
+            # perp_vec /= np.linalg.norm(perp_vec)
+            # avatar.rotate(player.latitude, *perp_vec)
+            # self.window.addItem(avatar)
+            # self.avatars.append(avatar)
 
         print(f'done [{time.time() - t0:.2f} s]')
 
@@ -227,7 +227,11 @@ class Graphics:
         #     ut.lat_to_theta(tracer_lat.ravel()),
         # )
         # print("Graphics", self.tracer_positions.min(), self.tracer_positions.max())
+
+        # Lock the positions array
+        # self.buffers['game_flow'][2] = 1
         self.tracers.setData(pos=self.tracer_positions.reshape((-1, 3)))
+        # self.buffers['game_flow'][2] = 0
 
     def update_player_positions(self):
         #     latitudes = np.array([player.latitude for player in players.values()])
@@ -238,10 +242,10 @@ class Graphics:
 
         for i in range(len(self.player_positions)):
             self.tracks[i].setData(pos=self.player_positions[i, ...])
-            self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 1], 0, 0, 1)
-            perp_vec = np.cross(self.player_positions[i, 0, :], [0, 0, 1])
-            perp_vec /= np.linalg.norm(perp_vec)
-            self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 0], *perp_vec)
+            # self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 1], 0, 0, 1)
+            # perp_vec = np.cross(self.player_positions[i, 0, :], [0, 0, 1])
+            # perp_vec /= np.linalg.norm(perp_vec)
+            # self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 0], *perp_vec)
 
         # # for i, (name, player) in enumerate(players.items()):
         #     if not player.arrived:

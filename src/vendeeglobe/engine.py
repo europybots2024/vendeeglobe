@@ -381,6 +381,7 @@ class Engine:
             #     self.weather.tracer_lat, self.weather.tracer_lon
             # )
 
+            # if self.buffers['game_flow'][2] == 0:
             self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
             # print(self.pid)
             # self.tracer_buffer[..., 0] = x

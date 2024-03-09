@@ -20,6 +20,12 @@ from vendeeglobe.utils import distance_on_surface
 CREATOR = "TeamName"
 
 
+def add_spread(course, spread=0.2):
+    for ch in course:
+        ch.latitude += np.random.uniform(-spread, spread)
+        ch.longitude += np.random.uniform(-spread, spread)
+
+
 class Bot:
     """
     This is the ship-controlling bot that will be instantiated for the competition.
@@ -58,9 +64,7 @@ class Bot:
         ]
         # for ch in self.course[:9]:
         #     ch.reached = True
-        for ch in self.course:
-            ch.latitude += np.random.uniform(-0.1, 0.1)
-            ch.longitude += np.random.uniform(-0.1, 0.1)
+        add_spread(self.course)
 
     def run(
         self,
@@ -150,9 +154,7 @@ class Bot2:
             ),
         ]
 
-        for ch in self.course:
-            ch.latitude += np.random.uniform(-0.5, 0.5)
-            ch.longitude += np.random.uniform(-0.5, 0.5)
+        add_spread(self.course)
 
     def run(
         self,

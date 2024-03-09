@@ -257,4 +257,6 @@ class Weather:
         # self.tracer_positions[self.pid, ..., 0] = x
         # self.tracer_positions[self.pid, ..., 1] = y
         # self.tracer_positions[self.pid, ..., 2] = z
+
+        # TODO: maybe we can use vstack?
         self.tracer_positions[self.pid, ...] = np.array([x, y, z]).transpose(1, 2, 0)

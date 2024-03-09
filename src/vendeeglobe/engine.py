@@ -358,9 +358,10 @@ class Engine:
             # if t > self.time_limit:
             #     self.shutdown()
 
-            # if (clock_time - self.last_time_update) > config.time_update_interval:
-            #     self.update_scoreboard(self.time_limit - t)
-            #     self.last_time_update = clock_time
+            if (clock_time - self.last_time_update) > config.time_update_interval:
+                # self.update_scoreboard(self.time_limit - t)
+                self.update_scoreboard()
+                self.last_time_update = clock_time
 
             # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
             #     self.forecast = self.weather.get_forecast(t)
@@ -401,28 +402,40 @@ class Engine:
 
             self.previous_clock_time = clock_time
 
-    def update_scoreboard(self, t: float):
-        time = str(datetime.timedelta(seconds=int(t)))[2:]
-        self.time_label.setText(f"Time left: {time} s")
-        status = [
-            (
-                get_player_points(player),
-                player.distance_travelled,
-                player.team,
-                player.speed,
-                player.color,
-                len([ch for ch in player.checkpoints if ch.reached]),
+    def update_scoreboard(self):
+
+        for i, player in enumerate(self.players.values()):
+            self.buffers['player_status'][self.bot_index_begin + i, ...] = np.array(
+                [
+                    get_player_points(player),
+                    player.distance_travelled,
+                    player.speed,
+                    len([ch for ch in player.checkpoints if ch.reached]),
+                ],
+                dtype=float,
             )
-            for player in self.players.values()
-        ]
-        for i, (_, dist, team, speed, col, nch) in enumerate(
-            sorted(status, reverse=True)
-        ):
-            self.player_boxes[i].setText(
-                f'<div style="color:{col}">&#9632;</div> {i+1}. '
-                f'{team[:config.max_name_length]}: {int(dist)} km, '
-                f'{int(speed)} km/h [{nch}]'
-            )
+        # time = str(datetime.timedelta(seconds=int(t)))[2:]
+        # self.time_label.setText(f"Time left: {time} s")
+        # status = [
+        #     (
+        #         get_player_points(player),
+        #         player.distance_travelled,
+        #         player.team,
+        #         player.speed,
+        #         player.color,
+        #         len([ch for ch in player.checkpoints if ch.reached]),
+        #     )
+        #     for player in self.players.values()
+        # ]
+
+        # for i, (_, dist, team, speed, col, nch) in enumerate(
+        #     sorted(status, reverse=True)
+        # ):
+        #     self.player_boxes[i].setText(
+        #         f'<div style="color:{col}">&#9632;</div> {i+1}. '
+        #         f'{team[:config.max_name_length]}: {int(dist)} km, '
+        #         f'{int(speed)} km/h [{nch}]'
+        #     )
 
     def update_leaderboard(self, scores, fastest_times):
         sorted_scores = dict(

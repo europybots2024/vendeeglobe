@@ -64,7 +64,11 @@ class Graphics:
         # player_positions: np.ndarray,
         # default_texture: np.array,
     ):
-        t0 = time.time()
+
+        self.scoreboard_max_players = 20
+
+        self.initialize_time()
+
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
         self.window = gl.GLViewWidget()
@@ -83,6 +87,8 @@ class Graphics:
         self.high_contrast_texture = np.transpose(
             self.map_textures.contrast_texture, axes=[1, 0, 2]
         )
+
+        self.players = players
 
         self.buffers = {
             key: array_from_shared_mem(*value) for key, value in buffers.items()
@@ -172,15 +178,15 @@ class Graphics:
         colors = np.array([to_rgba(color) for color in player_colors])
         # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
-        self.players = gl.GLScatterPlotItem(
+        self.player_markers = gl.GLScatterPlotItem(
             pos=self.player_positions,
             color=colors,
             size=10,
             pxMode=True,
         )
-        self.players.setGLOptions("opaque")
+        self.player_markers.setGLOptions("opaque")
         # # self.tracers.setGLOptions('translucent')
-        self.window.addItem(self.players)
+        self.window.addItem(self.player_markers)
 
         self.tracks = []
         self.avatars = []
@@ -219,7 +225,16 @@ class Graphics:
             # self.window.addItem(avatar)
             # self.avatars.append(avatar)
 
-        print(f'done [{time.time() - t0:.2f} s]')
+        print(f'done [{time.time() - self.start_time:.2f} s]')
+
+    def initialize_time(self):
+        self.start_time = time.time()
+        self.last_player_update = self.start_time
+        self.last_graphics_update = self.start_time
+        self.last_time_update = self.start_time
+        self.last_forecast_update = self.start_time
+        self.previous_clock_time = self.start_time
+        self.update_interval = 1 / config.fps
 
     def update_wind_tracers(self):  # , tracer_lat: np.ndarray, tracer_lon: np.ndarray):
         # x, y, z = ut.to_xyz(
@@ -238,7 +253,7 @@ class Graphics:
         #     longitudes = np.array([player.longitude for player in players.values()])
         #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
         #     self.players.setData(pos=np.array([x, y, z]).T)
-        self.players.setData(pos=self.player_positions[:, 0, :])
+        self.player_markers.setData(pos=self.player_positions[:, 0, :])
 
         for i in range(len(self.player_positions)):
             self.tracks[i].setData(pos=self.player_positions[i, ...])
@@ -279,11 +294,37 @@ class Graphics:
     def toggle_stars(self, val):
         self.background_stars.setVisible(val)
 
+    def update_scoreboard(self):
+        status = [
+            (
+                self.buffers['player_status'][i, 0],  # points
+                self.buffers['player_status'][i, 1],  # distance travelled
+                player.team,
+                self.buffers['player_status'][i, 2],  # speed
+                player.color,
+                int(self.buffers['player_status'][i, 3]),  # checkpoints reached
+            )
+            for i, player in enumerate(self.players)
+        ]
+
+        for i, (_, dist, team, speed, col, nch) in enumerate(
+            sorted(status, reverse=True)[: self.scoreboard_max_players]
+        ):
+            self.player_boxes[i].setText(
+                f'<div style="color:{col}">&#9632;</div> {i+1}. '
+                f'{team[:config.max_name_length]}: {int(dist)} km, '
+                f'{int(speed)} km/h [{nch}]'
+            )
+
     def update(self):
         if self.buffers['game_flow'][0]:
             return
+        clock_time = time.time()
         self.update_wind_tracers()
         self.update_player_positions()
+        if (clock_time - self.last_time_update) > config.time_update_interval:
+            self.update_scoreboard()
+            self.last_time_update = clock_time
 
     def run(self):
         main_window = QMainWindow()
@@ -333,10 +374,10 @@ class Graphics:
         separator.setLineWidth(1)
         widget1_layout.addWidget(separator)
 
-        # self.player_boxes = {}
-        # for i, p in enumerate(self.players.values()):
-        #     self.player_boxes[i] = QLabel("")
-        #     widget1_layout.addWidget(self.player_boxes[i])
+        self.player_boxes = {}
+        for i in range(min(len(self.players), self.scoreboard_max_players)):
+            self.player_boxes[i] = QLabel("")
+            widget1_layout.addWidget(self.player_boxes[i])
         widget1_layout.addStretch()
 
         layout.addWidget(self.window)

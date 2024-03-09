@@ -16,7 +16,7 @@ class Player:
     def __init__(
         self,
         team: str,
-        avatar: Union[str, int],
+        # number: int,
         start: Optional[Location] = None,
     ):
         self.team = team
@@ -37,7 +37,7 @@ class Player:
         self.distance_travelled = 0.0
         self.dlat = 0.0
         self.dlon = 0.0
-        self.make_avatar(avatar)
+        # self.make_avatar(avatar)
         self.sail = 1.0
 
     def make_avatar(self, avatar):

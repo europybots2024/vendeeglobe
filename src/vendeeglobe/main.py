@@ -48,7 +48,7 @@ def spawn_engine(*args):
 
 
 def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
-    n_sub_processes = 2
+    n_sub_processes = 8
     # n = config.ntracers // self.n_sub_processes
     # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
     # for i in range(config.ntracers - sum(self.ntracers_per_sub_process)):
@@ -61,10 +61,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     #     bots[team] = bot
     #     players[team] = Player(team=team, avatar=getattr(bot, "avatar", 1), start=start)
     bots = {bot.team: bot for bot in bots}
-    players = {
-        name: Player(team=name, avatar=getattr(bot, 'avatar', 1), start=start)
-        for name, bot in bots.items()
-    }
+    players = {name: Player(team=name, start=start) for name in bots}
     # # for name, bot in bots.items():
     # #     players[name] = Player(team=name, avatar=getattr(bot, 'avatar', 1), start=start)
 
@@ -80,10 +77,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     tracer_positions = np.empty((n_sub_processes, config.tracer_lifetime, ntracers, 3))
     player_positions = np.empty((len(bots), config.max_track_length, 3))
     player_delta_angles = np.empty((len(bots), 2))
-    # tracer_positions = 6000 * (
-    #     np.random.random((n_sub_processes, config.tracer_lifetime, config.ntracers, 3))
-    #     - 0.5
-    # )
+    player_status = np.zeros((len(bots), 4))  # points, dist travelled, speed, checks
 
     weather = WeatherData(seed=seed, time_limit=time_limit)
 
@@ -111,6 +105,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         'forecast_u': weather.forecast_u,
         'forecast_v': weather.forecast_v,
         'game_flow': game_flow,
+        'player_status': player_status,
     }
 
     with SharedMemoryManager() as smm:
@@ -188,6 +183,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                         'player_positions',
                         'player_delta_angles',
                         'game_flow',
+                        'player_status',
                     )
                 },
             ),

@@ -62,25 +62,7 @@ class Engine:
         players: dict,
         bot_index_begin: int,
         buffers: dict,
-        # tracer_shared_mem: SharedMemory,
-        # tracer_shared_data_dtype: np.dtype,
-        # tracer_shared_data_shape: Tuple[int, ...],
-        # u_shared_mem: SharedMemory,
-        # u_shared_data_dtype: np.dtype,
-        # u_shared_data_shape: Tuple[int, ...],
-        # v_shared_mem: SharedMemory,
-        # v_shared_data_dtype: np.dtype,
-        # v_shared_data_shape: Tuple[int, ...],
-        # forecast_u_shared_mem: SharedMemory,
-        # forecast_u_shared_data_dtype: np.dtype,
-        # forecast_u_shared_data_shape: Tuple[int, ...],
-        # forecast_v_shared_mem: SharedMemory,
-        # forecast_v_shared_data_dtype: np.dtype,
-        # forecast_v_shared_data_shape: Tuple[int, ...],
-        # player_positions_shared_mem: SharedMemory,
-        # player_positions_data_dtype: np.dtype,
-        # player_positions_data_shape: Tuple[int, ...],
-        # bots: dict,
+        time_limit: float,
         test: bool = True,
         # time_limit: float = 8 * 60,
         # seed: int = None,
@@ -107,7 +89,7 @@ class Engine:
         # self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
 
         self.pid = pid
-        # self.time_limit = time_limit
+        self.time_limit = time_limit
         # self.start_time = None
         self.safe = not test
         # self.test = test
@@ -355,8 +337,8 @@ class Engine:
 
         if dt > self.update_interval:
             dt = dt * config.seconds_to_hours
-            # if t > self.time_limit:
-            #     self.shutdown()
+            if t > self.time_limit:
+                self.shutdown()
 
             if (clock_time - self.last_time_update) > config.time_update_interval:
                 # self.update_scoreboard(self.time_limit - t)

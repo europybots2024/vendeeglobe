@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
+import datetime
 import time
 from typing import Any, Dict
 
@@ -43,6 +44,13 @@ from . import config
 from . import utils as ut
 from .map import MapTextures
 from .player import Player
+from .scores import (
+    finalize_scores,
+    get_player_points,
+    read_fastest_times,
+    read_scores,
+    write_fastest_times,
+)
 from .sphere import GLTexturedSphereItem
 from .utils import array_from_shared_mem, string_to_color
 from .weather import Weather
@@ -59,6 +67,7 @@ class Graphics:
         # player_colors: Dict[str, str],
         # player_names,
         players: Dict[str, Player],
+        test: bool,
         buffers: Dict[str, Any],
         # tracer_positions: np.ndarray,
         # player_positions: np.ndarray,
@@ -89,6 +98,7 @@ class Graphics:
         )
 
         self.players = players
+        self.test = test
 
         self.buffers = {
             key: array_from_shared_mem(*value) for key, value in buffers.items()
@@ -174,7 +184,7 @@ class Graphics:
         # latitudes = np.array([player.latitude for player in players.values()])
         # longitudes = np.array([player.longitude for player in players.values()])
         self.player_positions = self.buffers['player_positions']
-        player_colors = [string_to_color(p.team) for p in players]
+        player_colors = [string_to_color(p.team) for p in self.players.values()]
         colors = np.array([to_rgba(color) for color in player_colors])
         # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
@@ -191,7 +201,7 @@ class Graphics:
         self.tracks = []
         self.avatars = []
         # self.labels = {}
-        for i, player in enumerate(players):
+        for i, player in enumerate(self.players.values()):
             # for i in range(len(self.player_positions)):
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude),
@@ -225,6 +235,7 @@ class Graphics:
             # self.window.addItem(avatar)
             # self.avatars.append(avatar)
 
+        self.fastest_times = read_fastest_times(self.players)
         print(f'done [{time.time() - self.start_time:.2f} s]')
 
     def initialize_time(self):
@@ -304,7 +315,7 @@ class Graphics:
                 player.color,
                 int(self.buffers['player_status'][i, 3]),  # checkpoints reached
             )
-            for i, player in enumerate(self.players)
+            for i, player in enumerate(self.players.values())
         ]
 
         for i, (_, dist, team, speed, col, nch) in enumerate(
@@ -325,6 +336,30 @@ class Graphics:
         if (clock_time - self.last_time_update) > config.time_update_interval:
             self.update_scoreboard()
             self.last_time_update = clock_time
+
+    def update_leaderboard(self, scores, fastest_times):
+        sorted_scores = dict(
+            sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        )
+        for i, (name, score) in enumerate(
+            list(sorted_scores.items())[: self.scoreboard_max_players]
+        ):
+            self.score_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f'{i+1}. {name[:config.max_name_length]}: {score}'
+            )
+
+        sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
+        time_list = list(enumerate(sorted_times.items()))
+        for i, (name, t) in time_list[:3]:
+            try:
+                time = str(datetime.timedelta(seconds=int(t)))[2:]
+            except OverflowError:
+                time = "None"
+            self.fastest_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f'{i+1}. {name[:config.max_name_length]}: {time}'
+            )
 
     def run(self):
         main_window = QMainWindow()
@@ -394,23 +429,23 @@ class Graphics:
         separator.setLineWidth(1)
         widget2_layout.addWidget(separator)
         widget2_layout.addWidget(QLabel("Scores:"))
-        # self.score_boxes = {}
-        # for i, p in enumerate(self.players.values()):
-        #     self.score_boxes[i] = QLabel(p.team)
-        #     widget2_layout.addWidget(self.score_boxes[i])
+        self.score_boxes = {}
+        for i in range(min(len(self.players), self.scoreboard_max_players)):
+            self.score_boxes[i] = QLabel("")
+            widget2_layout.addWidget(self.score_boxes[i])
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
         separator.setLineWidth(1)
         widget2_layout.addWidget(separator)
         widget2_layout.addWidget(QLabel("Fastest finish:"))
-        # self.fastest_boxes = {}
-        # for i in range(3):
-        #     self.fastest_boxes[i] = QLabel(str(i + 1))
-        #     widget2_layout.addWidget(self.fastest_boxes[i])
+        self.fastest_boxes = {}
+        for i in range(3):
+            self.fastest_boxes[i] = QLabel("")
+            widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
-        # self.update_leaderboard(
-        #     read_scores(self.players.keys(), test=self.test), self.fastest_times
-        # )
+        self.update_leaderboard(
+            read_scores(self.players.keys(), test=self.test), self.fastest_times
+        )
 
         main_window.show()
         self.timer = QtCore.QTimer()

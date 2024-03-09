@@ -12,21 +12,32 @@ from .utils import distance_on_surface
 
 def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
     scores = {p: 0 for p in players}
-    fname = "scores.txt"
-    if os.path.exists(fname) and (not test):
-        with open(fname, "r") as f:
-            contents = f.readlines()
-        for line in contents:
-            name, score = line.split(":")
-            scores[name] = int(score.strip())
+    folder = ".scores"
+    for player in players:
+        fname = os.path.join(folder, f"{player}.txt")
+        if os.path.exists(fname) and (not test):
+            with open(fname, "r") as f:
+                scores[player] = int(f.read())
+    # if os.path.exists(fname) and (not test):
+    #     with open(fname, "r") as f:
+    #         contents = f.readlines()
+    #     for line in contents:
+    #         name, score = line.split(":")
+    #         scores[name] = int(score.strip())
     return scores
 
 
 def _write_scores(scores: Dict[str, int]):
-    fname = "scores.txt"
-    with open(fname, "w") as f:
-        for name, score in scores.items():
-            f.write(f"{name}: {score}\n")
+    # fname = "scores.txt"
+    # with open(fname, "w") as f:
+    #     for name, score in scores.items():
+    #         f.write(f"{name}: {score}\n")
+    folder = ".scores"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    for name, score in scores.items():
+        with open(os.path.join(folder, f"{name}.txt"), "w") as f:
+            f.write(str(score))
 
 
 def get_player_points(player: Player) -> int:

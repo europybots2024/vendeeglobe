@@ -175,7 +175,8 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
         graphics = Process(
             target=spawn_graphics,
             args=(
-                list(players.values()),
+                players,
+                test,
                 {
                     key: buffers[key]
                     for key in (
@@ -196,13 +197,13 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                 Process(
                     target=spawn_engine,
                     args=(
-                        # lock,
                         i,
                         seed,
                         {name: bots[name] for name in group},
                         {name: players[name] for name in group},
                         bot_index_begin,
                         buffers,
+                        time_limit,
                     ),
                 )
             )

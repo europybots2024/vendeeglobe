@@ -30,14 +30,28 @@ from .utils import (
 from .weather import Weather, WeatherData
 
 
+class Clock:
+    def __init__(self):
+        self._start_time = None
+
+    @property
+    def start_time(self):
+        if self._start_time is None:
+            self._start_time = time.time()
+        return self._start_time
+
+
+clock = Clock()
+
+
 def spawn_graphics(*args):
     graphics = Graphics(*args)
-    graphics.run()
+    graphics.run(start_time=clock.start_time)
 
 
 def spawn_engine(*args):
     engine = Engine(*args)
-    engine.run()
+    engine.run(start_time=clock.start_time)
 
 
 def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
@@ -84,8 +98,10 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
     map_terrain = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))['sea_array']
     # # self.array = mapdata['array']
     # self.sea_array = mapdata
+    world_map = MapData()
 
-    game_flow = np.zeros(3, dtype=int)  # pause, exit, final
+    game_flow = np.zeros(3, dtype=int)  # pause, exit_from_graphics
+    shutdown = np.zeros(n_sub_processes, dtype=bool)
 
     # pre_compile()
 
@@ -104,6 +120,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
         'forecast_v': weather.forecast_v,
         'game_flow': game_flow,
         'player_status': player_status,
+        'shutdown': shutdown,
     }
 
     with SharedMemoryManager() as smm:
@@ -182,6 +199,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
                         'player_delta_angles',
                         'game_flow',
                         'player_status',
+                        'shutdown',
                     )
                 },
             ),
@@ -202,6 +220,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
                         buffers,
                         time_limit,
                         safe,
+                        world_map,
                     ),
                 )
             )

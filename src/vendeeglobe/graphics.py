@@ -75,7 +75,7 @@ class Graphics:
 
         self.scoreboard_max_players = 20
 
-        self.initialize_time()
+        # self.initialize_time()
 
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
@@ -234,10 +234,10 @@ class Graphics:
             # self.avatars.append(avatar)
 
         # self.fastest_times = read_fastest_times(self.players)
-        print(f'done [{time.time() - self.start_time:.2f} s]')
+        # print(f'done [{time.time() - self.start_time:.2f} s]')
 
-    def initialize_time(self):
-        self.start_time = time.time()
+    def initialize_time(self, start_time: float):
+        self.start_time = start_time
         self.last_player_update = self.start_time
         self.last_graphics_update = self.start_time
         self.last_time_update = self.start_time
@@ -254,6 +254,8 @@ class Graphics:
 
         # Lock the positions array
         # self.buffers['game_flow'][2] = 1
+        # print(self.tracer_positions.shape)
+        # print(sum(self.tracer_positions.ravel() != 0))
         self.tracers.setData(pos=self.tracer_positions.reshape((-1, 3)))
         # self.buffers['game_flow'][2] = 0
 
@@ -303,7 +305,9 @@ class Graphics:
     def toggle_stars(self, val):
         self.background_stars.setVisible(val)
 
-    def update_scoreboard(self):
+    def update_scoreboard(self, t: float):
+        time_str = str(datetime.timedelta(seconds=int(t)))[2:]
+        self.time_label.setText(f"Time left: {time_str} s")
         status = [
             (
                 self.buffers['player_status'][i, 0],  # points
@@ -328,18 +332,29 @@ class Graphics:
     def update(self):
         if self.buffers['game_flow'][0]:
             return
-        if self.buffers['game_flow'][2]:
-            self
+        if all(self.buffers['shutdown']):
+            for name, points in zip(
+                self.players.keys(), self.buffers['player_status'][:, 0]
+            ):
+                print(f"{name}: {points}")
+            self.update_leaderboard(
+                scores=finalize_scores(
+                    self.players, player_points=self.buffers['player_status'][:, 0]
+                )
+            )
             self.timer.stop()
         clock_time = time.time()
+        t = clock_time - self.start_time
         self.update_wind_tracers()
         self.update_player_positions()
         if (clock_time - self.last_time_update) > config.time_update_interval:
-            self.update_scoreboard()
+            self.update_scoreboard(t)
             self.last_time_update = clock_time
 
-    def update_leaderboard(self):
-        scores = read_scores(self.players)
+    def update_leaderboard(self, scores: Dict[str, int]):
+        # scores = finalize_scores(
+        #     self.players, player_points=self.buffers['player_status'][:, 0]
+        # )
         fastest_times = read_fastest_times(self.players)
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)
@@ -364,7 +379,7 @@ class Graphics:
                 f'{i+1}. {name[:config.max_name_length]}: {time}'
             )
 
-    def run(self):
+    def run(self, start_time: float):
         main_window = QMainWindow()
         main_window.setWindowTitle("Vendée Globe")
         main_window.setGeometry(100, 100, 1280, 720)
@@ -446,7 +461,10 @@ class Graphics:
             self.fastest_boxes[i] = QLabel("")
             widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
-        self.update_leaderboard()
+
+        self.initialize_time(start_time=start_time)
+
+        self.update_leaderboard(scores=read_scores(self.players))
 
         main_window.show()
         self.timer = QtCore.QTimer()

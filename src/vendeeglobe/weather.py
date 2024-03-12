@@ -158,10 +158,10 @@ class Weather:
 
         # size = (config.tracer_lifetime, config.ntracers)
         size = self.tracer_positions.shape[1:-1]
-        rng = np.random.default_rng(pid + (seed if seed is not None else 0))
+        self.rng = np.random.default_rng(pid + (seed if seed is not None else 0))
 
-        self.tracer_lat = rng.uniform(-89.9, 89.9, size=size)
-        self.tracer_lon = rng.uniform(-180, 180, size=size)
+        self.tracer_lat = self.rng.uniform(-89.9, 89.9, size=size)
+        self.tracer_lon = self.rng.uniform(-180, 180, size=size)
         # self.tracer_colors = np.zeros(self.tracer_lat.shape + (4,))
         # self.tracer_colors[..., pid] = 1.0
         # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
@@ -238,8 +238,8 @@ class Weather:
         )
 
         # Randomly replace tracers
-        new_lat = np.random.uniform(-89.9, 89.9, size=(self.number_of_new_tracers,))
-        new_lon = np.random.uniform(-180, 180, size=(self.number_of_new_tracers,))
+        new_lat = self.rng.uniform(-89.9, 89.9, size=(self.number_of_new_tracers,))
+        new_lon = self.rng.uniform(-180, 180, size=(self.number_of_new_tracers,))
         istart = self.new_tracer_counter
         iend = self.new_tracer_counter + self.number_of_new_tracers
         self.tracer_lat[0, istart:iend] = new_lat

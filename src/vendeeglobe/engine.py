@@ -64,6 +64,7 @@ class Engine:
         buffers: dict,
         time_limit: float,
         safe: bool,
+        world_map: MapData,
         # time_limit: float = 8 * 60,
         # seed: int = None,
         # start: Optional[Location] = None,
@@ -126,7 +127,7 @@ class Engine:
         #     self.players[name] =
         # # # print(f"done [{time.time() - t0:.2f} s]")
 
-        self.map = MapData()
+        self.map = world_map
         self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(
             self.pid,
@@ -150,18 +151,19 @@ class Engine:
             # forecast_v_shared_data_shape,
             # self.tracer_buffer,
         )
+        self.buffers['shutdown'][self.pid] = False
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
         # )
-        # self.players_not_arrived = list(self.players.keys())
+        self.players_not_arrived = list(self.players.keys())
         # self.forecast = self.weather.get_forecast(0)
 
         # self.set_schedule()
         # self.group_counter = 0
         # self.fastest_times = read_fastest_times(self.players)
 
-    def initialize_time(self):
-        self.start_time = time.time()
+    def initialize_time(self, start_time: float):
+        self.start_time = start_time
         self.last_player_update = self.start_time
         self.last_graphics_update = self.start_time
         self.last_time_update = self.start_time
@@ -227,8 +229,9 @@ class Engine:
         longitudes = np.array([player.longitude for player in self.players.values()])
         u, v = weather.get_uv(latitudes, longitudes, np.array([t]))
         # positions = []
-        for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
-            lat, lon = player.get_path(dt, u[i], v[i])
+        # for i, player in enumerate([p for p in self.players.values() if not p.arrived]):
+        for i, player in enumerate(self.players.values()):
+            lat, lon = player.get_path(0 if player.arrived else dt, u[i], v[i])
             terrain = self.map.get_terrain(longitudes=lon, latitudes=lat)
             w = np.where(terrain == 0)[0]
             if len(w) > 0:
@@ -252,48 +255,48 @@ class Engine:
                 player.dlat = 0
                 player.dlon = 0
 
-            for checkpoint in player.checkpoints:
-                if not checkpoint.reached:
-                    d = ut.distance_on_surface(
-                        longitude1=player.longitude,
-                        latitude1=player.latitude,
-                        longitude2=checkpoint.longitude,
-                        latitude2=checkpoint.latitude,
-                    )
-                    if d < checkpoint.radius:
-                        checkpoint.reached = True
-                        print(f"{player.team} reached {checkpoint}")
-            dist_to_finish = ut.distance_on_surface(
-                longitude1=player.longitude,
-                latitude1=player.latitude,
-                longitude2=config.start.longitude,
-                latitude2=config.start.latitude,
-            )
-            if dist_to_finish < config.start.radius and all(
-                ch.reached for ch in player.checkpoints
-            ):
-                player.arrived = True
-                # player.bonus = config.score_step * len(self.players_not_arrived)
-                player.bonus = config.score_step - t
-                n_not_arrived = len(self.players_not_arrived)
-                n_players = len(self.players)
-                if n_not_arrived == n_players:
-                    pos_str = "st"
-                elif n_not_arrived == n_players - 1:
-                    pos_str = "nd"
-                elif n_not_arrived == n_players - 2:
-                    pos_str = "rd"
-                else:
-                    pos_str = "th"
-                print(
-                    f"{player.team} finished in {n_players - n_not_arrived + 1}"
-                    f"{pos_str} position!"
+            if not player.arrived:
+
+                for checkpoint in player.checkpoints:
+                    if not checkpoint.reached:
+                        d = ut.distance_on_surface(
+                            longitude1=player.longitude,
+                            latitude1=player.latitude,
+                            longitude2=checkpoint.longitude,
+                            latitude2=checkpoint.latitude,
+                        )
+                        if d < checkpoint.radius:
+                            checkpoint.reached = True
+                            print(f"{player.team} reached {checkpoint}")
+                dist_to_finish = ut.distance_on_surface(
+                    longitude1=player.longitude,
+                    latitude1=player.latitude,
+                    longitude2=config.start.longitude,
+                    latitude2=config.start.latitude,
                 )
-                self.players_not_arrived.remove(player.team)
-                player.trip_time = t
-                # self.fastest_times[player.team] = min(
-                #     t, self.fastest_times[player.team]
-                # )
+                if dist_to_finish < config.start.radius and all(
+                    ch.reached for ch in player.checkpoints
+                ):
+                    player.arrived = True
+                    # player.bonus = config.score_step * len(self.players_not_arrived)
+                    player.bonus = config.score_step - t
+                    # n_not_arrived = len(self.players_not_arrived)
+                    # n_players = len(self.players)
+                    # if n_not_arrived == n_players:
+                    #     pos_str = "st"
+                    # elif n_not_arrived == n_players - 1:
+                    #     pos_str = "nd"
+                    # elif n_not_arrived == n_players - 2:
+                    #     pos_str = "rd"
+                    # else:
+                    #     pos_str = "th"
+                    time_str = str(datetime.timedelta(seconds=int(t)))[2:]
+                    print(f"{player.team} finished in {time_str}")
+                    self.players_not_arrived.remove(player.team)
+                    player.trip_time = t
+                    # self.fastest_times[player.team] = min(
+                    #     t, self.fastest_times[player.team]
+                    # )
 
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
@@ -320,11 +323,12 @@ class Engine:
         ] = np.array([[player.dlat, player.dlon] for player in self.players.values()])
 
     def shutdown(self):
-        finalize_scores(players=self.players)
+        # finalize_scores(players=self.players)
+        self.update_scoreboard()
         write_times({team: p.trip_time for team, p in self.players.items()})
         # self.update_leaderboard(final_scores, self.fastest_times)
         # self.timer.stop()
-        self.buffers['game_flow'][2] = 1
+        self.buffers['shutdown'][self.pid] = True
 
     def update(self):
 
@@ -383,8 +387,9 @@ class Engine:
             # self.graphics.update_player_positions(self.players)
             # self.group_counter += 1
 
-            # if len(self.players_not_arrived) == 0:
-            #     self.shutdown()
+            if len(self.players_not_arrived) == 0:
+                self.buffers['game_flow'][1] = 1
+                return
 
             self.previous_clock_time = clock_time
 
@@ -423,30 +428,30 @@ class Engine:
         #         f'{int(speed)} km/h [{nch}]'
         #     )
 
-    def update_leaderboard(self, scores, fastest_times):
-        sorted_scores = dict(
-            sorted(scores.items(), key=lambda item: item[1], reverse=True)
-        )
-        for i, (name, score) in enumerate(sorted_scores.items()):
-            self.score_boxes[i].setText(
-                f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {score}'
-            )
+    # def update_leaderboard(self, scores, fastest_times):
+    #     sorted_scores = dict(
+    #         sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    #     )
+    #     for i, (name, score) in enumerate(sorted_scores.items()):
+    #         self.score_boxes[i].setText(
+    #             f'<div style="color:{self.players[name].color}">&#9632;</div> '
+    #             f'{i+1}. {name[:config.max_name_length]}: {score}'
+    #         )
 
-        sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
-        time_list = list(enumerate(sorted_times.items()))
-        for i, (name, t) in time_list[:3]:
-            try:
-                time = str(datetime.timedelta(seconds=int(t)))[2:]
-            except OverflowError:
-                time = "None"
-            self.fastest_boxes[i].setText(
-                f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {time}'
-            )
+    #     sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
+    #     time_list = list(enumerate(sorted_times.items()))
+    #     for i, (name, t) in time_list[:3]:
+    #         try:
+    #             time = str(datetime.timedelta(seconds=int(t)))[2:]
+    #         except OverflowError:
+    #             time = "None"
+    #         self.fastest_boxes[i].setText(
+    #             f'<div style="color:{self.players[name].color}">&#9632;</div> '
+    #             f'{i+1}. {name[:config.max_name_length]}: {time}'
+    #         )
 
-    def run(self):
-        self.initialize_time()
+    def run(self, start_time: float):
+        self.initialize_time(start_time)
         # self.update()
         while not self.buffers['game_flow'][1]:
             self.update()

@@ -89,15 +89,21 @@ def get_player_points(player: Player) -> int:
     return points
 
 
-def get_rankings(players: Dict[str, Player]) -> Dict[str, int]:
-    status = [(get_player_points(player), player.team) for player in players.values()]
+def get_rankings(
+    players: Dict[str, Player], player_points: np.ndarray
+) -> Dict[str, int]:
+    # status = [(get_player_points(player), player.team) for player in players.values()]
+    status = [
+        (player_points[i], player.team) for i, player in enumerate(players.values())
+    ]
     return [team for _, team in sorted(status, reverse=True)]
 
 
-def _get_final_scores(players: Dict[str, Player], scores: Dict[str, int]):
-    rankings = get_rankings(players)
+def _get_final_scores(
+    players: Dict[str, Player], scores: Dict[str, int], player_points: np.ndarray
+):
+    rankings = get_rankings(players, player_points)
     for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
-    #           [ 7,  3,  3,  2,  2, 2, 2, 2, 1, 1]
     final_scores = {}
     round_scores = {}
     for team in rankings:
@@ -119,12 +125,12 @@ def _print_scores(
         print(f"{i + 1}. {name}: {total} ({score})")
 
 
-def finalize_scores(players: Dict[str, Player]):
+def finalize_scores(players: Dict[str, Player], player_points: np.ndarray):
     scores = read_scores(players)
-    round_scores, final_scores = _get_final_scores(players, scores)
+    round_scores, final_scores = _get_final_scores(players, scores, player_points)
     _print_scores(round_scores=round_scores, final_scores=final_scores)
     _write_scores(round_scores)
-    # return final_scores
+    return final_scores
 
 
 def read_fastest_times(players: Dict[str, Player]) -> Dict[str, int]:

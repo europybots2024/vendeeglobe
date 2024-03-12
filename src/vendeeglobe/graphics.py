@@ -329,27 +329,42 @@ class Graphics:
                 f'{int(speed)} km/h [{nch}]'
             )
 
+    def shutdown(self):
+        for name, points in zip(
+            self.players.keys(), self.buffers['player_status'][:, 0]
+        ):
+            print(f"{name}: {points}")
+        self.update_leaderboard(
+            scores=finalize_scores(
+                self.players, player_points=self.buffers['player_status'][:, 0]
+            )
+        )
+        self.timer.stop()
+
     def update(self):
         if self.buffers['game_flow'][0]:
             return
         if all(self.buffers['shutdown']):
-            for name, points in zip(
-                self.players.keys(), self.buffers['player_status'][:, 0]
-            ):
-                print(f"{name}: {points}")
-            self.update_leaderboard(
-                scores=finalize_scores(
-                    self.players, player_points=self.buffers['player_status'][:, 0]
-                )
-            )
-            self.timer.stop()
+            self.shutdown()
+            # for name, points in zip(
+            #     self.players.keys(), self.buffers['player_status'][:, 0]
+            # ):
+            #     print(f"{name}: {points}")
+            # self.update_leaderboard(
+            #     scores=finalize_scores(
+            #         self.players, player_points=self.buffers['player_status'][:, 0]
+            #     )
+            # )
+            # self.timer.stop()
         clock_time = time.time()
         t = clock_time - self.start_time
         self.update_wind_tracers()
         self.update_player_positions()
         if (clock_time - self.last_time_update) > config.time_update_interval:
-            self.update_scoreboard(t)
+            self.update_scoreboard(config.time_limit - t)
             self.last_time_update = clock_time
+        if t > config.time_limit:
+            self.buffers['game_flow'][1] = 1
 
     def update_leaderboard(self, scores: Dict[str, int]):
         # scores = finalize_scores(

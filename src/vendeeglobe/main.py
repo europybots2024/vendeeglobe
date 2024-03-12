@@ -54,7 +54,7 @@ def spawn_engine(*args):
     engine.run(start_time=clock.start_time)
 
 
-def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
+def play(bots, seed=None, start=None, safe=False):
     n_sub_processes = 8
     # n = config.ntracers // self.n_sub_processes
     # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
@@ -85,13 +85,19 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
     # print(len(bot_groups))
     # print('keys', [it.keys() for it in bot_groups])
 
-    ntracers = config.ntracers // n_sub_processes
+    ntracers = (
+        config.ntracers
+        // (n_sub_processes * config.number_of_new_tracers)
+        * config.number_of_new_tracers
+    )
     tracer_positions = np.empty((n_sub_processes, config.tracer_lifetime, ntracers, 3))
     player_positions = np.empty((len(bots), config.max_track_length, 3))
     player_delta_angles = np.empty((len(bots), 2))
     player_status = np.zeros((len(bots), 4))  # points, dist travelled, speed, checks
 
-    weather = WeatherData(seed=seed, time_limit=time_limit)
+    pre_compile()
+
+    weather = WeatherData(seed=seed)
 
     # map_terrain = MapData()
 
@@ -102,8 +108,6 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
 
     game_flow = np.zeros(3, dtype=int)  # pause, exit_from_graphics
     shutdown = np.zeros(n_sub_processes, dtype=bool)
-
-    # pre_compile()
 
     # self.time_limit = time_limit
     # self.start_time = None
@@ -218,7 +222,6 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
                         {name: players[name] for name in group},
                         bot_index_begin,
                         buffers,
-                        time_limit,
                         safe,
                         world_map,
                     ),

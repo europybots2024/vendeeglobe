@@ -28,4 +28,4 @@ for i, ai in enumerate(ais):
 
 start = bots[-1].course[-3]
 
-vg.play(bots=bots, start=start, seed=None, time_limit=60 * 8)
+vg.play(bots=bots, start=start, seed=None)

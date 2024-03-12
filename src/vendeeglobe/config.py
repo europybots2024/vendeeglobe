@@ -12,7 +12,8 @@ class Config:
     map_file: str = "world.jpg"
     map_radius: float = 6371.0
     resourcedir: Path = Path(__file__).parent / "resources"
-    ntracers: int = 8000
+    ntracers: int = 5000
+    number_of_new_tracers = 2
     tracer_lifetime: int = 50
     start: Checkpoint = Checkpoint(longitude=-1.81, latitude=46.494275, radius=5.0)
     checkpoints: Tuple[Checkpoint, Checkpoint] = (

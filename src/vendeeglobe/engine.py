@@ -62,7 +62,6 @@ class Engine:
         players: dict,
         bot_index_begin: int,
         buffers: dict,
-        time_limit: float,
         safe: bool,
         world_map: MapData,
         # time_limit: float = 8 * 60,
@@ -90,7 +89,7 @@ class Engine:
         # self.tracer_buffer = np.zeros(self.tracer_positions.shape[1:])
 
         self.pid = pid
-        self.time_limit = time_limit
+        # self.time_limit = time_limit
         # self.start_time = None
         self.safe = safe
         # self.test = test
@@ -211,7 +210,7 @@ class Engine:
         return instructions
 
     def call_player_bots(self, t: float, dt: float):
-        for player in self.players.values():
+        for player in [p for p in self.players.values() if not p.arrived]:
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -344,9 +343,9 @@ class Engine:
 
         if dt > self.update_interval:
             dt = dt * config.seconds_to_hours
-            if t > self.time_limit:
-                self.buffers['game_flow'][1] = 1
-                return
+            # if t > self.time_limit:
+            #     self.buffers['game_flow'][1] = 1
+            #     return
 
             if (clock_time - self.last_time_update) > config.time_update_interval:
                 # self.update_scoreboard(self.time_limit - t)
@@ -387,9 +386,9 @@ class Engine:
             # self.graphics.update_player_positions(self.players)
             # self.group_counter += 1
 
-            if len(self.players_not_arrived) == 0:
-                self.buffers['game_flow'][1] = 1
-                return
+            # if len(self.players_not_arrived) == 0:
+            #     self.buffers['game_flow'][1] = 1
+            #     return
 
             self.previous_clock_time = clock_time
 

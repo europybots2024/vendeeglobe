@@ -32,14 +32,14 @@ class WeatherForecast:
 
 
 class WeatherData:
-    def __init__(self, time_limit: int, seed: Optional[int] = None):
+    def __init__(self, seed: Optional[int] = None):
         t0 = time.time()
         print("Generating weather...", end=" ", flush=True)
         rng = np.random.default_rng(seed)
 
         self.ny = 128
         self.nx = self.ny * 2
-        self.nt = int(time_limit / config.weather_update_interval)
+        self.nt = int(config.time_limit / config.weather_update_interval)
 
         self.dt = config.weather_update_interval  # weather changes every 12 hours
 
@@ -96,6 +96,8 @@ class WeatherData:
         self.v.setflags(write=False)
         self.forecast_u.setflags(write=False)
         self.forecast_v.setflags(write=False)
+
+        print(f"done [{time.time() - t0:.2f} s]")
 
 
 class Weather:
@@ -166,7 +168,7 @@ class Weather:
         # self.tracer_colors[..., pid] = 1.0
         # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
 
-        self.number_of_new_tracers = 2
+        # self.number_of_new_tracers = 2
         self.new_tracer_counter = 0
 
         # # Make forecast data
@@ -238,14 +240,22 @@ class Weather:
         )
 
         # Randomly replace tracers
-        new_lat = self.rng.uniform(-89.9, 89.9, size=(self.number_of_new_tracers,))
-        new_lon = self.rng.uniform(-180, 180, size=(self.number_of_new_tracers,))
+        new_lat = self.rng.uniform(-89.9, 89.9, size=(config.number_of_new_tracers,))
+        new_lon = self.rng.uniform(-180, 180, size=(config.number_of_new_tracers,))
         istart = self.new_tracer_counter
-        iend = self.new_tracer_counter + self.number_of_new_tracers
+        iend = self.new_tracer_counter + config.number_of_new_tracers
+        # print(
+        #     istart,
+        #     iend,
+        #     self.new_tracer_counter,
+        #     self.number_of_new_tracers,
+        #     self.tracer_lat[0, istart:iend].shape,
+        #     new_lat.shape,
+        # )
         self.tracer_lat[0, istart:iend] = new_lat
         self.tracer_lon[0, istart:iend] = new_lon
         self.new_tracer_counter = (
-            self.new_tracer_counter + self.number_of_new_tracers
+            self.new_tracer_counter + config.number_of_new_tracers
         ) % self.tracer_lat.shape[1]
 
         x, y, z = ut.to_xyz(

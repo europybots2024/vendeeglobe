@@ -4,7 +4,9 @@ import vendeeglobe as vg
 from template_bot import Bot, Bot2
 
 nbots = 30
-ais = np.random.choice([Bot, Bot2], nbots)
+
+# ais = np.random.choice([Bot, Bot2], nbots)
+ais = [Bot2] * nbots
 
 # players = {
 #     "Alice": Bot,
@@ -22,6 +24,8 @@ start = None
 bots = []
 for i, ai in enumerate(ais):
     bots.append(ai())
-    bots[-1].team = f'Team {i}'
+    bots[-1].team = f'Team-{i}'
+
+start = bots[-1].course[-3]
 
 vg.play(bots=bots, start=start, seed=None, time_limit=60 * 8)

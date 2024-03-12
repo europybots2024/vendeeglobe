@@ -10,14 +10,25 @@ from .player import Player
 from .utils import distance_on_surface
 
 
-def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
+def _make_folder(folder: str):
+    try:
+        os.makedirs(folder)
+    except FileExistsError:
+        pass
+
+
+def read_scores(players: Dict[str, Player]) -> Dict[str, int]:
     scores = {p: 0 for p in players}
     folder = ".scores"
+    if not os.path.exists(folder):
+        return scores
     for player in players:
-        fname = os.path.join(folder, f"{player}.txt")
-        if os.path.exists(fname) and (not test):
+        fname = os.path.join(folder, f"{player}_scores.txt")
+        if os.path.exists(fname):
             with open(fname, "r") as f:
-                scores[player] = int(f.read())
+                # scores[player] = int(f.read())
+                contents = f.readlines()
+            scores[player] = sum(int(line.strip()) for line in contents)
     # if os.path.exists(fname) and (not test):
     #     with open(fname, "r") as f:
     #         contents = f.readlines()
@@ -33,11 +44,12 @@ def _write_scores(scores: Dict[str, int]):
     #     for name, score in scores.items():
     #         f.write(f"{name}: {score}\n")
     folder = ".scores"
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    _make_folder(folder)
     for name, score in scores.items():
-        with open(os.path.join(folder, f"{name}.txt"), "w") as f:
-            f.write(str(score))
+        fname = os.path.join(folder, f"{name}_scores.txt")
+        mode = 'w+' if os.path.exists(fname) else 'w'
+        with open(fname, mode) as f:
+            f.write(f'{score}\n')
 
 
 def get_player_points(player: Player) -> int:
@@ -85,6 +97,7 @@ def get_rankings(players: Dict[str, Player]) -> Dict[str, int]:
 def _get_final_scores(players: Dict[str, Player], scores: Dict[str, int]):
     rankings = get_rankings(players)
     for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    #           [ 7,  3,  3,  2,  2, 2, 2, 2, 1, 1]
     final_scores = {}
     round_scores = {}
     for team in rankings:
@@ -106,28 +119,33 @@ def _print_scores(
         print(f"{i + 1}. {name}: {total} ({score})")
 
 
-def finalize_scores(players: Dict[str, Player], test: bool = False):
-    scores = read_scores(players, test=test)
+def finalize_scores(players: Dict[str, Player]):
+    scores = read_scores(players)
     round_scores, final_scores = _get_final_scores(players, scores)
     _print_scores(round_scores=round_scores, final_scores=final_scores)
-    _write_scores(final_scores)
-    return final_scores
+    _write_scores(round_scores)
+    # return final_scores
 
 
 def read_fastest_times(players: Dict[str, Player]) -> Dict[str, int]:
     times = {p: np.inf for p in players}
-    fname = "fastest_times.txt"
-    if os.path.exists(fname):
-        with open(fname, "r") as f:
-            contents = f.readlines()
-        for line in contents:
-            name, t = line.split(":")
-            times[name] = float(t.strip())
+    folder = ".scores"
+    if not os.path.exists(folder):
+        return times
+    for name in players:
+        fname = os.path.join(folder, f"{name}_times.txt")
+        if os.path.exists(fname):
+            with open(fname, "r") as f:
+                contents = f.readlines()
+            times[name] = min(float(t.strip()) for t in contents)
     return times
 
 
-def write_fastest_times(times: Dict[str, Player]):
-    fname = "fastest_times.txt"
-    with open(fname, "w") as f:
-        for name, t in times.items():
-            f.write(f"{name}: {t}\n")
+def write_times(times: Dict[str, Player]):
+    folder = ".scores"
+    _make_folder(folder)
+    for name, t in times.items():
+        fname = os.path.join(folder, f"{name}_times.txt")
+        mode = 'w+' if os.path.exists(fname) else 'w'
+        with open(fname, mode) as f:
+            f.write(f"{t}\n")

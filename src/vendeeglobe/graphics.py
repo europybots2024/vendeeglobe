@@ -49,7 +49,7 @@ from .scores import (
     get_player_points,
     read_fastest_times,
     read_scores,
-    write_fastest_times,
+    # write_fastest_times,
 )
 from .sphere import GLTexturedSphereItem
 from .utils import array_from_shared_mem, string_to_color
@@ -67,7 +67,6 @@ class Graphics:
         # player_colors: Dict[str, str],
         # player_names,
         players: Dict[str, Player],
-        test: bool,
         buffers: Dict[str, Any],
         # tracer_positions: np.ndarray,
         # player_positions: np.ndarray,
@@ -98,7 +97,6 @@ class Graphics:
         )
 
         self.players = players
-        self.test = test
 
         self.buffers = {
             key: array_from_shared_mem(*value) for key, value in buffers.items()
@@ -235,7 +233,7 @@ class Graphics:
             # self.window.addItem(avatar)
             # self.avatars.append(avatar)
 
-        self.fastest_times = read_fastest_times(self.players)
+        # self.fastest_times = read_fastest_times(self.players)
         print(f'done [{time.time() - self.start_time:.2f} s]')
 
     def initialize_time(self):
@@ -330,6 +328,9 @@ class Graphics:
     def update(self):
         if self.buffers['game_flow'][0]:
             return
+        if self.buffers['game_flow'][2]:
+            self
+            self.timer.stop()
         clock_time = time.time()
         self.update_wind_tracers()
         self.update_player_positions()
@@ -337,7 +338,9 @@ class Graphics:
             self.update_scoreboard()
             self.last_time_update = clock_time
 
-    def update_leaderboard(self, scores, fastest_times):
+    def update_leaderboard(self):
+        scores = read_scores(self.players)
+        fastest_times = read_fastest_times(self.players)
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)
         )
@@ -443,9 +446,7 @@ class Graphics:
             self.fastest_boxes[i] = QLabel("")
             widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
-        self.update_leaderboard(
-            read_scores(self.players.keys(), test=self.test), self.fastest_times
-        )
+        self.update_leaderboard()
 
         main_window.show()
         self.timer = QtCore.QTimer()

@@ -34,6 +34,7 @@ class Player:
             Checkpoint(**asdict(checkpoint)) for checkpoint in config.checkpoints
         ]
         self.arrived = False
+        self.trip_time = np.inf
         self.distance_travelled = 0.0
         self.dlat = 0.0
         self.dlon = 0.0

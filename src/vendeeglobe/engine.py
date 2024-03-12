@@ -46,7 +46,7 @@ from .scores import (
     get_player_points,
     read_fastest_times,
     read_scores,
-    write_fastest_times,
+    write_times,
 )
 from . import utils as ut
 from .weather import Weather
@@ -63,10 +63,10 @@ class Engine:
         bot_index_begin: int,
         buffers: dict,
         time_limit: float,
-        test: bool = True,
+        safe: bool,
         # time_limit: float = 8 * 60,
         # seed: int = None,
-        start: Optional[Location] = None,
+        # start: Optional[Location] = None,
     ):
         # pre_compile()
         self.bot_index_begin = bot_index_begin
@@ -91,7 +91,7 @@ class Engine:
         self.pid = pid
         self.time_limit = time_limit
         # self.start_time = None
-        self.safe = not test
+        self.safe = safe
         # self.test = test
 
         # t0 = time.time()
@@ -273,7 +273,8 @@ class Engine:
                 ch.reached for ch in player.checkpoints
             ):
                 player.arrived = True
-                player.bonus = config.score_step * len(self.players_not_arrived)
+                # player.bonus = config.score_step * len(self.players_not_arrived)
+                player.bonus = config.score_step - t
                 n_not_arrived = len(self.players_not_arrived)
                 n_players = len(self.players)
                 if n_not_arrived == n_players:
@@ -289,9 +290,10 @@ class Engine:
                     f"{pos_str} position!"
                 )
                 self.players_not_arrived.remove(player.team)
-                self.fastest_times[player.team] = min(
-                    t, self.fastest_times[player.team]
-                )
+                player.trip_time = t
+                # self.fastest_times[player.team] = min(
+                #     t, self.fastest_times[player.team]
+                # )
 
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude), ut.lat_to_theta(player.latitude)
@@ -318,10 +320,11 @@ class Engine:
         ] = np.array([[player.dlat, player.dlon] for player in self.players.values()])
 
     def shutdown(self):
-        final_scores = finalize_scores(players=self.players, test=self.test)
-        write_fastest_times(self.fastest_times)
-        self.update_leaderboard(final_scores, self.fastest_times)
-        self.timer.stop()
+        finalize_scores(players=self.players)
+        write_times({team: p.trip_time for team, p in self.players.items()})
+        # self.update_leaderboard(final_scores, self.fastest_times)
+        # self.timer.stop()
+        self.buffers['game_flow'][2] = 1
 
     def update(self):
 
@@ -338,7 +341,8 @@ class Engine:
         if dt > self.update_interval:
             dt = dt * config.seconds_to_hours
             if t > self.time_limit:
-                self.shutdown()
+                self.buffers['game_flow'][1] = 1
+                return
 
             if (clock_time - self.last_time_update) > config.time_update_interval:
                 # self.update_scoreboard(self.time_limit - t)
@@ -446,6 +450,7 @@ class Engine:
         # self.update()
         while not self.buffers['game_flow'][1]:
             self.update()
+        self.shutdown()
         # time.sleep(0.1)
 
     # def old_run(self):

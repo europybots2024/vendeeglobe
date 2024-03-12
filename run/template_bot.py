@@ -21,7 +21,7 @@ CREATOR = "TeamName"
 
 
 def add_spread(course, spread=0.2):
-    for ch in course:
+    for ch in course[:-1]:
         ch.latitude += np.random.uniform(-spread, spread)
         ch.longitude += np.random.uniform(-spread, spread)
 
@@ -62,9 +62,10 @@ class Bot:
                 radius=5,
             ),
         ]
-        # for ch in self.course[:9]:
-        #     ch.reached = True
-        add_spread(self.course)
+        for ch in self.course[:-2]:
+            ch.reached = True
+
+        # add_spread(self.course)
 
     def run(
         self,
@@ -153,6 +154,9 @@ class Bot2:
                 radius=5,
             ),
         ]
+
+        for ch in self.course[:-3]:
+            ch.reached = True
 
         add_spread(self.course)
 

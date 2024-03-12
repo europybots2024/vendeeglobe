@@ -20,13 +20,6 @@ from .engine import Engine
 from .graphics import Graphics
 from .map import MapData, MapProxy, MapTextures
 from .player import Player
-from .scores import (
-    finalize_scores,
-    get_player_points,
-    read_fastest_times,
-    read_scores,
-    write_fastest_times,
-)
 from .utils import (
     array_from_shared_mem,
     distance_on_surface,
@@ -47,7 +40,7 @@ def spawn_engine(*args):
     engine.run()
 
 
-def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
+def play(bots, seed=None, time_limit=8 * 60, start=None, safe=False):
     n_sub_processes = 8
     # n = config.ntracers // self.n_sub_processes
     # self.ntracers_per_sub_process = [n for _ in range(self.n_sub_processes)]
@@ -64,6 +57,11 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     players = {name: Player(team=name, start=start) for name in bots}
     # # for name, bot in bots.items():
     # #     players[name] = Player(team=name, avatar=getattr(bot, 'avatar', 1), start=start)
+
+    # Cheat!
+    for player in players.values():
+        for ch in player.checkpoints:
+            ch.reached = True
 
     groups = np.array_split(list(bots.keys()), n_sub_processes)
     print('groups', groups)
@@ -87,7 +85,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
     # # self.array = mapdata['array']
     # self.sea_array = mapdata
 
-    game_flow = np.zeros(2, dtype=int)  # pause, exit
+    game_flow = np.zeros(3, dtype=int)  # pause, exit, final
 
     # pre_compile()
 
@@ -176,7 +174,6 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
             target=spawn_graphics,
             args=(
                 players,
-                test,
                 {
                     key: buffers[key]
                     for key in (
@@ -204,6 +201,7 @@ def play(bots, seed=None, time_limit=8 * 60, start=None, test=True):
                         bot_index_begin,
                         buffers,
                         time_limit,
+                        safe,
                     ),
                 )
             )

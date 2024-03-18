@@ -106,7 +106,8 @@ def play(bots, seed=None, start=None, safe=False):
     # self.sea_array = mapdata
     world_map = MapData()
 
-    game_flow = np.zeros(3, dtype=int)  # pause, exit_from_graphics
+    game_flow = np.zeros(2, dtype=bool)  # pause, exit_from_graphics
+    arrived = np.zeros(n_sub_processes, dtype=bool)
     shutdown = np.zeros(n_sub_processes, dtype=bool)
 
     # self.time_limit = time_limit
@@ -124,7 +125,8 @@ def play(bots, seed=None, start=None, safe=False):
         'forecast_v': weather.forecast_v,
         'game_flow': game_flow,
         'player_status': player_status,
-        'shutdown': shutdown,
+        'all_arrived': arrived,
+        'all_shutdown': shutdown,
     }
 
     with SharedMemoryManager() as smm:
@@ -203,7 +205,8 @@ def play(bots, seed=None, start=None, safe=False):
                         'player_delta_angles',
                         'game_flow',
                         'player_status',
-                        'shutdown',
+                        'all_arrived',
+                        'all_shutdown',
                     )
                 },
             ),

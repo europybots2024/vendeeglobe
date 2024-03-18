@@ -344,7 +344,11 @@ class Graphics:
     def update(self):
         if self.buffers['game_flow'][0]:
             return
-        if all(self.buffers['shutdown']):
+
+        if all(self.buffers['all_arrived']):
+            self.buffers['game_flow'][1] = True
+
+        if all(self.buffers['all_shutdown']):
             self.shutdown()
             # for name, points in zip(
             #     self.players.keys(), self.buffers['player_status'][:, 0]
@@ -364,7 +368,7 @@ class Graphics:
             self.update_scoreboard(config.time_limit - t)
             self.last_time_update = clock_time
         if t > config.time_limit:
-            self.buffers['game_flow'][1] = 1
+            self.buffers['game_flow'][1] = True
 
     def update_leaderboard(self, scores: Dict[str, int]):
         # scores = finalize_scores(
@@ -489,4 +493,4 @@ class Graphics:
         self.timer.start()
         pg.exec()
 
-        self.buffers['game_flow'][1] = 1
+        self.buffers['game_flow'][1] = True

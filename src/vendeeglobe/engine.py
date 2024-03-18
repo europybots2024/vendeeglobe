@@ -150,7 +150,7 @@ class Engine:
             # forecast_v_shared_data_shape,
             # self.tracer_buffer,
         )
-        self.buffers['shutdown'][self.pid] = False
+        self.buffers['all_shutdown'][self.pid] = False
         # self.graphics = Graphics(
         #     game_map=self.map, weather=self.weather, players=self.players
         # )
@@ -327,13 +327,16 @@ class Engine:
         write_times({team: p.trip_time for team, p in self.players.items()})
         # self.update_leaderboard(final_scores, self.fastest_times)
         # self.timer.stop()
-        self.buffers['shutdown'][self.pid] = True
+        self.buffers['all_shutdown'][self.pid] = True
 
     def update(self):
 
         # if self.buffers['game_flow'][1]:
         #     raise KeyboardInterrupt
         if self.buffers['game_flow'][0]:
+            return
+
+        if len(self.players_not_arrived) == 0:
             return
 
         clock_time = time.time()
@@ -386,9 +389,9 @@ class Engine:
             # self.graphics.update_player_positions(self.players)
             # self.group_counter += 1
 
-            # if len(self.players_not_arrived) == 0:
-            #     self.buffers['game_flow'][1] = 1
-            #     return
+            if len(self.players_not_arrived) == 0:
+                self.buffers['all_arrived'][self.pid] = True
+                self.update_scoreboard()
 
             self.previous_clock_time = clock_time
 

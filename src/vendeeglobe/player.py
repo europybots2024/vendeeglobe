@@ -13,12 +13,7 @@ from .core import Checkpoint, Heading, Location, Vector
 
 
 class Player:
-    def __init__(
-        self,
-        team: str,
-        # number: int,
-        start: Optional[Location] = None,
-    ):
+    def __init__(self, team: str, start: Optional[Location] = None):
         self.team = team
         self.bonus = 0
         self.heading = 180.0
@@ -38,20 +33,7 @@ class Player:
         self.distance_travelled = 0.0
         self.dlat = 0.0
         self.dlon = 0.0
-        # self.make_avatar(avatar)
         self.sail = 1.0
-
-    def make_avatar(self, avatar):
-        if isinstance(avatar, str):
-            self.avatar = Image.open(avatar).resize(config.avatar_size).convert('RGBA')
-        else:
-            img = Image.open(config.resourcedir / f'ship{avatar}.png')
-            img = img.resize(config.avatar_size).convert("RGBA")
-            data = img.getdata()
-            self.avatar = np.array(data).reshape(img.height, img.width, 4)
-            rgb = hex2color(self.color)
-            for i in range(3):
-                self.avatar[..., i] = int(round(rgb[i] * 255))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         if [instructions.location, instructions.heading, instructions.vector].count(

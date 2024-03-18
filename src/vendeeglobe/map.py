@@ -39,20 +39,8 @@ class MapTextures:
 class MapData:
     def __init__(self):
         mapdata = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))
-        # self.array = mapdata['array']
         self.sea_array = mapdata['sea_array']
-        # self.high_contrast_texture = mapdata['high_contrast_texture']
-
-        # class Map:
-        #     def __init__(self):
         t0 = time.time()
-        #         print('Creating world map...', end=' ', flush=True)
-
-        # mapdata = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))
-        # self.array = mapdata['array']
-        # self.sea_array = mapdata['sea_array']
-        # self.high_contrast_texture = mapdata['high_contrast_texture']
-
         self.nlat, self.nlon, _ = mapdata['array'].shape
         lat_min = -90
         lat_max = 90

@@ -26,23 +26,12 @@ def read_scores(players: Dict[str, Player]) -> Dict[str, int]:
         fname = os.path.join(folder, f"{player}_scores.txt")
         if os.path.exists(fname):
             with open(fname, "r") as f:
-                # scores[player] = int(f.read())
                 contents = f.readlines()
             scores[player] = sum(int(line.strip()) for line in contents)
-    # if os.path.exists(fname) and (not test):
-    #     with open(fname, "r") as f:
-    #         contents = f.readlines()
-    #     for line in contents:
-    #         name, score = line.split(":")
-    #         scores[name] = int(score.strip())
     return scores
 
 
 def _write_scores(scores: Dict[str, int]):
-    # fname = "scores.txt"
-    # with open(fname, "w") as f:
-    #     for name, score in scores.items():
-    #         f.write(f"{name}: {score}\n")
     folder = ".scores"
     _make_folder(folder)
     for name, score in scores.items():
@@ -92,7 +81,6 @@ def get_player_points(player: Player) -> int:
 def get_rankings(
     players: Dict[str, Player], player_points: np.ndarray
 ) -> Dict[str, int]:
-    # status = [(get_player_points(player), player.team) for player in players.values()]
     status = [
         (player_points[i], player.team) for i, player in enumerate(players.values())
     ]

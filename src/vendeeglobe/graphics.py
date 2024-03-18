@@ -49,7 +49,6 @@ from .scores import (
     get_player_points,
     read_fastest_times,
     read_scores,
-    # write_fastest_times,
 )
 from .sphere import GLTexturedSphereItem
 from .utils import array_from_shared_mem, string_to_color
@@ -57,25 +56,9 @@ from .weather import Weather
 
 
 class Graphics:
-    def __init__(
-        self,
-        #  game_map: Map,
-        # total_number_of_tracers: int,
-        # tracer_shared_mem: SharedMemory,
-        # tracer_shared_data_dtype: np.dtype,
-        # tracer_shared_data_shape: Tuple[int, ...],
-        # player_colors: Dict[str, str],
-        # player_names,
-        players: Dict[str, Player],
-        buffers: Dict[str, Any],
-        # tracer_positions: np.ndarray,
-        # player_positions: np.ndarray,
-        # default_texture: np.array,
-    ):
+    def __init__(self, players: Dict[str, Player], buffers: Dict[str, Any]):
 
         self.scoreboard_max_players = 20
-
-        # self.initialize_time()
 
         print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
@@ -101,10 +84,6 @@ class Graphics:
         self.buffers = {
             key: array_from_shared_mem(*value) for key, value in buffers.items()
         }
-
-        # self.default_texture = np.zeros((64, 128, 4), dtype='uint8')
-        # self.default_texture[..., 3] = 255
-        # self.high_contrast_texture = self.default_texture.copy()
 
         self.sphere = GLTexturedSphereItem(self.default_texture)
         self.sphere.setGLOptions("opaque")
@@ -147,24 +126,13 @@ class Graphics:
             mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
             self.window.addItem(mesh)
 
-        # self.tracer_positions = array_from_shared_mem(
-        #     tracer_shared_mem, tracer_shared_data_dtype, tracer_shared_data_shape
-        # )
         self.tracer_positions = self.buffers['tracer_positions']
 
-        # # Add tracers
-        # x, y, z = ut.to_xyz(
-        #     ut.lon_to_phi(weather.tracer_lon.ravel()),
-        #     ut.lat_to_theta(weather.tracer_lat.ravel()),
-        # )
-
-        # size = (config.tracer_lifetime, total_number_of_tracers)
         self.default_tracer_colors = np.ones(self.tracer_positions.shape[:-1] + (4,))
         self.default_tracer_colors[..., 3] = np.linspace(
             1, 0, config.tracer_lifetime
         ).reshape((-1, 1))
 
-        # self.default_tracer_colors = weather.tracer_colors
         self.high_contrast_tracer_colors = self.default_tracer_colors.copy()
         self.high_contrast_tracer_colors[..., :3] *= 0.8
         self.tracers = gl.GLScatterPlotItem(
@@ -173,18 +141,14 @@ class Graphics:
             size=2,
             pxMode=True,
         )
-        # print(self.tracer_positions.reshape((-1, 3)).shape)
         # self.tracers.setGLOptions("opaque")
         self.tracers.setGLOptions('translucent')
         self.window.addItem(self.tracers)
 
-        # # Add players
-        # latitudes = np.array([player.latitude for player in players.values()])
-        # longitudes = np.array([player.longitude for player in players.values()])
+        # Add players
         self.player_positions = self.buffers['player_positions']
         player_colors = [string_to_color(p.team) for p in self.players.values()]
         colors = np.array([to_rgba(color) for color in player_colors])
-        # x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
 
         self.player_markers = gl.GLScatterPlotItem(
             pos=self.player_positions,
@@ -198,16 +162,13 @@ class Graphics:
 
         self.tracks = []
         self.avatars = []
-        # self.labels = {}
         for i, player in enumerate(self.players.values()):
-            # for i in range(len(self.player_positions)):
             x, y, z = ut.to_xyz(
                 ut.lon_to_phi(player.longitude),
                 ut.lat_to_theta(player.latitude),
             )
             pos = np.array([[x], [y], [z]]).T
             track = gl.GLLinePlotItem(
-                # pos=self.player_positions[i, 0, :],
                 pos=pos,
                 color=tuple(colors[i]),
                 width=4,
@@ -217,24 +178,7 @@ class Graphics:
             self.window.addItem(track)
             self.tracks.append(track)
 
-            # avatar = gl.GLImageItem(
-            #     np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
-            # )
-            # offset = config.avatar_size[0] / 2
-            # avatar.translate(-offset, -offset, 0)
-            # avatar.rotate(90, 1, 0, 0)
-            # avatar.rotate(180, 0, 0, 1)
-            # avatar.translate(0, config.map_radius, 0)
-            # avatar.rotate(90, 0, 0, 1)
-            # avatar.rotate(player.longitude, 0, 0, 1)
-            # perp_vec = np.cross([x, y, 0], [0, 0, 1])
-            # perp_vec /= np.linalg.norm(perp_vec)
-            # avatar.rotate(player.latitude, *perp_vec)
-            # self.window.addItem(avatar)
-            # self.avatars.append(avatar)
-
-        # self.fastest_times = read_fastest_times(self.players)
-        # print(f'done [{time.time() - self.start_time:.2f} s]')
+        print(f'done [{time.time() - self.start_time:.2f} s]')
 
     def initialize_time(self, start_time: float):
         self.start_time = start_time
@@ -245,48 +189,13 @@ class Graphics:
         self.previous_clock_time = self.start_time
         self.update_interval = 1 / config.fps
 
-    def update_wind_tracers(self):  # , tracer_lat: np.ndarray, tracer_lon: np.ndarray):
-        # x, y, z = ut.to_xyz(
-        #     ut.lon_to_phi(tracer_lon.ravel()),
-        #     ut.lat_to_theta(tracer_lat.ravel()),
-        # )
-        # print("Graphics", self.tracer_positions.min(), self.tracer_positions.max())
-
-        # Lock the positions array
-        # self.buffers['game_flow'][2] = 1
-        # print(self.tracer_positions.shape)
-        # print(sum(self.tracer_positions.ravel() != 0))
+    def update_wind_tracers(self):
         self.tracers.setData(pos=self.tracer_positions.reshape((-1, 3)))
-        # self.buffers['game_flow'][2] = 0
 
     def update_player_positions(self):
-        #     latitudes = np.array([player.latitude for player in players.values()])
-        #     longitudes = np.array([player.longitude for player in players.values()])
-        #     x, y, z = ut.to_xyz(ut.lon_to_phi(longitudes), ut.lat_to_theta(latitudes))
-        #     self.players.setData(pos=np.array([x, y, z]).T)
         self.player_markers.setData(pos=self.player_positions[:, 0, :])
-
         for i in range(len(self.player_positions)):
             self.tracks[i].setData(pos=self.player_positions[i, ...])
-            # self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 1], 0, 0, 1)
-            # perp_vec = np.cross(self.player_positions[i, 0, :], [0, 0, 1])
-            # perp_vec /= np.linalg.norm(perp_vec)
-            # self.avatars[i].rotate(self.buffers['player_delta_angles'][i, 0], *perp_vec)
-
-        # # for i, (name, player) in enumerate(players.items()):
-        #     if not player.arrived:
-        #         arr = np.array([x[i], y[i], z[i]])
-        #         pos = np.vstack(
-        #             [self.tracks[name]['pos'], arr],
-        #         )
-        #         npos = len(pos)
-        #         step = (npos // 1000) if npos > 1000 else 1
-        #         self.tracks[name]['artist'].setData(pos=pos[::step])
-        #         self.tracks[name]['pos'] = pos
-        #         self.avatars[name].rotate(player.dlon, 0, 0, 1)
-        #         perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
-        #         perp_vec /= np.linalg.norm(perp_vec)
-        #         self.avatars[name].rotate(player.dlat, *perp_vec)
 
     def toggle_wind_tracers(self, val):
         self.tracers.setVisible(val)
@@ -350,16 +259,7 @@ class Graphics:
 
         if all(self.buffers['all_shutdown']):
             self.shutdown()
-            # for name, points in zip(
-            #     self.players.keys(), self.buffers['player_status'][:, 0]
-            # ):
-            #     print(f"{name}: {points}")
-            # self.update_leaderboard(
-            #     scores=finalize_scores(
-            #         self.players, player_points=self.buffers['player_status'][:, 0]
-            #     )
-            # )
-            # self.timer.stop()
+
         clock_time = time.time()
         t = clock_time - self.start_time
         self.update_wind_tracers()
@@ -371,9 +271,6 @@ class Graphics:
             self.buffers['game_flow'][1] = True
 
     def update_leaderboard(self, scores: Dict[str, int]):
-        # scores = finalize_scores(
-        #     self.players, player_points=self.buffers['player_status'][:, 0]
-        # )
         fastest_times = read_fastest_times(self.players)
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)

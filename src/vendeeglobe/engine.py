@@ -87,10 +87,12 @@ class Engine:
             weather_v=self.buffers["weather_v"],
             forecast_u=self.buffers["forecast_u"],
             forecast_v=self.buffers["forecast_v"],
+            forecast_t=self.buffers["forecast_t"],
             tracer_positions=self.buffers["tracer_positions"],
         )
         self.buffers['all_shutdown'][self.pid] = False
         self.players_not_arrived = list(self.players.keys())
+        self.forecast = self.weather.get_forecast(0)
 
     def initialize_time(self, start_time: float):
         self.start_time = start_time
@@ -111,7 +113,7 @@ class Engine:
             "heading": player.heading,
             "speed": player.speed,
             "vector": player.get_vector(),
-            "forecast": None,  # TODO self.forecast,
+            "forecast": self.forecast,
             "map": self.map_proxy,
         }
         if self.safe:
@@ -227,9 +229,11 @@ class Engine:
                 self.update_scoreboard()
                 self.last_time_update = clock_time
 
-            # if (clock_time - self.last_forecast_update) > config.weather_update_interval:
-            #     self.forecast = self.weather.get_forecast(t)
-            #     self.last_forecast_update = clock_time
+            if (
+                clock_time - self.last_forecast_update
+            ) > config.weather_update_interval:
+                self.forecast = self.weather.get_forecast(t)
+                self.last_forecast_update = clock_time
 
             self.call_player_bots(t=t * config.seconds_to_hours, dt=dt)
             self.move_players(self.weather, t=t, dt=dt)

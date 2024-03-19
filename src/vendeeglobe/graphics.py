@@ -56,11 +56,15 @@ from .weather import Weather
 
 
 class Graphics:
-    def __init__(self, players: Dict[str, Player], buffers: Dict[str, Any]):
+    def __init__(
+        self, players: Dict[str, Player], high_contrast: bool, buffers: Dict[str, Any]
+    ):
+        t0 = time.time()
+        print("Composing graphics...", end=" ", flush=True)
 
         self.scoreboard_max_players = 20
+        self.high_contrast = high_contrast
 
-        print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Vendee Globe")
         self.window = gl.GLViewWidget()
         self.window.setWindowTitle("Vendee Globe")
@@ -178,7 +182,7 @@ class Graphics:
             self.window.addItem(track)
             self.tracks.append(track)
 
-        print(f'done [{time.time() - self.start_time:.2f} s]')
+        print(f'done [{time.time() - t0:.2f} s]')
 
     def initialize_time(self, start_time: float):
         self.start_time = start_time
@@ -333,6 +337,7 @@ class Graphics:
         texture_checkbox = QCheckBox("High contrast", checked=False)
         widget1_layout.addWidget(texture_checkbox)
         texture_checkbox.stateChanged.connect(self.toggle_texture)
+        texture_checkbox.setChecked(self.high_contrast)
 
         stars_checkbox = QCheckBox("Background stars", checked=True)
         widget1_layout.addWidget(stars_checkbox)

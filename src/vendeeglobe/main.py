@@ -54,7 +54,7 @@ def spawn_engine(*args):
     engine.run(start_time=clock.start_time)
 
 
-def play(bots, seed=None, start=None, safe=False, ncores=8):
+def play(bots, seed=None, start=None, safe=False, ncores=8, high_contrast=False):
 
     pre_compile()
 
@@ -91,6 +91,7 @@ def play(bots, seed=None, start=None, safe=False, ncores=8):
         'weather_v': weather.v,
         'forecast_u': weather.forecast_u,
         'forecast_v': weather.forecast_v,
+        'forecast_t': weather.forecast_times,
         'game_flow': game_flow,
         'player_status': player_status,
         'all_arrived': arrived,
@@ -110,6 +111,7 @@ def play(bots, seed=None, start=None, safe=False, ncores=8):
             target=spawn_graphics,
             args=(
                 players,
+                high_contrast,
                 {
                     key: buffers[key]
                     for key in (

@@ -16,9 +16,6 @@ from vendeeglobe import (
 )
 from vendeeglobe.utils import distance_on_surface
 
-# This is your team name
-CREATOR = "TeamName"
-
 
 def add_spread(course, spread=0.2):
     for ch in course[:-1]:
@@ -32,7 +29,7 @@ class Bot:
     """
 
     def __init__(self):
-        self.team = CREATOR  # Mandatory attribute
+        self.team = "TeamName"  # Mandatory attribute
         self.avatar = 1  # Optional attribute
         self.course = [
             Checkpoint(longitude=-45.5481686, latitude=39.0722068, radius=200),
@@ -134,7 +131,7 @@ class Bot2:
     """
 
     def __init__(self):
-        self.team = CREATOR  # Mandatory attribute
+        self.team = "TeamName"  # Mandatory attribute
         self.avatar = 2  # Optional attribute
         self.course = [
             Checkpoint(latitude=43.797109, longitude=-11.264905, radius=50),

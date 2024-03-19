@@ -109,43 +109,15 @@ class Weather:
         weather_v: np.ndarray,
         forecast_u: np.ndarray,
         forecast_v: np.ndarray,
+        forecast_t: np.ndarray,
         tracer_positions: np.ndarray,
-        # u_shared_mem: SharedMemory,
-        # u_shared_data_dtype: np.dtype,
-        # u_shared_data_shape: Tuple[int, ...],
-        # v_shared_mem: SharedMemory,
-        # v_shared_data_dtype: np.dtype,
-        # v_shared_data_shape: Tuple[int, ...],
-        # forecast_u_shared_mem: SharedMemory,
-        # forecast_u_shared_data_dtype: np.dtype,
-        # forecast_u_shared_data_shape: Tuple[int, ...],
-        # forecast_v_shared_mem: SharedMemory,
-        # forecast_v_shared_data_dtype: np.dtype,
-        # forecast_v_shared_data_shape: Tuple[int, ...],
-        # tracer_buffer: np.ndarray,
     ):
         self.pid = pid
-        # self.u = ut.array_from_shared_mem(
-        #     u_shared_mem, u_shared_data_dtype, u_shared_data_shape
-        # )
-        # self.v = ut.array_from_shared_mem(
-        #     v_shared_mem, v_shared_data_dtype, v_shared_data_shape
-        # )
-        # self.forecast_u = ut.array_from_shared_mem(
-        #     forecast_u_shared_mem,
-        #     forecast_u_shared_data_dtype,
-        #     forecast_u_shared_data_shape,
-        # )
-        # self.forecast_v = ut.array_from_shared_mem(
-        #     forecast_v_shared_mem,
-        #     forecast_v_shared_data_dtype,
-        #     forecast_v_shared_data_shape,
-        # )
-        # self.tracer_buffer = tracer_buffer
         self.u = weather_u
         self.v = weather_v
         self.forecast_u = forecast_u
         self.forecast_v = forecast_v
+        self.forecast_t = forecast_t
         self.tracer_positions = tracer_positions
 
         self.nt, self.ny, self.nx = self.u.shape
@@ -158,50 +130,15 @@ class Weather:
         lon_max = 180
         self.du = (lon_max - lon_min) / self.nx
 
-        # size = (config.tracer_lifetime, config.ntracers)
         size = self.tracer_positions.shape[1:-1]
         self.rng = np.random.default_rng(pid + (seed if seed is not None else 0))
 
         self.tracer_lat = self.rng.uniform(-89.9, 89.9, size=size)
         self.tracer_lon = self.rng.uniform(-180, 180, size=size)
-        # self.tracer_colors = np.zeros(self.tracer_lat.shape + (4,))
-        # self.tracer_colors[..., pid] = 1.0
-        # self.tracer_colors[..., 3] = np.linspace(1, 0, 50).reshape((-1, 1))
-
-        # self.number_of_new_tracers = 2
         self.new_tracer_counter = 0
 
-        # # Make forecast data
-        # self.forecast_times = np.arange(
-        #     0, config.forecast_length * 6, config.weather_update_interval
-        # )
-        # nf = len(self.forecast_times)
-
-        # blurred_u = uniform_filter(self.u, size=30, mode="wrap")
-        # blurred_v = uniform_filter(self.v, size=30, mode="wrap")
-        # coeffs_a = np.linspace(0, 1, nf)
-        # coeffs_b = np.linspace(1, 0, nf)
-        # shape = self.u.shape + (1,)
-        # u_r = self.u.reshape(shape)
-        # v_r = self.v.reshape(shape)
-        # bu_r = blurred_u.reshape(shape)
-        # bv_r = blurred_v.reshape(shape)
-
-        # self.forecast_u = np.transpose(
-        #     coeffs_b * u_r + coeffs_a * bu_r, axes=[3, 0, 1, 2]
-        # )
-        # self.forecast_v = np.transpose(
-        #     coeffs_b * v_r + coeffs_a * bv_r, axes=[3, 0, 1, 2]
-        # )
-
-        # self.u.setflags(write=False)
-        # self.v.setflags(write=False)
-        # self.forecast_u.setflags(write=False)
-        # self.forecast_v.setflags(write=False)
-        # print(f"done [{time.time() - t0:.2f} s]")
-
     def get_forecast(self, t: float) -> WeatherForecast:
-        t = t + self.forecast_times
+        t = t + self.forecast_t
         it = (t / self.dt).astype(int) % self.nt
         ik = np.arange(len(t))
         return WeatherForecast(
@@ -244,14 +181,6 @@ class Weather:
         new_lon = self.rng.uniform(-180, 180, size=(config.number_of_new_tracers,))
         istart = self.new_tracer_counter
         iend = self.new_tracer_counter + config.number_of_new_tracers
-        # print(
-        #     istart,
-        #     iend,
-        #     self.new_tracer_counter,
-        #     self.number_of_new_tracers,
-        #     self.tracer_lat[0, istart:iend].shape,
-        #     new_lat.shape,
-        # )
         self.tracer_lat[0, istart:iend] = new_lat
         self.tracer_lon[0, istart:iend] = new_lon
         self.new_tracer_counter = (
@@ -259,14 +188,7 @@ class Weather:
         ) % self.tracer_lat.shape[1]
 
         x, y, z = ut.to_xyz(
-            # ut.lon_to_phi(self.tracer_lon.ravel()),
-            # ut.lat_to_theta(self.tracer_lat.ravel()),
-            ut.lon_to_phi(self.tracer_lon),
-            ut.lat_to_theta(self.tracer_lat),
+            ut.lon_to_phi(self.tracer_lon), ut.lat_to_theta(self.tracer_lat)
         )
-        # self.tracer_positions[self.pid, ..., 0] = x
-        # self.tracer_positions[self.pid, ..., 1] = y
-        # self.tracer_positions[self.pid, ..., 2] = z
-
-        # TODO: maybe we can use vstack?
+        # Using transpose is apparently faster than np.stack
         self.tracer_positions[self.pid, ...] = np.array([x, y, z]).transpose(1, 2, 0)

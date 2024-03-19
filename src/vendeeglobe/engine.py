@@ -2,52 +2,15 @@
 
 import datetime
 import time
-from multiprocessing.shared_memory import SharedMemory
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict
 
 import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
 
-try:
-    from PyQt5.QtWidgets import (
-        QCheckBox,
-        QFrame,
-        QHBoxLayout,
-        QLabel,
-        QMainWindow,
-        QSizePolicy,
-        QSlider,
-        QVBoxLayout,
-        QWidget,
-    )
-    from PyQt5.QtCore import Qt
-except ImportError:
-    from PySide2.QtWidgets import (
-        QMainWindow,
-        QWidget,
-        QLabel,
-        QHBoxLayout,
-        QVBoxLayout,
-        QCheckBox,
-        QSizePolicy,
-        QSlider,
-        QFrame,
-    )
-    from PySide2.QtCore import Qt
 
 from . import config
-from .core import Location
-from .graphics import Graphics
 from .map import MapProxy, MapData
 from .player import Player
-from .scores import (
-    finalize_scores,
-    get_player_points,
-    read_fastest_times,
-    read_scores,
-    write_times,
-)
+from .scores import get_player_points, write_times
 from . import utils as ut
 from .weather import Weather
 
@@ -57,8 +20,8 @@ class Engine:
         self,
         pid: int,
         seed: int,
-        bots: dict,
-        players: dict,
+        bots: Dict[str, Any],
+        players: Dict[str, Player],
         bot_index_begin: int,
         buffers: dict,
         safe: bool,

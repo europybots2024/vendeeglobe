@@ -2,7 +2,6 @@
 
 import time
 from dataclasses import dataclass
-from multiprocessing.shared_memory import SharedMemory
 from typing import Optional, Tuple
 
 import numpy as np
@@ -25,7 +24,7 @@ class WeatherForecast:
     ) -> Tuple[np.ndarray, np.ndarray]:
         iv = ((lat + 90.0) / self.dv).astype(int)
         iu = ((lon + 180.0) / self.du).astype(int)
-        it = ((t / config.seconds_to_hours) / self.dt).astype(int)  #  % self.nt
+        it = ((t / config.seconds_to_hours) / self.dt).astype(int)  # % self.nt
         u = self.u[it, iv, iu]
         v = self.v[it, iv, iu]
         return u, v

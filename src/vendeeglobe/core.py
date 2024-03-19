@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
-
-import numpy as np
+from typing import Optional
 
 
 @dataclass

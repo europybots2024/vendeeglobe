@@ -7,8 +7,6 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from matplotlib.colors import to_rgba
-from OpenGL.GL import *  # noqa
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from pyqtgraph.Qt import QtCore
 
 
@@ -44,15 +42,9 @@ from . import config
 from . import utils as ut
 from .map import MapTextures
 from .player import Player
-from .scores import (
-    finalize_scores,
-    get_player_points,
-    read_fastest_times,
-    read_scores,
-)
+from .scores import finalize_scores, read_fastest_times, read_scores
 from .sphere import GLTexturedSphereItem
 from .utils import array_from_shared_mem, string_to_color
-from .weather import Weather
 
 
 class Graphics:

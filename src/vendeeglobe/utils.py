@@ -9,6 +9,7 @@ import numba
 import numpy as np
 
 from . import config
+from .core import Location
 
 RADIUS = float(config.map_radius)
 
@@ -130,45 +131,20 @@ def longitude_difference(lon1: float, lon2: float) -> float:
         return -min(-lon_diff, crossing_diff)
 
 
-# def gkern(sigma=1):
-#     """
-#     Creates gaussian kernel
-#     """
-#     ax = np.linspace(-(sigma - 1) / 2.0, (sigma - 1) / 2.0, sigma)
-#     gauss = np.exp(-0.5 * np.square(ax) / np.square(sigma))
-#     kernel = np.outer(gauss, gauss)
-#     return kernel / np.sum(kernel)
+def goto(origin: Location, to: Location):
+    """
+    Find the heading angle (in degrees) for the shortest distance from `origin` to `to`.
+    """
+    lon1 = np.radians(origin.longitude)
+    lat1 = np.radians(origin.latitude)
+    lon2 = np.radians(to.longitude)
+    lat2 = np.radians(to.latitude)
 
-
-# @numba.njit(cache=True)
-# def blur_weather(u: np.ndarray, v: np.ndarray, n: int) -> Tuple[np.ndarray, np.ndarray]:
-#     u_out = np.zeros((n,) + u.shape)
-#     v_out = np.zeros_like(u_out)
-#     nt, ny, nx = u.shape
-#     for k in range(n):
-#         sigma = 2 * k + 1
-#         ax = np.linspace(-(sigma - 1) / 2.0, (sigma - 1) / 2.0, sigma)
-#         gauss = np.exp(-0.5 * np.square(ax) / np.square(sigma))
-#         kernel = np.outer(gauss, gauss)
-#         kernel /= np.sum(kernel)
-
-#         for t in range(nt):
-#             for j in range(ny):
-#                 for i in range(nx):
-#                     for jj in range(-k, k + 1):
-#                         for ii in range(-k, k + 1):
-#                             u_out[k, t, j, i] += (
-#                                 kernel[jj, ii] * u[t, (j + jj) % ny, (i + ii) % nx]
-#                             )
-#                             v_out[k, t, j, i] += (
-#                                 kernel[jj, ii] * v[t, (j + jj) % ny, (i + ii) % nx]
-#                             )
-#     # u_out[0] = u
-#     # v_out[0] = v
-#     # for i in range(1, n):
-#     #     u_out[i] = uniform_filter(u, size=i * 2, mode="wrap")
-#     #     v_out[i] = uniform_filter(v, size=i * 2, mode="wrap")
-#     return u_out, v_out
+    dlon = lon2 - lon1
+    y = np.sin(dlon) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(dlon)
+    initial_bearing = -np.arctan2(y, x) + (np.pi * 0.5)
+    return (np.degrees(initial_bearing) + 360) % 360
 
 
 def pre_compile():

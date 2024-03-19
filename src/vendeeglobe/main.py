@@ -1,33 +1,20 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import datetime
-import os
 import time
-from multiprocessing import Lock, Process
+from multiprocessing import Process
 from multiprocessing.managers import SharedMemoryManager
-from multiprocessing.shared_memory import SharedMemory
-from typing import List, Optional, Tuple
 
 
 import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
 
 
 from . import config
-from .core import Location
 from .engine import Engine
 from .graphics import Graphics
-from .map import MapData, MapProxy, MapTextures
+from .map import MapData
 from .player import Player
-from .utils import (
-    array_from_shared_mem,
-    distance_on_surface,
-    longitude_difference,
-    pre_compile,
-    string_to_color,
-)
-from .weather import Weather, WeatherData
+from .utils import array_from_shared_mem, pre_compile
+from .weather import WeatherData
 
 
 class Clock:
@@ -81,7 +68,6 @@ def play(bots, seed=None, start=None, safe=False, ncores=8, high_contrast=False)
     shutdown = np.zeros(n_sub_processes, dtype=bool)
 
     weather = WeatherData(seed=seed)
-    # map_terrain = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))['sea_array']
     world_map = MapData()
 
     buffer_mapping = {

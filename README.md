@@ -75,12 +75,24 @@ Preview
 - Ships will get stuck when reaching land (obviously!), but will not crash: you can turn around
 - Ships cannot crash into each other (they behave like ghosts)
 
-## Scoring:
+## Scoring
 
 - Points from 1st to last place decay exponentially (and depend on the number of players)
 
+<img src="https://github.com/europybots2024/vendeeglobe/assets/39047984/6b7de608-71a7-4bd0-8fa5-0da02cf035d3" width="500" />
 
 - Back home with 2 checkpoints is best (or closest to home)
 - Then closest to 2nd checkpoint, then closest to 1st checkpoint
 
+## Timing
+
+Here is a table that gives the correspondance between real/user time duration and the amount of time that goes by in the game.
+
+| Real/User time | Time in game |
+| --- | --- |
+| 8 mins   | 80 days  |
+| 1 min    | 10 days  |
+| 6 sec    |  1 day   |
+| 1 sec    |  4 hours |
+| 0.25 sec |  1 hour  |
 

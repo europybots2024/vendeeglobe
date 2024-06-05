@@ -73,6 +73,14 @@ Preview
 
 - With a wind force of 1, the ship will go as fast as the wind
 - Ships will get stuck when reaching land (obviously!), but will not crash: you can turn around
-- Ships cannot crash into each other (ghosts)
+- Ships cannot crash into each other (they behave like ghosts)
+
+## Scoring:
+
+- Points from 1st to last place decay exponentially (and depend on the number of players)
+
+
+- Back home with 2 checkpoints is best (or closest to home)
+- Then closest to 2nd checkpoint, then closest to 1st checkpoint
 
 

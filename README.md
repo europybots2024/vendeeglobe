@@ -41,6 +41,9 @@ Around the world sailing race
 
 Preview
 
+<img src="https://github.com/europybots2024/vendeeglobe/assets/39047984/1ed0ec51-4d42-40de-bed6-88eefebab866" width="600" />
+
+
 ## Goal & general rules
 
 - Sail around the world as fast as possible

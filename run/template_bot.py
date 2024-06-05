@@ -6,11 +6,9 @@ import numpy as np
 
 from vendeeglobe import (
     Checkpoint,
-    Heading,
     Instructions,
     Location,
     MapProxy,
-    Vector,
     WeatherForecast,
     config,
 )
@@ -59,7 +57,7 @@ class Bot:
                 radius=5,
             ),
         ]
-        for ch in self.course[:-2]:
+        for ch in self.course[:-3]:
             ch.reached = True
 
         # add_spread(self.course)
@@ -144,6 +142,7 @@ class Bot2:
             Checkpoint(latitude=-15.668984, longitude=77.674694, radius=1190.0),
             Checkpoint(latitude=-39.438937, longitude=19.836265, radius=50.0),
             Checkpoint(latitude=14.881699, longitude=-21.024326, radius=50.0),
+            Checkpoint(latitude=43, longitude=-19, radius=5),
             Checkpoint(latitude=44.076538, longitude=-18.292936, radius=50.0),
             Checkpoint(
                 latitude=config.start.latitude,

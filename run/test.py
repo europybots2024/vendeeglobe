@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
-import numpy as np
 import vendeeglobe as vg
-from template_bot import Bot, Bot2
+from template_bot import Bot2
 
 nbots = 30
 
@@ -24,7 +23,7 @@ start = None
 bots = []
 for i, ai in enumerate(ais):
     bots.append(ai())
-    bots[-1].team = f'Team-{i}'
+    bots[-1].team = f"Team-{i}"
 
 start = bots[-1].course[-3]
 

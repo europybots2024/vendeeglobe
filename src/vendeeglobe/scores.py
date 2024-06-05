@@ -27,7 +27,7 @@ def read_scores(players: Dict[str, Player]) -> Dict[str, int]:
         if os.path.exists(fname):
             with open(fname, "r") as f:
                 contents = f.readlines()
-            scores[player] = sum(int(line.strip()) for line in contents)
+            scores[player] = sum(float(line.strip()) for line in contents)
     return scores
 
 
@@ -36,9 +36,9 @@ def _write_scores(scores: Dict[str, int]):
     _make_folder(folder)
     for name, score in scores.items():
         fname = os.path.join(folder, f"{name}_scores.txt")
-        mode = 'w+' if os.path.exists(fname) else 'w'
+        mode = "w+" if os.path.exists(fname) else "w"
         with open(fname, mode) as f:
-            f.write(f'{score}\n')
+            f.write(f"{score}\n")
 
 
 def get_player_points(player: Player) -> int:
@@ -91,11 +91,15 @@ def _get_final_scores(
     players: Dict[str, Player], scores: Dict[str, int], player_points: np.ndarray
 ):
     rankings = get_rankings(players, player_points)
-    for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    # exponential points distribution
+    n = len(players)  # Points for the 1st position
+    k = np.log(n) / (n - 1)
+    points = n * np.exp(-k * (np.arange(1, n + 1) - 1))
+    # for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
     final_scores = {}
     round_scores = {}
-    for team in rankings:
-        round_scores[team] = for_grabs.pop(0) if for_grabs else 0
+    for team, p in zip(rankings, points):
+        round_scores[team] = p  # for_grabs.pop(0) if for_grabs else 0
         final_scores[team] = scores[team] + round_scores[team]
     return round_scores, final_scores
 
@@ -110,7 +114,7 @@ def _print_scores(
     sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
     print("Scores:")
     for i, (name, score, total) in enumerate(sorted_scores):
-        print(f"{i + 1}. {name}: {total} ({score})")
+        print(f"{i + 1}. {name}: {total:.2f} ({score:.2f})")
 
 
 def finalize_scores(players: Dict[str, Player], player_points: np.ndarray):
@@ -140,6 +144,6 @@ def write_times(times: Dict[str, Player]):
     _make_folder(folder)
     for name, t in times.items():
         fname = os.path.join(folder, f"{name}_times.txt")
-        mode = 'w+' if os.path.exists(fname) else 'w'
+        mode = "w+" if os.path.exists(fname) else "w"
         with open(fname, mode) as f:
             f.write(f"{t}\n")

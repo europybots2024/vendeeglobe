@@ -122,7 +122,7 @@ class Graphics:
             mesh.rotate(np.degrees(ut.lon_to_phi(ch.longitude)), 0, 0, 1)
             self.window.addItem(mesh)
 
-        self.tracer_positions = self.buffers['tracer_positions']
+        self.tracer_positions = self.buffers["tracer_positions"]
 
         self.default_tracer_colors = np.ones(self.tracer_positions.shape[:-1] + (4,))
         self.default_tracer_colors[..., 3] = np.linspace(
@@ -130,7 +130,7 @@ class Graphics:
         ).reshape((-1, 1))
 
         self.high_contrast_tracer_colors = self.default_tracer_colors.copy()
-        self.high_contrast_tracer_colors[..., :3] *= 0.8
+        self.high_contrast_tracer_colors[..., :3] *= 0.5
         self.tracers = gl.GLScatterPlotItem(
             pos=self.tracer_positions.reshape((-1, 3)),
             color=self.default_tracer_colors.reshape((-1, 4)),
@@ -138,11 +138,11 @@ class Graphics:
             pxMode=True,
         )
         # self.tracers.setGLOptions("opaque")
-        self.tracers.setGLOptions('translucent')
+        self.tracers.setGLOptions("translucent")
         self.window.addItem(self.tracers)
 
         # Add players
-        self.player_positions = self.buffers['player_positions']
+        self.player_positions = self.buffers["player_positions"]
         player_colors = [string_to_color(p.team) for p in self.players.values()]
         colors = np.array([to_rgba(color) for color in player_colors])
 
@@ -174,7 +174,7 @@ class Graphics:
             self.window.addItem(track)
             self.tracks.append(track)
 
-        print(f'done [{time.time() - t0:.2f} s]')
+        print(f"done [{time.time() - t0:.2f} s]")
 
     def initialize_time(self, start_time: float):
         self.start_time = start_time
@@ -215,12 +215,12 @@ class Graphics:
         self.time_label.setText(f"Time left: {time_str} s")
         status = [
             (
-                self.buffers['player_status'][i, 0],  # points
-                self.buffers['player_status'][i, 1],  # distance travelled
+                self.buffers["player_status"][i, 0],  # points
+                self.buffers["player_status"][i, 1],  # distance travelled
                 player.team,
-                self.buffers['player_status'][i, 2],  # speed
+                self.buffers["player_status"][i, 2],  # speed
                 player.color,
-                int(self.buffers['player_status'][i, 3]),  # checkpoints reached
+                int(self.buffers["player_status"][i, 3]),  # checkpoints reached
             )
             for i, player in enumerate(self.players.values())
         ]
@@ -230,30 +230,30 @@ class Graphics:
         ):
             self.player_boxes[i].setText(
                 f'<div style="color:{col}">&#9632;</div> {i+1}. '
-                f'{team[:config.max_name_length]}: {int(dist)} km, '
-                f'{int(speed)} km/h [{nch}]'
+                f"{team[:config.max_name_length]}: {int(dist)} km, "
+                f"{int(speed)} km/h [{nch}]"
             )
 
     def shutdown(self):
         for name, points in zip(
-            self.players.keys(), self.buffers['player_status'][:, 0]
+            self.players.keys(), self.buffers["player_status"][:, 0]
         ):
             print(f"{name}: {points}")
         self.update_leaderboard(
             scores=finalize_scores(
-                self.players, player_points=self.buffers['player_status'][:, 0]
+                self.players, player_points=self.buffers["player_status"][:, 0]
             )
         )
         self.timer.stop()
 
     def update(self):
-        if self.buffers['game_flow'][0]:
+        if self.buffers["game_flow"][0]:
             return
 
-        if all(self.buffers['all_arrived']):
-            self.buffers['game_flow'][1] = True
+        if all(self.buffers["all_arrived"]):
+            self.buffers["game_flow"][1] = True
 
-        if all(self.buffers['all_shutdown']):
+        if all(self.buffers["all_shutdown"]):
             self.shutdown()
 
         clock_time = time.time()
@@ -264,7 +264,7 @@ class Graphics:
             self.update_scoreboard(config.time_limit - t)
             self.last_time_update = clock_time
         if t > config.time_limit:
-            self.buffers['game_flow'][1] = True
+            self.buffers["game_flow"][1] = True
 
     def update_leaderboard(self, scores: Dict[str, int]):
         fastest_times = read_fastest_times(self.players)
@@ -276,7 +276,7 @@ class Graphics:
         ):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {score}'
+                f"{i+1}. {name[:config.max_name_length]}: {score}"
             )
 
         sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
@@ -288,7 +288,7 @@ class Graphics:
                 time = "None"
             self.fastest_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {time}'
+                f"{i+1}. {name[:config.max_name_length]}: {time}"
             )
 
     def run(self, start_time: float):
@@ -387,4 +387,4 @@ class Graphics:
         self.timer.start()
         pg.exec()
 
-        self.buffers['game_flow'][1] = True
+        self.buffers["game_flow"][1] = True

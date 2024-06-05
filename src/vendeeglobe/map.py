@@ -13,14 +13,21 @@ from . import config
 
 def create_map_data(fname):
     im = Image.open(os.path.join(config.resourcedir, config.map_file))
-    array = np.array(im.convert('RGBA'))
-    img16 = array.astype('int16')
+    array = np.array(im.convert("RGBA"))
+    img16 = array.astype("int16")
     sea_array = np.flipud(
         np.where(img16[:, :, 2] > (img16[:, :, 0] + img16[:, :, 1]), 1, 0)
     )
-    high_contrast_texture = np.array(
-        Image.fromarray(np.uint8(sea_array * 255)).convert('RGBA')
-    )
+    # high_contrast_texture = np.array(
+    #     Image.fromarray(np.uint8(sea_array * 255)).convert('RGBA')
+    # )
+    high_contrast_texture = np.zeros((*sea_array.shape, 4), dtype="uint8")
+    high_contrast_texture[..., 3] = 255
+    inds = sea_array == 1
+    high_contrast_texture[inds, 0] = 200
+    high_contrast_texture[inds, 1] = 255
+    high_contrast_texture[inds, 2] = 255
+    high_contrast_texture[~inds, 1] = 50
     np.savez(
         fname,
         array=array,
@@ -31,18 +38,18 @@ def create_map_data(fname):
 
 class MapTextures:
     def __init__(self):
-        mapdata = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))
-        self.default_texture = mapdata['array']
-        self.contrast_texture = mapdata['high_contrast_texture']
+        mapdata = np.load(os.path.join(config.resourcedir, "mapdata.npz"))
+        self.default_texture = mapdata["array"]
+        self.contrast_texture = mapdata["high_contrast_texture"]
 
 
 class MapData:
     def __init__(self):
         t0 = time.time()
-        print('Creating world map...', end=' ', flush=True)
-        mapdata = np.load(os.path.join(config.resourcedir, 'mapdata.npz'))
-        self.sea_array = mapdata['sea_array']
-        self.nlat, self.nlon, _ = mapdata['array'].shape
+        print("Creating world map...", end=" ", flush=True)
+        mapdata = np.load(os.path.join(config.resourcedir, "mapdata.npz"))
+        self.sea_array = mapdata["sea_array"]
+        self.nlat, self.nlon, _ = mapdata["array"].shape
         lat_min = -90
         lat_max = 90
         self.dlat = (lat_max - lat_min) / self.nlat
@@ -57,7 +64,7 @@ class MapData:
         )
         self.lon_grid, self.lat_grid = np.meshgrid(self.lon, self.lat)
         self.sea_array.setflags(write=False)
-        print(f'done [{time.time() - t0:.2f} s]')
+        print(f"done [{time.time() - t0:.2f} s]")
 
     def get_terrain(self, longitudes, latitudes):
         ilon = ((longitudes + 180.0) / self.dlon).astype(int)

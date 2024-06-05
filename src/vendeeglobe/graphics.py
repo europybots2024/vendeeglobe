@@ -296,7 +296,7 @@ class Graphics:
             pxMode=True,
         )
         # self.tracers.setGLOptions("opaque")
-        self.tracers.setGLOptions('translucent')
+        self.tracers.setGLOptions("translucent")
         self.window.addItem(self.tracers)
 
         # Add players
@@ -316,7 +316,6 @@ class Graphics:
         self.window.addItem(self.players)
 
         self.tracks = {}
-        self.avatars = {}
         self.labels = {}
         for i, (name, player) in enumerate(players.items()):
             x, y, z = ut.to_xyz(
@@ -325,35 +324,20 @@ class Graphics:
             )
             pos = np.array([[x], [y], [z]]).T
             self.tracks[name] = {
-                'pos': pos,
-                'artist': gl.GLLinePlotItem(
+                "pos": pos,
+                "artist": gl.GLLinePlotItem(
                     pos=pos, color=tuple(colors[i]), width=4, antialias=True
                 ),
             }
-            self.tracks[name]['artist'].setGLOptions("opaque")
-            self.window.addItem(self.tracks[name]['artist'])
-
-            self.avatars[name] = gl.GLImageItem(
-                np.fliplr(np.transpose(np.array(player.avatar), axes=[1, 0, 2]))
-            )
-            offset = config.avatar_size[0] / 2
-            self.avatars[name].translate(-offset, -offset, 0)
-            self.avatars[name].rotate(90, 1, 0, 0)
-            self.avatars[name].rotate(180, 0, 0, 1)
-            self.avatars[name].translate(0, config.map_radius, 0)
-            self.avatars[name].rotate(90, 0, 0, 1)
-            self.avatars[name].rotate(player.longitude, 0, 0, 1)
-            perp_vec = np.cross([x, y, 0], [0, 0, 1])
-            perp_vec /= np.linalg.norm(perp_vec)
-            self.avatars[name].rotate(player.latitude, *perp_vec)
-            self.window.addItem(self.avatars[name])
+            self.tracks[name]["artist"].setGLOptions("opaque")
+            self.window.addItem(self.tracks[name]["artist"])
 
         if course_preview is not None:
             line, vertices = _make_course_preview(course_preview)
             self.window.addItem(line)
             self.window.addItem(vertices)
 
-        print(f'done [{time.time() - t0:.2f} s]')
+        print(f"done [{time.time() - t0:.2f} s]")
 
     def update_wind_tracers(self, tracer_lat: np.ndarray, tracer_lon: np.ndarray):
         x, y, z = ut.to_xyz(
@@ -372,16 +356,12 @@ class Graphics:
             if not player.arrived:
                 arr = np.array([x[i], y[i], z[i]])
                 pos = np.vstack(
-                    [self.tracks[name]['pos'], arr],
+                    [self.tracks[name]["pos"], arr],
                 )
                 npos = len(pos)
                 step = (npos // 1000) if npos > 1000 else 1
-                self.tracks[name]['artist'].setData(pos=pos[::step])
-                self.tracks[name]['pos'] = pos
-                self.avatars[name].rotate(player.dlon, 0, 0, 1)
-                perp_vec = np.cross([x[i], y[i], 0], [0, 0, 1])
-                perp_vec /= np.linalg.norm(perp_vec)
-                self.avatars[name].rotate(player.dlat, *perp_vec)
+                self.tracks[name]["artist"].setData(pos=pos[::step])
+                self.tracks[name]["pos"] = pos
 
     def toggle_wind_tracers(self, val):
         self.tracers.setVisible(val)

@@ -47,7 +47,7 @@ from .scores import (
     read_scores,
     write_fastest_times,
 )
-from .utils import distance_on_surface, longitude_difference, pre_compile
+from .utils import distance_on_surface, pre_compile
 from .weather import Weather
 
 
@@ -76,10 +76,8 @@ class Engine:
         print("Generating players...", end=" ", flush=True)
         self.bots = {bot.team: bot for bot in bots}
         self.players = {}
-        for name, bot in self.bots.items():
-            self.players[name] = Player(
-                team=name, avatar=getattr(bot, 'avatar', 1), start=start
-            )
+        for name in self.bots:
+            self.players[name] = Player(team=name, start=start)
         print(f"done [{time.time() - t0:.2f} s]")
 
         self.map = Map()
@@ -181,8 +179,6 @@ class Engine:
                     longitude2=next_lon,
                     latitude2=next_lat,
                 )
-                player.dlat = next_lat - player.latitude
-                player.dlon = longitude_difference(next_lon, player.longitude)
                 player.latitude = next_lat
                 player.longitude = next_lon
             else:
@@ -296,8 +292,8 @@ class Engine:
         ):
             self.player_boxes[i].setText(
                 f'<div style="color:{col}">&#9632;</div> {i+1}. '
-                f'{team[:config.max_name_length]}: {int(dist)} km, '
-                f'{int(speed)} km/h [{nch}]'
+                f"{team[:config.max_name_length]}: {int(dist)} km, "
+                f"{int(speed)} km/h [{nch}]"
             )
 
     def update_leaderboard(self, scores, fastest_times):
@@ -307,7 +303,7 @@ class Engine:
         for i, (name, score) in enumerate(sorted_scores.items()):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {score}'
+                f"{i+1}. {name[:config.max_name_length]}: {score}"
             )
 
         sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
@@ -319,7 +315,7 @@ class Engine:
                 time = "None"
             self.fastest_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f'{i+1}. {name[:config.max_name_length]}: {time}'
+                f"{i+1}. {name[:config.max_name_length]}: {time}"
             )
 
     def run(self):

@@ -4,8 +4,6 @@ from dataclasses import asdict
 from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
-from matplotlib.colors import hex2color
-from PIL import Image
 
 from . import config
 from . import utils as utl
@@ -16,7 +14,6 @@ class Player:
     def __init__(
         self,
         team: str,
-        avatar: Union[str, int],
         start: Optional[Location] = None,
     ):
         self.team = team
@@ -35,22 +32,7 @@ class Player:
         ]
         self.arrived = False
         self.distance_travelled = 0.0
-        self.dlat = 0.0
-        self.dlon = 0.0
-        self.make_avatar(avatar)
         self.sail = 1.0
-
-    def make_avatar(self, avatar):
-        if isinstance(avatar, str):
-            self.avatar = Image.open(avatar).resize(config.avatar_size).convert('RGBA')
-        else:
-            img = Image.open(config.resourcedir / f'ship{avatar}.png')
-            img = img.resize(config.avatar_size).convert("RGBA")
-            data = img.getdata()
-            self.avatar = np.array(data).reshape(img.height, img.width, 4)
-            rgb = hex2color(self.color)
-            for i in range(3):
-                self.avatar[..., i] = int(round(rgb[i] * 255))
 
     def execute_bot_instructions(self, instructions: Union[Location, Heading, Vector]):
         if [

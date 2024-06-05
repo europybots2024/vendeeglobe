@@ -278,7 +278,7 @@ class Engine:
         for i, (name, score) in enumerate(sorted_scores.items()):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f"{i+1}. {name[:config.max_name_length]}: {score}"
+                f"{i+1}. {name[:config.max_name_length]}: {score:.2f}"
             )
 
         sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))

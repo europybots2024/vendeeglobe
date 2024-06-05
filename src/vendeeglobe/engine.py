@@ -91,9 +91,6 @@ class Engine:
         )
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
-
-        self.set_schedule()
-        self.group_counter = 0
         self.fastest_times = read_fastest_times(self.players)
 
     def initialize_time(self):
@@ -104,23 +101,6 @@ class Engine:
         self.last_forecast_update = self.start_time
         self.previous_clock_time = self.start_time
         self.current_time = 0.0
-
-    def set_schedule(self):
-        times = []
-        for player in self.players.values():
-            t0 = time.time()
-            self.execute_player_bot(player=player, t=0, dt=0)
-            times.append(((time.time() - t0), player))
-        ng = 1
-        time_groups = {i: [] for i in range(ng)}
-        self.player_groups = {i: [] for i in range(ng)}
-        for t in sorted(times, key=lambda tup: tup[0], reverse=True):
-            ind = np.argmin([sum(g) for g in time_groups.values()])
-            time_groups[ind].append(t[0])
-            self.player_groups[ind].append(t[1])
-        empty_groups = [i for i, g in time_groups.items() if len(g) == 0]
-        for i in empty_groups:
-            del self.player_groups[i]
 
     def execute_player_bot(self, player, t: float, dt: float):
         instructions = None
@@ -144,8 +124,8 @@ class Engine:
             instructions = self.bots[player.team].run(**args)
         return instructions
 
-    def call_player_bots(self, t: float, dt: float, players: List[Player]):
-        for player in players:
+    def call_player_bots(self, t: float, dt: float):
+        for player in self.players.values():
             if self.safe:
                 try:
                     player.execute_bot_instructions(
@@ -252,11 +232,7 @@ class Engine:
             self.forecast = self.weather.get_forecast(self.current_time)
             self.last_forecast_update = clock_time
 
-        self.call_player_bots(
-            t=self.current_time * config.seconds_to_hours,
-            dt=dt,
-            players=self.player_groups[self.group_counter % len(self.player_groups)],
-        )
+        self.call_player_bots(t=self.current_time * config.seconds_to_hours, dt=dt)
         self.move_players(self.weather, t=self.current_time, dt=dt)
         if self.tracer_checkbox.isChecked():
             self.weather.update_wind_tracers(
@@ -266,7 +242,6 @@ class Engine:
                 self.weather.tracer_lat, self.weather.tracer_lon
             )
         self.graphics.update_player_positions(self.players)
-        self.group_counter += 1
 
         if len(self.players_not_arrived) == 0:
             self.shutdown()

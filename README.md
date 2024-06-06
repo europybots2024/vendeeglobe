@@ -96,3 +96,24 @@ Here is a table that gives the correspondance between real/user time duration an
 | 1 sec    |  4 hours |
 | 0.25 sec |  1 hour  |
 
+## The control center - the Bot
+
+- To play the game, you will have to create a Python program.
+- It should contain a class named `Bot` and that class should have a method named `run`.
+- Every time step, the `run` method will be called, and it will be inside that function that you should control your ship.
+- You are provided with a `bot.py` in the `template_bot` repository to give you an example.
+
+Look at the comments in `bot.py` for details on what information is available to you at every time step and how to control your vessel.
+
+## The weather forecast
+
+- The `weather_forecast` is one of the arguments the `run` function will receive.
+- It represents wind data for the 5 days to come (for the entire globe).
+- The accuracy of the forecast decreases the further in time you look: the figure below shows the same weather data (value of the horizontal `u` wind component) 1 day in the future, and 5 days in the future
+
+![Screenshot at 2024-06-06 22-26-09](https://github.com/europybots2024/vendeeglobe/assets/39047984/f5f20fbb-385c-49ff-bc59-2753f04af0d4)
+ 
+- It is a `WeatherForecast` class which has a method to get the wind horizontal (`u`) and vertical (`v`) vector components for any given location(s) in space (latitude and longitude) and time (from 0 to 5 days).
+```Py
+u, v = forecast.get_uv(latitudes, longitudes, times)
+```

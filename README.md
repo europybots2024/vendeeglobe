@@ -41,6 +41,9 @@ Around the world sailing race
 
 Preview
 
+![Preview](https://github.com/europybots2024/vendeeglobe/assets/39047984/1ed0ec51-4d42-40de-bed6-88eefebab866)
+
+
 ## Goal & general rules
 
 - Sail around the world as fast as possible
@@ -49,4 +52,47 @@ Preview
 - Each round has a time limit of 8 minutes (=80 days)
 
 ## Mandatory checkpoints
+
+- A checkpoint is a location on the globe (latitude+longitude) with a radius
+- If you sail within the checkpoint radius, the checkpoint has been reached
+- The first mandatory checkpoint is located in the middle of the pacific ocean and has a radius of 2000 km
+- The second mandatory checkpoint is located in the middle of the indian ocean and has a radius of 1200 km
+
+![Screenshot at 2024-06-05 21-24-26](https://github.com/europybots2024/vendeeglobe/assets/39047984/5a34e09d-91c4-4f46-9e96-183cbf0735bd)
+
+## Weather
+
+- Only the wind is a factor (there are no ocean currents)
+- Wind is randomly generated for every game, and stays static for 12 hours during a round
+
+## Sailing
+
+- The angle between ship and wind affects ship speed
+
+<img src="https://github.com/europybots2024/vendeeglobe/assets/39047984/89de9e74-7296-465c-8814-c61de2d36214" width="500" />
+
+- With a wind force of 1, the ship will go as fast as the wind
+- Ships will get stuck when reaching land (obviously!), but will not crash: you can turn around
+- Ships cannot crash into each other (they behave like ghosts)
+
+## Scoring
+
+- Points from 1st to last place decay exponentially (and depend on the number of players)
+
+<img src="https://github.com/europybots2024/vendeeglobe/assets/39047984/6b7de608-71a7-4bd0-8fa5-0da02cf035d3" width="500" />
+
+- Back home with 2 checkpoints is best (or closest to home)
+- Then closest to 2nd checkpoint, then closest to 1st checkpoint
+
+## Timing
+
+Here is a table that gives the correspondance between real/user time duration and the amount of time that goes by in the game.
+
+| Real/User time | Time in game |
+| --- | --- |
+| 8 mins   | 80 days  |
+| 1 min    | 10 days  |
+| 6 sec    |  1 day   |
+| 1 sec    |  4 hours |
+| 0.25 sec |  1 hour  |
 

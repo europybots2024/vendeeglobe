@@ -18,7 +18,7 @@ def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
             contents = f.readlines()
         for line in contents:
             name, score = line.split(":")
-            scores[name] = int(score.strip())
+            scores[name] = float(score.strip())
     return scores
 
 
@@ -73,11 +73,14 @@ def get_rankings(players: Dict[str, Player]) -> Dict[str, int]:
 
 def _get_final_scores(players: Dict[str, Player], scores: Dict[str, int]):
     rankings = get_rankings(players)
-    for_grabs = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    # exponential points distribution
+    n = len(players)  # Points for the 1st position
+    k = np.log(n) / (n - 1)
+    points = n * np.exp(-k * (np.arange(1, n + 1) - 1))
     final_scores = {}
     round_scores = {}
-    for team in rankings:
-        round_scores[team] = for_grabs.pop(0) if for_grabs else 0
+    for team, p in zip(rankings, points):
+        round_scores[team] = p
         final_scores[team] = scores[team] + round_scores[team]
     return round_scores, final_scores
 
@@ -92,7 +95,7 @@ def _print_scores(
     sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
     print("Scores:")
     for i, (name, score, total) in enumerate(sorted_scores):
-        print(f"{i + 1}. {name}: {total} ({score})")
+        print(f"{i + 1}. {name}: {total:.2f} ({score:.2f})")
 
 
 def finalize_scores(players: Dict[str, Player], test: bool = False):

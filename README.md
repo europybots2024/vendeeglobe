@@ -50,6 +50,7 @@ Preview
 - Start from les Sables-d’Olonne in France
 - There are two mandatory checkpoints
 - Each round has a time limit of 8 minutes (=80 days)
+- The tournament on the final day consist of 8 rounds, where the scores from each round are summed
 
 ## Mandatory checkpoints
 
@@ -141,3 +142,53 @@ You initialize a `Instructions` object, and then set one of the following:
 ### Ship speed
 
 Additionally, you can control the ship's speed by choosing how much `sail` to deploy: a number between 0 and 1
+
+## Optimizing development
+
+There are 4 ways you can speed up your development.
+
+### 1. Course preview
+
+You can show a preview of your course using a `course_preview`.
+This is an argument of the `play` function.
+A list of checkpoints should be supplied:
+```Py
+vendeeglobe.play(...,
+                 course_preview=[
+                     Checkpoint(latitude=43.797109, longitude=-11.264905, radius=50),
+                     Checkpoint(longitude=-29.908577, latitude=17.999811, radius=50),
+                     ...
+                 ])
+```
+
+### 2. Change your starting location
+
+You can supply any starting location on the globe, if you want to e.g. test the middle or end part of your course.
+```Py
+vendeeglobe.play(...,
+                 start=vendeeglobe.Location(longitude=-68.004373, latitude=18.180470)
+                 )
+```
+If you are using a course of checkpoints (as in the `template_bot`), remember to set all of the checkpoints that come before `start` to `.reached = True` ;-)
+
+### 3. Use the high-contrast mode
+
+- Sometimes, it can be a little unclear whether a small island or shallow water is an actual obstacle on the map or not.
+- You can use the high-contrast mode to view a two-color map which will clearly differentiate land and sea.
+- This can be done by either using the `high_contrast=True` argument, or using the in-game checkbox in the left side bar.
+
+![Screenshot at 2024-06-06 23-00-06](https://github.com/europybots2024/vendeeglobe/assets/39047984/99e20350-0a92-4282-bb66-aa26c2bdc6b7)
+
+### 4. Speed up time
+
+You can speed up time using e.g. `speedup=2.0` as an argument to `vendeeglobe.play`, but note that **this one is a little buggy!**
+
+Because the ships advance using a time step mechanism, this may cause you to overshoot a checkpoint (or oscillate around it),
+or you might crash into land if you're navigating close to a coast line.
+
+## Tips and recommendations
+
+- It is strongly recommended to start by just plotting a course (Google Maps is your friend!).
+- Explore the map in the game: **some parts have deliberately been edited to allow different routes to be taken**.
+- Unlike in real life, the wind direction is predominantly from East to West.
+- Once you have a course that works, you can then start thinking more about the wind.

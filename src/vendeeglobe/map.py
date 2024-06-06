@@ -64,6 +64,20 @@ class Map:
 
 @dataclass(frozen=True)
 class MapProxy:
+    """
+    A proxy for the world map.
+
+    This class allows to get the terrain type (sea or land) at any location on the globe.
+
+    Parameters
+    ----------
+    array:
+        A 2D array where 1 represents sea and 0 represents land.
+    dlat:
+        The latitude step in degrees.
+    dlon:
+        The longitude step in degrees.
+    """
     array: np.ndarray
     dlat: float
     dlon: float
@@ -71,6 +85,16 @@ class MapProxy:
     def get_inds(
         self, latitude: Union[float, np.ndarray], longitude: Union[float, np.ndarray]
     ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Get the indices of the supplied latitude(s) and longitude(s).
+
+        Parameters
+        ----------
+        latitude:
+            The latitude(s) in degrees.
+        longitude:
+            The longitude(s) in degrees.
+        """
         ilat = ((np.asarray(latitude) + 90.0) / self.dlat).astype(int)
         ilon = ((np.asarray(longitude) + 180.0) / self.dlon).astype(int)
         return ilat, ilon
@@ -78,5 +102,15 @@ class MapProxy:
     def get_data(
         self, latitude: Union[float, np.ndarray], longitude: Union[float, np.ndarray]
     ) -> Union[float, np.ndarray]:
+        """
+        Get the terrain type (sea or land) at the supplied latitude(s) and longitude(s).
+
+        Parameters
+        ----------
+        latitude:
+            The latitude(s) in degrees.
+        longitude:
+            The longitude(s) in degrees.
+        """
         ilat, ilon = self.get_inds(latitude, longitude)
         return self.array[ilat, ilon]

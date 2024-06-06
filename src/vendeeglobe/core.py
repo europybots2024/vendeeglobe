@@ -41,7 +41,7 @@ class Instructions:
     Instructions for the ship.
     Define one of the following:
     - a location to go to
-    - a heading to point to
+    - a heading to point to (East is 0, North is 90, West is 180, South is 270)
     - a vector to follow
     - a number of degrees to turn left
     - a number of degrees to turn right

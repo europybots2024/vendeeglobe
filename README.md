@@ -13,7 +13,7 @@ Conference attendees can participate in a tournament where they (either alone or
 - Register your team: fill in the form at https://forms.gle/TosuLTY1zo59FNSz5 (no limit on the number of participants)
 - Read the game rules below and start working on your bot
 - Ask questions on the Discord forum `pybot-game-tournament`
-- Once your bot is ready, make sure you copy it into the `main` branch of the repo you created
+- Once your bot is ready, make sure you have merged all your changes into the `main` branch of the repo you created
 - Deadline is 15:00 on Friday July 12th
 - Tournament will be 15:30 - 16:45 on Friday July 12th in the Open Space area
 
@@ -122,7 +122,7 @@ u, v = forecast.get_uv(latitudes, longitudes, times)
 ## The world map
 
 - The `world_map` is another of the arguments received by your bot's `run` function.
-- It is a `MapProxy` class (not the actual map data used by the game to prevent bots from writing their own map!).
+- It is a `MapProxy` class (not the actual map data used by the game to prevent bots from editing the game map in-place!).
 - It has a method `get_data` to get the world map values (1 = sea, 0 = land) for any given latitude(s) and longitude(s):
 ```Py
 map_values = world_map.get_data(latitudes, longitudes)

@@ -8,7 +8,7 @@ import numpy as np
 
 
 from . import config
-from .map import MapProxy, MapData
+from .map import MapData
 from .player import Player
 from .scores import get_player_points, write_times
 from . import utils as ut
@@ -42,7 +42,6 @@ class Engine:
         self.position_counter = 0
 
         self.map = world_map
-        self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(
             self.pid,
             seed,
@@ -76,8 +75,8 @@ class Engine:
             "heading": player.heading,
             "speed": player.speed,
             "vector": player.get_vector(),
-            "forecast": self.forecast,
-            "map": self.map_proxy,
+            "forecast": self.forecast.get_uv,
+            "world_map": self.map.get_terrain,
         }
         if self.safe:
             try:

@@ -20,11 +20,23 @@ class WeatherForecast:
     dt: float
 
     def get_uv(
-        self, lat: np.ndarray, lon: np.ndarray, t: np.ndarray
+        self, *, latitudes: np.ndarray, longitudes: np.ndarray, times: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
-        iv = ((lat + 90.0) / self.dv).astype(int)
-        iu = ((lon + 180.0) / self.du).astype(int)
-        it = ((t / config.seconds_to_hours) / self.dt).astype(int)  # % self.nt
+        """
+        Get the wind speed at the given latitude, longitude and time.
+
+        Parameters
+        ----------
+        latitudes: np.ndarray
+            Latitude(s) in degrees.
+        longitudes: np.ndarray
+            Longitude(s) in degrees.
+        times: np.ndarray
+            Time in hours.
+        """
+        iv = ((np.asarray(latitudes) + 90.0) / self.dv).astype(int)
+        iu = ((np.asarray(longitudes) + 180.0) / self.du).astype(int)
+        it = ((np.asarray(times) / config.seconds_to_hours) / self.dt).astype(int)
         u = self.u[it, iv, iu]
         v = self.v[it, iv, iu]
         return u, v

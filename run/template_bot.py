@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # flake8: noqa F401
-
+from collections.abc import Callable
 import numpy as np
 
 from vendeeglobe import (
     Checkpoint,
     Instructions,
     Location,
-    MapProxy,
-    WeatherForecast,
+    # MapProxy,
+    # WeatherForecast,
     config,
 )
 from vendeeglobe.utils import distance_on_surface
@@ -71,8 +71,8 @@ class Bot:
         heading: float,
         speed: float,
         vector: np.ndarray,
-        forecast: WeatherForecast,
-        map: MapProxy,
+        forecast: Callable,
+        world_map: Callable,
     ):
         """
         This is the method that will be called at every time step to get the
@@ -99,6 +99,12 @@ class Bot:
         map:
             The map of the world: 1 for sea, 0 for land.
         """
+        current_position_forecast = forecast(
+                latitudes=latitude, longitudes=longitude, times=0
+            )
+        current_position_terrain = world_map(
+                latitudes=latitude, longitudes=longitude
+            )
         instructions = Instructions()
         for ch in self.course:
             dist = distance_on_surface(
@@ -165,9 +171,15 @@ class Bot2:
         heading: float,
         speed: float,
         vector: np.ndarray,
-        forecast: WeatherForecast,
-        map: MapProxy,
+        forecast: Callable,
+        world_map: Callable,
     ):
+        current_position_forecast = forecast(
+                latitudes=latitude, longitudes=longitude, times=0
+            )
+        current_position_terrain = world_map(
+                latitudes=latitude, longitudes=longitude
+            )
         loc = None
         for ch in self.course:
             dist = distance_on_surface(

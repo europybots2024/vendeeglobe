@@ -177,8 +177,8 @@ class Engine:
         if self.buffers['game_flow'][0]:
             return
 
-        if len(self.players_not_arrived) == 0:
-            return
+        # if len(self.players_not_arrived) == 0:
+        #     return
 
         clock_time = time.time()
         t = clock_time - self.start_time
@@ -186,24 +186,27 @@ class Engine:
 
         if dt > self.update_interval:
             dt = dt * config.seconds_to_hours
-
-            if (clock_time - self.last_time_update) > config.time_update_interval:
-                self.update_scoreboard()
-                self.last_time_update = clock_time
-
-            if (
-                clock_time - self.last_forecast_update
-            ) > config.weather_update_interval:
-                self.forecast = self.weather.get_forecast(t)
-                self.last_forecast_update = clock_time
-
-            self.call_player_bots(t=t * config.seconds_to_hours, dt=dt)
-            self.move_players(self.weather, t=t, dt=dt)
             self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
 
-            if len(self.players_not_arrived) == 0:
-                self.buffers['all_arrived'][self.pid] = True
-                self.update_scoreboard()
+            if len(self.players_not_arrived) > 0:
+
+                if (clock_time - self.last_time_update) > config.time_update_interval:
+                    self.update_scoreboard()
+                    self.last_time_update = clock_time
+
+                if (
+                    clock_time - self.last_forecast_update
+                ) > config.weather_update_interval:
+                    self.forecast = self.weather.get_forecast(t)
+                    self.last_forecast_update = clock_time
+
+                self.call_player_bots(t=t * config.seconds_to_hours, dt=dt)
+                self.move_players(self.weather, t=t, dt=dt)
+                # self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
+
+                if len(self.players_not_arrived) == 0:
+                    self.buffers['all_arrived'][self.pid] = True
+                    self.update_scoreboard()
 
             self.previous_clock_time = clock_time
 

@@ -38,7 +38,7 @@ except ImportError:
 from . import config
 from .core import Checkpoint, Location
 from .graphics import Graphics
-from .map import Map, MapProxy
+from .map import Map
 from .player import Player
 from .scores import (
     finalize_scores,
@@ -81,7 +81,6 @@ class Engine:
         print(f"done [{time.time() - t0:.2f} s]")
 
         self.map = Map()
-        self.map_proxy = MapProxy(self.map.sea_array, self.map.dlat, self.map.dlon)
         self.weather = Weather(seed=seed, time_limit=self.time_limit)
         self.graphics = Graphics(
             game_map=self.map,
@@ -112,8 +111,8 @@ class Engine:
             "heading": player.heading,
             "speed": player.speed,
             "vector": player.get_vector(),
-            "forecast": self.forecast,
-            "world_map": self.map_proxy,
+            "forecast": self.forecast.get_uv,
+            "world_map": self.map.get_terrain,
         }
         if self.safe:
             try:

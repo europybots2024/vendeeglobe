@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
-from dataclasses import dataclass
-from typing import Tuple, Union
+from typing import Union
 
 import numpy as np
 from PIL import Image
@@ -56,61 +55,22 @@ class Map:
         self.sea_array.setflags(write=False)
         print(f'done [{time.time() - t0:.2f} s]')
 
-    def get_terrain(self, longitudes, latitudes):
-        ilon = ((longitudes + 180.0) / self.dlon).astype(int)
-        ilat = ((latitudes + 90.0) / self.dlat).astype(int)
-        return self.sea_array[ilat, ilon]
-
-
-@dataclass(frozen=True)
-class MapProxy:
-    """
-    A proxy for the world map.
-
-    This class allows to get the terrain type (sea or land) at any location on the globe.
-
-    Parameters
-    ----------
-    array:
-        A 2D array where 1 represents sea and 0 represents land.
-    dlat:
-        The latitude step in degrees.
-    dlon:
-        The longitude step in degrees.
-    """
-    array: np.ndarray
-    dlat: float
-    dlon: float
-
-    def get_inds(
-        self, latitude: Union[float, np.ndarray], longitude: Union[float, np.ndarray]
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Get the indices of the supplied latitude(s) and longitude(s).
-
-        Parameters
-        ----------
-        latitude:
-            The latitude(s) in degrees.
-        longitude:
-            The longitude(s) in degrees.
-        """
-        ilat = ((np.asarray(latitude) + 90.0) / self.dlat).astype(int)
-        ilon = ((np.asarray(longitude) + 180.0) / self.dlon).astype(int)
-        return ilat, ilon
-
-    def get_data(
-        self, latitude: Union[float, np.ndarray], longitude: Union[float, np.ndarray]
+    def get_terrain(
+        self,
+        *,
+        latitudes: Union[float, np.ndarray],
+        longitudes: Union[float, np.ndarray],
     ) -> Union[float, np.ndarray]:
         """
         Get the terrain type (sea or land) at the supplied latitude(s) and longitude(s).
 
         Parameters
         ----------
-        latitude:
+        latitudes:
             The latitude(s) in degrees.
-        longitude:
+        longitudes:
             The longitude(s) in degrees.
         """
-        ilat, ilon = self.get_inds(latitude, longitude)
-        return self.array[ilat, ilon]
+        ilon = ((np.asarray(longitudes) + 180.0) / self.dlon).astype(int)
+        ilat = ((np.asarray(latitudes) + 90.0) / self.dlat).astype(int)
+        return self.sea_array[ilat, ilon]

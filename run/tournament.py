@@ -10,4 +10,4 @@ for repo in glob.glob("*_bot"):
     module = importlib.import_module(f"{repo}")
     bots.append(module.Bot())
 
-vg.play(bots=bots, test=False)
+vg.play(bots=bots, safe=True, ncores=8)

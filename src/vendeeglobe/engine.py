@@ -52,7 +52,7 @@ class Engine:
             forecast_t=self.buffers["forecast_t"],
             tracer_positions=self.buffers["tracer_positions"],
         )
-        self.buffers['all_shutdown'][self.pid] = False
+        self.buffers["all_shutdown"][self.pid] = False
         self.players_not_arrived = list(self.players.keys())
         self.forecast = self.weather.get_forecast(0)
 
@@ -126,7 +126,6 @@ class Engine:
                 player.longitude = next_lon
 
             if not player.arrived:
-
                 for checkpoint in player.checkpoints:
                     if not checkpoint.reached:
                         d = ut.distance_on_surface(
@@ -164,17 +163,18 @@ class Engine:
         inds = np.round(
             np.linspace(0, self.position_counter - 1, config.max_track_length)
         ).astype(int)
-        self.buffers['player_positions'][
+        self.buffers["player_positions"][
             self.bot_index_begin : self.bot_index_end, ...
         ] = self.player_tracks[:, inds, :][:, ::-1, :]
 
     def shutdown(self):
+        print("inside engine shutdown")
         self.update_scoreboard()
         write_times({team: p.trip_time for team, p in self.players.items()})
-        self.buffers['all_shutdown'][self.pid] = True
+        self.buffers["all_shutdown"][self.pid] = True
 
     def update(self):
-        if self.buffers['game_flow'][0]:
+        if self.buffers["game_flow"][0]:
             return
 
         # if len(self.players_not_arrived) == 0:
@@ -189,7 +189,6 @@ class Engine:
             self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
 
             if len(self.players_not_arrived) > 0:
-
                 if (clock_time - self.last_time_update) > config.time_update_interval:
                     self.update_scoreboard()
                     self.last_time_update = clock_time
@@ -205,15 +204,14 @@ class Engine:
                 # self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
 
                 if len(self.players_not_arrived) == 0:
-                    self.buffers['all_arrived'][self.pid] = True
+                    self.buffers["all_arrived"][self.pid] = True
                     self.update_scoreboard()
 
             self.previous_clock_time = clock_time
 
     def update_scoreboard(self):
-
         for i, player in enumerate(self.players.values()):
-            self.buffers['player_status'][self.bot_index_begin + i, ...] = np.array(
+            self.buffers["player_status"][self.bot_index_begin + i, ...] = np.array(
                 [
                     get_player_points(player),
                     player.distance_travelled,
@@ -225,6 +223,6 @@ class Engine:
 
     def run(self, start_time: float):
         self.initialize_time(start_time)
-        while not self.buffers['game_flow'][1]:
+        while not self.buffers["game_flow"][1]:
             self.update()
         self.shutdown()

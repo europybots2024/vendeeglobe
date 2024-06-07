@@ -21,6 +21,7 @@ try:
         QSlider,
         QVBoxLayout,
         QWidget,
+        QPushButton,
     )
     from PyQt5.QtCore import Qt
 except ImportError:
@@ -34,6 +35,7 @@ except ImportError:
         QSizePolicy,
         QSlider,
         QFrame,
+        QPushButton,
     )
     from PySide2.QtCore import Qt
 
@@ -246,6 +248,9 @@ class Graphics:
         )
         self.timer.stop()
 
+    def end_round(self):
+        self.buffers["game_flow"][1] = True
+
     def update(self):
         if self.buffers["game_flow"][0]:
             return
@@ -374,6 +379,9 @@ class Graphics:
             self.fastest_boxes[i] = QLabel("")
             widget2_layout.addWidget(self.fastest_boxes[i])
         widget2_layout.addStretch()
+        self.cancel_button = QPushButton("End round")
+        self.cancel_button.clicked.connect(self.end_round)
+        widget2_layout.addWidget(self.cancel_button)
 
         self.initialize_time(start_time=start_time)
 

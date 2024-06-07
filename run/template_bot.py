@@ -100,11 +100,9 @@ class Bot:
             The map of the world: 1 for sea, 0 for land.
         """
         current_position_forecast = forecast(
-                latitudes=latitude, longitudes=longitude, times=0
-            )
-        current_position_terrain = world_map(
-                latitudes=latitude, longitudes=longitude
-            )
+            latitudes=latitude, longitudes=longitude, times=0
+        )
+        current_position_terrain = world_map(latitudes=latitude, longitudes=longitude)
         instructions = Instructions()
         for ch in self.course:
             dist = distance_on_surface(
@@ -157,10 +155,10 @@ class Bot2:
             ),
         ]
 
-        for ch in self.course[:-3]:
-            ch.reached = True
+        # for ch in self.course[:-3]:
+        #     ch.reached = True
 
-        add_spread(self.course)
+        add_spread(self.course, 1.0)
 
     def run(
         self,
@@ -175,11 +173,9 @@ class Bot2:
         world_map: Callable,
     ):
         current_position_forecast = forecast(
-                latitudes=latitude, longitudes=longitude, times=0
-            )
-        current_position_terrain = world_map(
-                latitudes=latitude, longitudes=longitude
-            )
+            latitudes=latitude, longitudes=longitude, times=0
+        )
+        current_position_terrain = world_map(latitudes=latitude, longitudes=longitude)
         loc = None
         for ch in self.course:
             dist = distance_on_surface(

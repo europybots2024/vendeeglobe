@@ -42,17 +42,16 @@ def spawn_engine(*args):
 
 
 def play(bots, seed=None, start=None, safe=False, ncores=8, high_contrast=False):
-
     pre_compile()
 
     n_sub_processes = ncores
     bots = {bot.team: bot for bot in bots}
     players = {name: Player(team=name, start=start) for name in bots}
 
-    # TODO: Cheat!
-    for player in players.values():
-        for ch in player.checkpoints:
-            ch.reached = True
+    # # TODO: Cheat!
+    # for player in players.values():
+    #     for ch in player.checkpoints:
+    #         ch.reached = True
 
     groups = np.array_split(list(bots.keys()), n_sub_processes)
     ntracers = (
@@ -71,21 +70,20 @@ def play(bots, seed=None, start=None, safe=False, ncores=8, high_contrast=False)
     world_map = MapData()
 
     buffer_mapping = {
-        'tracer_positions': tracer_positions,
-        'player_positions': player_positions,
-        'weather_u': weather.u,
-        'weather_v': weather.v,
-        'forecast_u': weather.forecast_u,
-        'forecast_v': weather.forecast_v,
-        'forecast_t': weather.forecast_times,
-        'game_flow': game_flow,
-        'player_status': player_status,
-        'all_arrived': arrived,
-        'all_shutdown': shutdown,
+        "tracer_positions": tracer_positions,
+        "player_positions": player_positions,
+        "weather_u": weather.u,
+        "weather_v": weather.v,
+        "forecast_u": weather.forecast_u,
+        "forecast_v": weather.forecast_v,
+        "forecast_t": weather.forecast_times,
+        "game_flow": game_flow,
+        "player_status": player_status,
+        "all_arrived": arrived,
+        "all_shutdown": shutdown,
     }
 
     with SharedMemoryManager() as smm:
-
         buffers = {}
         for key, arr in buffer_mapping.items():
             mem = smm.SharedMemory(size=arr.nbytes)
@@ -101,12 +99,12 @@ def play(bots, seed=None, start=None, safe=False, ncores=8, high_contrast=False)
                 {
                     key: buffers[key]
                     for key in (
-                        'tracer_positions',
-                        'player_positions',
-                        'game_flow',
-                        'player_status',
-                        'all_arrived',
-                        'all_shutdown',
+                        "tracer_positions",
+                        "player_positions",
+                        "game_flow",
+                        "player_status",
+                        "all_arrived",
+                        "all_shutdown",
                     )
                 },
             ),

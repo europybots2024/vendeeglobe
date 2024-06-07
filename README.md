@@ -122,7 +122,7 @@ u, v = forecast.get_uv(latitudes, longitudes, times)
 ## The world map
 
 - The `world_map` is another of the arguments received by your bot's `run` function.
-- It is a `MapProxy` class (not the actual map data used by the game to prevent bots from writing their own map!).
+- It is a `MapProxy` class (not the actual map data used by the game to prevent bots from editing the game map in-place!).
 - It has a method `get_data` to get the world map values (1 = sea, 0 = land) for any given latitude(s) and longitude(s):
 ```Py
 map_values = world_map.get_data(latitudes, longitudes)

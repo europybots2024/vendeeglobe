@@ -109,7 +109,7 @@ Look at the comments in `bot.py` for details on what information is available to
 ## The weather forecast
 
 - The weather `forecast` is one of the arguments the `run` function will receive.
-- It is amethod that lets you access the wind data for the 5 days to come (for the entire globe).
+- It is a method that lets you access the wind data for the 5 days to come (for the entire globe).
 - The accuracy of the forecast decreases the further in time you look: the figure below shows the same weather data (value of the horizontal `u` wind component) 1 day in the future, and 5 days in the future
 
 ![Screenshot at 2024-06-06 22-26-09](https://github.com/europybots2024/vendeeglobe/assets/39047984/f5f20fbb-385c-49ff-bc59-2753f04af0d4)

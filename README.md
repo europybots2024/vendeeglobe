@@ -130,17 +130,14 @@ map_values = world_map(latitudes, longitudes)
 ## Instructions for the ship
 
 The bot will control the ship by returning a set of instructions that will then be read and applied by the game engine.
-You initialize a `Instructions` object, and then set one of the following:
+You initialize a `Instructions` object, and then set one of the following attributes:
 
 - `Location`: a latitude/longitude to go to (using the shortest straight-line path on the surface of the globe, ignoring land mass)
 - `Heading`:	heading for the ship in degrees (East is 0, North is 90, West is 180, South is 270)
 - `Vector`: vector for the ship (instead of heading)
 - `Left`:	turn left X degrees
 - `Right`:	turn right X degrees
-
-### Ship speed
-
-Additionally, you can control the ship's speed by choosing how much `sail` to deploy: a number between 0 and 1
+- `sail`: you can also control the ship's speed by choosing how much sail to deploy (a number between 0 and 1)
 
 ## Optimizing development
 

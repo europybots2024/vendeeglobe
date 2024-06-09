@@ -156,6 +156,7 @@ vendeeglobe.play(...,
                      ...
                  ])
 ```
+Note that, while it tries hard to be, the course preview may not be 100% accurate.
 
 ### 2. Change your starting location
 

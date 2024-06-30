@@ -209,6 +209,7 @@ or you might crash into land if you're navigating close to a coast line.
 
 ## Acknowledgements
 
+- The game was developed by @nvaytet and @gergely-elias.
 - The game was inspired by the [Virtual Regatta](https://www.virtualregatta.com/en/) game and [this cool visualization](https://earth.nullschool.net/) of wind conditions on Earth.
 - The cover image was created using https://deepai.org/machine-learning-model/
 - We thank the developers at the European Spallation Source's Data Management and Software Center for testing the game!

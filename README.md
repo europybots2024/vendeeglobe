@@ -23,12 +23,29 @@ Conference attendees can participate in a tournament where they (either alone or
 
 2. Get started with:
 
+### conda
+
 ```
 conda create -n <NAME> -c conda-forge python=3.10.*
 conda activate <NAME>
 git clone https://github.com/europybots2024/vendeeglobe.git
 git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
 cd vendeeglobe/
+python -m pip install -e .
+cd run/
+ln -s ../../<MYBOTNAME> .
+python play.py
+```
+
+### venv
+
+```
+git clone https://github.com/europybots2024/vendeeglobe.git
+git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
+cd vendeeglobe/
+python -m venv .<NAME>
+source .<NAME>/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -e .
 cd run/
 ln -s ../../<MYBOTNAME> .
@@ -166,7 +183,7 @@ vendeeglobe.play(...,
                  start=vendeeglobe.Location(longitude=-68.004373, latitude=18.180470)
                  )
 ```
-If you are using a course of checkpoints (as in the `template_bot`), remember to set all of the checkpoints that come before `start` to `.reached = True` ;-)
+If you are using a course of checkpoints (as in the `template_bot`), remember to set all of the checkpoints that come before `start` to `.reached = True`!
 
 ### 3. Use the high-contrast mode
 

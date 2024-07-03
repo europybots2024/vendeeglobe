@@ -20,6 +20,6 @@ vg.play(
     seed=None,  # Seed for generating the weather
     time_limit=60 * 8,  # Time limit in seconds
     speedup=None,  # Time speedup factor (this one is a little buggy!)
-    course_preview=None,  # A list of checkpoints should be supplied
+    course_preview=None,  # A list of checkpoints should be supplied: eg bots[0].course
     high_contrast=False,
 )

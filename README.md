@@ -23,12 +23,29 @@ Conference attendees can participate in a tournament where they (either alone or
 
 2. Get started with:
 
+### conda
+
 ```
 conda create -n <NAME> -c conda-forge python=3.10.*
 conda activate <NAME>
 git clone https://github.com/europybots2024/vendeeglobe.git
 git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
 cd vendeeglobe/
+python -m pip install -e .
+cd run/
+ln -s ../../<MYBOTNAME> .
+python play.py
+```
+
+### venv
+
+```
+git clone https://github.com/europybots2024/vendeeglobe.git
+git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
+cd vendeeglobe/
+python -m venv .<NAME>
+source .<NAME>/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -e .
 cd run/
 ln -s ../../<MYBOTNAME> .
@@ -108,40 +125,36 @@ Look at the comments in `bot.py` for details on what information is available to
 
 ## The weather forecast
 
-- The `weather_forecast` is one of the arguments the `run` function will receive.
-- It represents wind data for the 5 days to come (for the entire globe).
+- The weather `forecast` is one of the arguments the `run` function will receive.
+- It is a method that lets you access the wind data for the 5 days to come (for the entire globe).
 - The accuracy of the forecast decreases the further in time you look: the figure below shows the same weather data (value of the horizontal `u` wind component) 1 day in the future, and 5 days in the future
 
 ![Screenshot at 2024-06-06 22-26-09](https://github.com/europybots2024/vendeeglobe/assets/39047984/f5f20fbb-385c-49ff-bc59-2753f04af0d4)
  
-- It is a `WeatherForecast` class which has a method to get the wind horizontal (`u`) and vertical (`v`) vector components for any given location(s) in space (latitude and longitude) and time (from 0 to 5 days).
+- It is a callable which can get the wind horizontal (`u`) and vertical (`v`) vector components for any given location(s) in space (latitude and longitude) and time (from 0 to 5 days).
 ```Py
-u, v = forecast.get_uv(latitudes, longitudes, times)
+u, v = forecast(latitudes, longitudes, times)
 ```
 
 ## The world map
 
 - The `world_map` is another of the arguments received by your bot's `run` function.
-- It is a `MapProxy` class (not the actual map data used by the game to prevent bots from editing the game map in-place!).
-- It has a method `get_data` to get the world map values (1 = sea, 0 = land) for any given latitude(s) and longitude(s):
+- It is also a callable which provides the world map values (1 = sea, 0 = land) for any given latitude(s) and longitude(s):
 ```Py
-map_values = world_map.get_data(latitudes, longitudes)
+map_values = world_map(latitudes, longitudes)
 ```
 
 ## Instructions for the ship
 
 The bot will control the ship by returning a set of instructions that will then be read and applied by the game engine.
-You initialize a `Instructions` object, and then set one of the following:
+You initialize a `Instructions` object, and then set one of the following attributes:
 
 - `Location`: a latitude/longitude to go to (using the shortest straight-line path on the surface of the globe, ignoring land mass)
 - `Heading`:	heading for the ship in degrees (East is 0, North is 90, West is 180, South is 270)
 - `Vector`: vector for the ship (instead of heading)
 - `Left`:	turn left X degrees
 - `Right`:	turn right X degrees
-
-### Ship speed
-
-Additionally, you can control the ship's speed by choosing how much `sail` to deploy: a number between 0 and 1
+- `sail`: you can also control the ship's speed by choosing how much sail to deploy (a number between 0 and 1)
 
 ## Optimizing development
 
@@ -160,6 +173,7 @@ vendeeglobe.play(...,
                      ...
                  ])
 ```
+Note that, while it tries hard to be, the course preview may not be 100% accurate.
 
 ### 2. Change your starting location
 
@@ -169,7 +183,7 @@ vendeeglobe.play(...,
                  start=vendeeglobe.Location(longitude=-68.004373, latitude=18.180470)
                  )
 ```
-If you are using a course of checkpoints (as in the `template_bot`), remember to set all of the checkpoints that come before `start` to `.reached = True` ;-)
+If you are using a course of checkpoints (as in the `template_bot`), remember to set all of the checkpoints that come before `start` to `.reached = True`!
 
 ### 3. Use the high-contrast mode
 
@@ -192,3 +206,10 @@ or you might crash into land if you're navigating close to a coast line.
 - Explore the map in the game: **some parts have deliberately been edited to allow different routes to be taken**.
 - Unlike in real life, the wind direction is predominantly from East to West.
 - Once you have a course that works, you can then start thinking more about the wind.
+
+## Acknowledgements
+
+- The game was developed by @nvaytet and @gergely-elias.
+- The game was inspired by the [Virtual Regatta](https://www.virtualregatta.com/en/) game and [this cool visualization](https://earth.nullschool.net/) of wind conditions on Earth.
+- The cover image was created using https://deepai.org/machine-learning-model/
+- We thank the developers at the European Spallation Source's Data Management and Software Center for testing the game!

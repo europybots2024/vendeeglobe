@@ -58,7 +58,8 @@ Around the world sailing race
 
 Preview
 
-![Preview](https://github.com/europybots2024/vendeeglobe/assets/39047984/1ed0ec51-4d42-40de-bed6-88eefebab866)
+![Screenshot at 2023-11-14 17-34-45](https://github.com/europybots2024/vendeeglobe/assets/39047984/a2b029a4-325d-42bc-8e89-6b7783765c98)
+
 
 
 ## Goal & general rules

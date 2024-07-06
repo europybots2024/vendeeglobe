@@ -14,8 +14,8 @@ Conference attendees can participate in a tournament where they (either alone or
 - Read the game rules below and start working on your bot
 - Ask questions on the Discord forum `pybot-game-tournament`
 - Once your bot is ready, make sure you have merged all your changes into the `main` branch of the repo you created
-- Deadline is 15:00 on Friday July 12th
-- Tournament will be 15:30 - 16:45 on Friday July 12th in the Open Space area
+- Deadline is 12:30 on Friday July 12th
+- Tournament will be 13:00 - 14:30 on Friday July 12th in the Open Space area
 
 ## TL;DR
 

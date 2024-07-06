@@ -131,7 +131,7 @@ Look at the comments in `bot.py` for details on what information is available to
 - The accuracy of the forecast decreases the further in time you look: the figure below shows the same weather data (value of the horizontal `u` wind component) 1 day in the future, and 5 days in the future
 
 ![Screenshot at 2024-06-06 22-26-09](https://github.com/europybots2024/vendeeglobe/assets/39047984/f5f20fbb-385c-49ff-bc59-2753f04af0d4)
- 
+
 - It is a callable which can get the wind horizontal (`u`) and vertical (`v`) vector components for any given location(s) in space (latitude and longitude) and time (from 0 to 5 days).
 ```Py
 u, v = forecast(latitudes, longitudes, times)
@@ -214,3 +214,21 @@ or you might crash into land if you're navigating close to a coast line.
 - The game was inspired by the [Virtual Regatta](https://www.virtualregatta.com/en/) game and [this cool visualization](https://earth.nullschool.net/) of wind conditions on Earth.
 - The cover image was created using https://deepai.org/machine-learning-model/
 - We thank the developers at the European Spallation Source's Data Management and Software Center for testing the game!
+
+## Troubleshooting
+
+Python versions known to work: `3.9`, `3.10`, `3.11`, `3.12`.
+
+Dependencies:
+
+```
+importlib-resources
+matplotlib
+numba
+numpy
+pillow
+pyopengl
+pyqt5
+pyqtgraph
+scipy
+```

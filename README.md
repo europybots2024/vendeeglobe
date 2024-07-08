@@ -12,7 +12,7 @@ Conference attendees can participate in a tournament where they (either alone or
 - Create a repository for your bot from [the template](https://github.com/new?owner=europybots2024&template_name=template_bot&template_owner=europybots2024).
 - Register your team: fill in the form at https://forms.gle/TosuLTY1zo59FNSz5 (no limit on the number of participants)
 - Read the game rules below and start working on your bot
-- Ask questions on the Discord forum `pybot-game-tournament`
+- Ask questions on the Discord forum `ai-game-tournament`
 - Once your bot is ready, make sure you have merged all your changes into the `main` branch of the repo you created
 - Deadline is 12:30 on Friday July 12th
 - Tournament will be 13:00 - 14:30 on Friday July 12th in the Open Space area

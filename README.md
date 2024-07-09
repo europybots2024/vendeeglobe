@@ -219,7 +219,9 @@ or you might crash into land if you're navigating close to a coast line.
 
 Python versions known to work: `3.9`, `3.10`, `3.11`, `3.12`.
 
-Dependencies:
+**Dependencies:**
+
+**Note:** these should all get installed automatically if you used `pip install -e .` as suggested above.
 
 ```
 importlib-resources

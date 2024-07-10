@@ -3,6 +3,10 @@
 import importlib
 import glob
 
+import os
+# Enforces the use of wayland, even on Gnome systems. Which is needed by opengl
+os.environ["QT_QPA_PLATFORM"] = "wayland"
+
 import vendeeglobe as vg
 
 

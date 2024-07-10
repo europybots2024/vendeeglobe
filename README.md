@@ -29,7 +29,7 @@ Conference attendees can participate in a tournament where they (either alone or
 conda create -n <NAME> -c conda-forge python=3.10.*
 conda activate <NAME>
 git clone https://github.com/europybots2024/vendeeglobe.git
-git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
+git clone https://github.com/<USERNAME>/<MYBOTNAME>_bot.git
 cd vendeeglobe/
 python -m pip install -e .
 cd run/
@@ -41,7 +41,7 @@ python play.py
 
 ```
 git clone https://github.com/europybots2024/vendeeglobe.git
-git clone https://github.com/<USERNAME>/<MYBOTNAME>.git
+git clone https://github.com/<USERNAME>/<MYBOTNAME>_bot.git
 cd vendeeglobe/
 python -m venv .<NAME>
 source .<NAME>/bin/activate
@@ -51,6 +51,8 @@ cd run/
 ln -s ../../<MYBOTNAME> .
 python play.py
 ```
+
+**Note:** name the folder containing the bot needs to end with `_bot` to be picked up by the game!
 
 ## The game: Vendeeglobe
 

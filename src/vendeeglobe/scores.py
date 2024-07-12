@@ -36,7 +36,7 @@ def _write_scores(scores: Dict[str, int]):
     _make_folder(folder)
     for name, score in scores.items():
         fname = os.path.join(folder, f"{name}_scores.txt")
-        mode = "w+" if os.path.exists(fname) else "w"
+        mode = "a" if os.path.exists(fname) else "w"
         with open(fname, mode) as f:
             f.write(f"{score}\n")
 
@@ -144,6 +144,6 @@ def write_times(times: Dict[str, Player]):
     _make_folder(folder)
     for name, t in times.items():
         fname = os.path.join(folder, f"{name}_times.txt")
-        mode = "w+" if os.path.exists(fname) else "w"
+        mode = "a" if os.path.exists(fname) else "w"
         with open(fname, mode) as f:
             f.write(f"{t}\n")
